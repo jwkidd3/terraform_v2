@@ -44,7 +44,6 @@ By the end of this lab, you will be able to:
 ### Step 1: Create Lab Directory
 ```bash
 # Navigate to home directory and create new lab
-cd ~
 mkdir terraform-lab2
 cd terraform-lab2
 

@@ -43,7 +43,6 @@ By the end of this lab, you will be able to:
 
 ### Step 1: Create Module Structure
 ```bash
-cd ~
 mkdir terraform-lab4
 cd terraform-lab4
 

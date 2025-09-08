@@ -48,7 +48,6 @@ By the end of this lab, you will be able to:
 ### Step 1: Create Multi-Environment Project Structure
 ```bash
 # Create new project directory
-cd ~
 mkdir terraform-cloud-teams
 cd terraform-cloud-teams
 

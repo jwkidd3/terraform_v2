@@ -65,8 +65,8 @@ aws sts get-caller-identity
 ```bash
 # Create and navigate to lab directory (replace USERNAME with your chosen username)
 export TF_USERNAME="USERNAME"  # Replace USERNAME with your actual username
-mkdir ~/terraform-lab1
-cd ~/terraform-lab1
+mkdir terraform-lab1
+cd terraform-lab1
 
 # Create initial files
 touch main.tf

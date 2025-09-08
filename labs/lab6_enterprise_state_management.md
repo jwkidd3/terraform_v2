@@ -47,7 +47,6 @@ By the end of this lab, you will be able to:
 ### Step 1: Implement State File Encryption
 ```bash
 # Create advanced state management project
-cd ~
 mkdir terraform-lab6-enterprise-state
 cd terraform-lab6-enterprise-state
 

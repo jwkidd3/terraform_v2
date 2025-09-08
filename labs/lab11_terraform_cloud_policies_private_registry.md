@@ -49,7 +49,6 @@ By the end of this lab, you will be able to:
 ### Step 1: Create Basic Cost Control Policy
 ```bash
 # Create policy directory structure
-cd ~
 mkdir terraform-policies-registry
 cd terraform-policies-registry
 mkdir -p {policies/sentinel,modules/networking,examples}
@@ -262,7 +261,7 @@ EOF
 ### Step 1: Create VPC Module for Private Registry
 ```bash
 # Create VPC module structure
-cd ~/terraform-policies-registry/modules/networking
+cd terraform-policies-registry/modules/networking
 
 cat > main.tf << 'EOF'
 # Terraform Cloud Private Registry Module
@@ -736,7 +735,7 @@ EOF
 ### Step 2: Create Example Usage
 ```bash
 # Create example configuration
-cd ~/terraform-policies-registry/examples
+cd terraform-policies-registry/examples
 mkdir basic-vpc
 cd basic-vpc
 
@@ -1182,7 +1181,7 @@ EOF
 ### Step 3: Test the Complete Framework
 ```bash
 # Deploy the example that will trigger policies
-cd ~/terraform-policies-registry/examples/basic-vpc
+cd terraform-policies-registry/examples/basic-vpc
 
 # Initialize the configuration
 terraform init
@@ -1203,7 +1202,7 @@ terraform apply -auto-approve
 terraform output compliance_check
 
 # Deploy cost monitoring
-cd ~/terraform-policies-registry
+cd terraform-policies-registry
 terraform init
 terraform apply -auto-approve
 
@@ -1274,10 +1273,10 @@ The framework you built enforces:
 ### Clean Up
 ```bash
 # Clean up in reverse order
-cd ~/terraform-policies-registry/examples/basic-vpc
+cd terraform-policies-registry/examples/basic-vpc
 terraform destroy -auto-approve
 
-cd ~/terraform-policies-registry
+cd terraform-policies-registry
 terraform destroy -auto-approve
 
 echo "Resources cleaned up!"

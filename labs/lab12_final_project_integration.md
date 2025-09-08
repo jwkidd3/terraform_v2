@@ -52,7 +52,6 @@ By the end of this lab, you will be able to:
 
 ### Step 1: Create Enterprise Project Structure
 ```bash
-cd ~/terraform-training
 mkdir -p lab12-enterprise-integration/{environments/{dev,staging,prod},policies,scripts}
 cd lab12-enterprise-integration
 

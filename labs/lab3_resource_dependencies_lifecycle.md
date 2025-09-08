@@ -44,7 +44,6 @@ By the end of this lab, you will be able to:
 
 ### Step 1: Create Lab Environment
 ```bash
-cd ~
 mkdir terraform-lab3
 cd terraform-lab3
 

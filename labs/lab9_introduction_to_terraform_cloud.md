@@ -75,7 +75,6 @@ By the end of this lab, you will be able to:
 ### Step 4: Configure Terraform CLI
 ```bash
 # In your Cloud9 terminal
-cd ~
 mkdir -p ~/.terraform.d
 
 # Create credentials file
@@ -105,7 +104,6 @@ terraform login
 ### Step 1: Create Project with Local State
 ```bash
 # Create new project directory
-cd ~
 mkdir terraform-cloud-intro
 cd terraform-cloud-intro
 

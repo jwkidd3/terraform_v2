@@ -45,7 +45,6 @@ By the end of this lab, you will be able to:
 
 ### Step 1: Create Lab Environment
 ```bash
-cd ~
 mkdir terraform-lab5
 cd terraform-lab5
 
@@ -590,7 +589,6 @@ Create a new configuration that references the remote state:
 
 **Create new directory:**
 ```bash
-cd ~
 mkdir terraform-lab5-consumer
 cd terraform-lab5-consumer
 
