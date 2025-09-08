@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Mastering Terraform Configuration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/highlight/monokai.min.css">
+    <style>
+        /* Terraform Brand Colors */
+        :root {
+            --terraform-purple: #623ce4;
+            --terraform-dark: #1e1e3f;
+            --terraform-light: #f5f5ff;
+            --accent-blue: #1e88e5;
+            --accent-green: #4caf50;
+            --accent-orange: #ff9800;
+            --accent-red: #f44336;
+        }
+
+        /* Global Reveal.js Overrides */
+        .reveal {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 28px;
+            font-weight: 300;
+            color: #2c3e50;
+        }
+
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+            color: var(--terraform-purple);
+            font-weight: 600;
+            text-transform: none;
+            line-height: 1.2;
+        }
+
+        .reveal h1 {
+            font-size: 1.9em;
+            text-shadow: 2px 2px 4px rgba(98, 60, 228, 0.3);
+            margin-bottom: 0.3em;
+        }
+
+        .reveal h2 {
+            font-size: 1.4em;
+            margin-bottom: 0.3em;
+        }
+
+        .reveal h3 {
+            font-size: 1.1em;
+            margin-bottom: 0.2em;
+        }
+
+        .reveal h4 {
+            font-size: 1.0em;
+            color: var(--terraform-dark);
+            margin-bottom: 0.2em;
+        }
+
+        /* Slide Layout */
+        .reveal .slides section {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        .reveal .title-slide {
+            text-align: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--terraform-light) 0%, #e8e4ff 100%);
+            color: var(--terraform-dark);
+        }
+
+        /* Typography */
+        .reveal p {
+            margin: 0.8em 0;
+            line-height: 1.6;
+        }
+
+        .reveal ul, .reveal ol {
+            margin: 0.4em 0 0.4em 0.5em;
+            line-height: 1.3;
+            font-size: 0.85em;
+        }
+
+        .reveal li {
+            margin: 0.2em 0;
+        }
+
+        /* Code Styling */
+        .reveal code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: var(--terraform-dark);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .reveal pre {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1em 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .reveal pre code {
+            background-color: transparent;
+            border: none;
+            padding: 10px;
+            font-size: 0.6em;
+            line-height: 1.2;
+            color: #f8f8f2;
+            max-height: 350px;
+            overflow-y: auto;
+            display: block;
+            word-wrap: break-word;
+            scrollbar-width: thin;
+            scrollbar-color: var(--terraform-purple) rgba(255,255,255,0.1);
+        }
+
+        /* Layout Components */
+        .reveal .two-column {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            margin: 1em 0;
+        }
+
+        .reveal .three-column {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            margin: 1em 0;
+        }
+
+        .reveal .column {
+            flex: 1;
+            padding: 0;
+            min-width: 0;
+        }
+
+        .reveal .column h4 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--terraform-purple);
+            padding-bottom: 0.3em;
+        }
+
+        /* Alert Boxes */
+        .reveal .highlight {
+            background: linear-gradient(90deg, #fff3cd 0%, #fef7d9 100%);
+            border-left: 6px solid var(--accent-orange);
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+        }
+
+        .reveal .danger {
+            background: linear-gradient(90deg, #f8d7da 0%, #fce4e6 100%);
+            border-left: 6px solid var(--accent-red);
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+        }
+
+        .reveal .success {
+            background: linear-gradient(90deg, #d1ecf1 0%, #ddf2f7 100%);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 0 6px 6px 0;
+            padding: 10px;
+            margin: 8px 0;
+            box-shadow: 0 2px 4px rgba(30, 136, 229, 0.2);
+            font-size: 0.85em;
+        }
+
+        .reveal .info {
+            background: linear-gradient(90deg, #d4edda 0%, #e2f5e7 100%);
+            border-left: 6px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+        }
+
+        .reveal .terraform-brand {
+            background: linear-gradient(135deg, var(--terraform-purple) 0%, #7c4dff 100%);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            color: white;
+            font-size: 0.85em;
+        }
+
+        /* Lab Callout Optimization */
+        .reveal .lab-callout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            overflow: auto;
+        }
+        
+        .reveal .lab-callout h1 {
+            font-size: 1.5em;
+            margin-bottom: 0.2em;
+        }
+        
+        .reveal .lab-callout h2 {
+            font-size: 1.2em;
+            margin-bottom: 0.2em;
+        }
+        
+        .reveal .lab-callout h3 {
+            font-size: 1.0em;
+            margin-bottom: 0.2em;
+        }
+        
+        .reveal .lab-callout ul {
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+        
+        .reveal .lab-callout > div {
+            padding: 10px;
+            max-width: 95%;
+        }
+
+        /* Section Dividers */
+        .reveal .section-divider {
+            background: linear-gradient(90deg, var(--terraform-purple) 0%, #7c4dff 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .reveal .section-divider h2 {
+            color: white;
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        /* Tables */
+        .reveal table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .reveal table th,
+        .reveal table td {
+            border: 1px solid #ddd;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        .reveal table th {
+            background-color: var(--terraform-purple);
+            color: white;
+            font-weight: 600;
+        }
+
+        .reveal table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Lists */
+        .reveal .checklist li::marker {
+            content: "✅ ";
+        }
+
+        .reveal .warning-list li::marker {
+            content: "⚠️ ";
+        }
+
+        .reveal .feature-list li::marker {
+            content: "🚀 ";
+        }
+
+        /* Buttons/Links */
+        .reveal .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--terraform-purple);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .reveal .btn:hover {
+            background-color: var(--terraform-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Progress Indicators */
+        .reveal .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .reveal .progress-fill {
+            background: linear-gradient(90deg, var(--terraform-purple) 0%, #7c4dff 100%);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Enhanced Responsive Design for Better Screen Fit */
+        @media screen and (max-width: 1400px) {
+            .reveal {
+                font-size: 34px;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            .reveal {
+                font-size: 30px;
+            }
+            
+            .reveal .two-column,
+            .reveal .three-column {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .reveal pre code {
+                font-size: 0.65em;
+                max-height: 500px;
+            }
+            
+            .reveal .slides section {
+                padding: 15px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .reveal .two-column,
+            .reveal .three-column {
+                flex-direction: column;
+            }
+            
+            .reveal {
+                font-size: 28px;
+            }
+            
+            .reveal h1 {
+                font-size: 2.2em;
+            }
+            
+            .reveal h2 {
+                font-size: 1.8em;
+            }
+            
+            .reveal h3 {
+                font-size: 1.4em;
+            }
+            
+            .reveal pre code {
+                font-size: 0.6em;
+                max-height: 400px;
+                padding: 15px;
+            }
+            
+            .reveal .slides section {
+                padding: 10px;
+            }
+        }
+
+        /* Content overflow prevention */
+        .reveal section {
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+        
+        .reveal pre {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .reveal table {
+            font-size: 0.8em;
+            overflow-x: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        /* Custom Components */
+        .reveal .terraform-logo {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background-color: var(--terraform-purple);
+            border-radius: 6px;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .reveal .code-block-title {
+            background-color: var(--terraform-dark);
+            color: white;
+            padding: 8px 16px;
+            margin: 20px 0 0 0;
+            border-radius: 6px 6px 0 0;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .reveal .code-block-title + pre {
+            margin-top: 0;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Animation Classes */
+        .reveal .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Speaker Notes */
+        .reveal .notes {
+            font-size: 0.7em;
+            color: #666;
+            font-style: italic;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Title Slide -->
+            <section class="title-slide">
+                <div class="terraform-logo"></div>
+                <h1>Module 2: Mastering Terraform Configuration</h1>
+                <h2>Advanced Configuration Management & Enterprise Best Practices</h2>
+                <div class="progress-bar" style="width: 300px; margin: 30px auto;">
+                    <div class="progress-fill" style="width: 67%;"></div>
+                </div>
+                <p><strong>Course Structure:</strong> Day 2 of 3</p>
+                <p><strong>Focus:</strong> Advanced Configuration Management</p>
+                <p><strong>📊 70% Hands-on | 30% Theory</strong></p>
+                <div class="terraform-brand" style="margin: 20px auto; max-width: 600px;">
+                    <p>🎯 <strong>Focus:</strong> Advanced Terraform patterns, modules, and production-ready configurations</p>
+                </div>
+            </section>
+
+            <!-- Learning Objectives -->
+            <section>
+                <div class="section-divider">
+                    <h2>🎯 Learning Objectives & Outcomes</h2>
+                </div>
+                <div class="terraform-brand">
+                    <h3>🚀 What You'll Master Today</h3>
+                    <p>Transform from basic Terraform user to configuration expert with enterprise-grade skills</p>
+                </div>
+                <div class="two-column">
+                    <div class="column">
+                        <h4>🔧 Technical Skills</h4>
+                        <ul class="feature-list">
+                            <li>Advanced variable patterns & complex type validation</li>
+                            <li>Dynamic data structures & transformation functions</li>
+                            <li>Resource lifecycle management & dependency orchestration</li>
+                            <li>Data sources integration & remote state patterns</li>
+                            <li>Module architecture & composition strategies</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h4>💼 Professional Skills</h4>
+                        <ul class="feature-list">
+                            <li>Error handling & advanced debugging techniques</li>
+                            <li>Production-ready code organization patterns</li>
+                            <li>Security best practices & secrets management</li>
+                            <li>Team collaboration & code maintainability</li>
+                            <li>Enterprise architecture design principles</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="highlight">
+                    <h4>💡 Real-World Application</h4>
+                    <p>Each concept comes with hands-on AWS Cloud9 labs and real enterprise scenarios you'll encounter in production environments.</p>
+                </div>
+            </section>
+
+            <!-- Section 1: Advanced Variables and Outputs -->
+            <section>
+                <section class="section-divider">
+                    <h2>🔧 Section 1: Advanced Variables & Outputs</h2>
+                    <p>Master complex data structures and validation patterns</p>
+                </section>
+
+                <section>
+                    <h3>🏗️ Advanced Variable Patterns</h3>
+                    <div class="info">
+                        <p><strong>Enterprise Reality:</strong> Modern infrastructure requires complex, validated configurations that scale across multiple environments and teams.</p>
+                    </div>
+                    <h4>🔍 Complex Type Validation</h4>
+                    <div class="code-block-title">Environment Configuration with Advanced Validation</div>
+                    <pre><code class="language-hcl">variable "environments" {
+  description = "Multi-environment infrastructure configuration"
+  type = map(object({
+    # Compute Configuration
+    instance_type    = string
+    min_size        = number
+    max_size        = number
+    
+    # Feature Flags
+    enable_logging  = bool
+    enable_backup   = bool
+    enable_monitoring = bool
+    
+    # Security Configuration
+    allowed_cidrs   = list(string)
+    security_groups = list(string)
+    
+    # Cost Control
+    max_monthly_cost = number
+  }))
+  
+  validation {
+    condition = alltrue([
+      for env, config in var.environments :
+      can(regex("^t[2-4]\\.(nano|micro|small|medium)", config.instance_type))
+    ])
+    error_message = "Instance types must be cost-effective t2, t3, or t4 family (nano through medium)."
+  }
+  
+  validation {
+    condition = alltrue([
+      for env, config in var.environments :
+      config.min_size <= config.max_size && config.max_size <= 10
+    ])
+    error_message = "Min size must be <= max size, and max size must be <= 10 for cost control."
+  }
+  
+  validation {
+    condition = alltrue([
+      for env, config in var.environments :
+      config.max_monthly_cost > 0 && config.max_monthly_cost <= 10000
+    ])
+    error_message = "Monthly cost limit must be between $1 and $10,000."
+  }
+}</code></pre>
+                    <div class="highlight">
+                        <p><strong>💡 Pro Tip:</strong> Layer multiple validation rules to catch different types of configuration errors early in the development cycle.</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>⚡ Dynamic Configuration with Locals</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Enterprise Pattern:</strong> Use locals to create computed values that adapt to different environments while maintaining consistency.</p>
+                    </div>
+                    <div class="code-block-title">Advanced Locals Configuration</div>
+                    <pre><code class="language-hcl">locals {
+  # Environment-specific configuration
+  env_config = var.environments[var.current_environment]
+  current_timestamp = formatdate("YYYY-MM-DD-hhmm", timestamp())
+  
+  # Computed naming patterns
+  resource_prefix = "${var.organization}-${var.project_name}-${var.current_environment}"
+  instance_name = "${local.resource_prefix}-web"
+  
+  # Conditional logic for different environments
+  monitoring_enabled = var.current_environment == "production" ? true : local.env_config.enable_monitoring
+  backup_enabled = contains(["production", "staging"], var.current_environment)
+  encryption_enabled = var.current_environment != "development"
+  
+  # Complex data transformations
+  subnets_by_az = {
+    for subnet in var.private_subnets :
+    subnet.availability_zone => {
+      id         = subnet.id
+      cidr_block = subnet.cidr_block
+      tier       = subnet.tier
+    }
+  }
+  
+  # Availability zone distribution
+  az_distribution = {
+    for i, az in data.aws_availability_zones.available.names :
+    az => {
+      private_subnet = cidrsubnet(var.vpc_cidr, 8, i + 10)
+      public_subnet  = cidrsubnet(var.vpc_cidr, 8, i + 20)
+    }
+  }
+  
+  # Comprehensive tagging strategy
+  common_tags = merge(var.default_tags, {
+    Environment     = var.current_environment
+    Project         = var.project_name
+    Organization    = var.organization
+    ManagedBy      = "Terraform"
+    DeployedAt     = local.current_timestamp
+    CostCenter     = local.env_config.cost_center
+    Owner          = local.env_config.owner_email
+    BackupEnabled  = tostring(local.backup_enabled)
+    MonitoringTier = local.monitoring_enabled ? "enhanced" : "basic"
+  })
+  
+  # Security group rules generation
+  ingress_rules = {
+    for rule in var.security_rules :
+    "${rule.name}-${rule.port}" => {
+      from_port   = rule.port
+      to_port     = rule.port
+      protocol    = rule.protocol
+      cidr_blocks = rule.environment == "all" ? ["0.0.0.0/0"] : local.env_config.allowed_cidrs
+      description = "${rule.description} for ${var.current_environment}"
+    }
+  }
+}</code></pre>
+                    <div class="success">
+                        <p><strong>🎯 Best Practice:</strong> Use locals to eliminate code duplication and create single sources of truth for computed values.</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>📊 Advanced Output Patterns</h3>
+                    <div class="info">
+                        <p><strong>Module Integration:</strong> Well-structured outputs are crucial for module composition and cross-stack references in enterprise architectures.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>🏗️ Structured Module Outputs</h4>
+                            <div class="code-block-title">networking-outputs.tf</div>
+                            <pre><code class="language-hcl"># Hierarchical output structure
+output "networking" {
+  description = "Complete networking configuration"
+  value = {
+    # Core Infrastructure
+    vpc = {
+      id         = aws_vpc.main.id
+      cidr_block = aws_vpc.main.cidr_block
+      arn        = aws_vpc.main.arn
+    }
+    
+    # Subnet Information
+    subnets = {
+      private = {
+        ids          = aws_subnet.private[*].id
+        cidr_blocks  = aws_subnet.private[*].cidr_block
+        azs          = aws_subnet.private[*].availability_zone
+      }
+      public = {
+        ids          = aws_subnet.public[*].id
+        cidr_blocks  = aws_subnet.public[*].cidr_block
+        azs          = aws_subnet.public[*].availability_zone
+      }
+    }
+    
+    # Gateway Configuration
+    gateways = {
+      internet = aws_internet_gateway.main.id
+      nat      = aws_nat_gateway.main[*].public_ip
+    }
+    
+    # Route Tables
+    route_tables = {
+      private_ids = aws_route_table.private[*].id
+      public_id   = aws_route_table.public.id
+    }
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>🔒 Sensitive Data Handling</h4>
+                            <div class="code-block-title">security-outputs.tf</div>
+                            <pre><code class="language-hcl"># Sensitive outputs with proper marking
+output "database_connection" {
+  description = "RDS connection details"
+  value = {
+    # Non-sensitive connection info
+    endpoint         = aws_rds_instance.main.endpoint
+    port            = aws_rds_instance.main.port
+    database_name   = aws_rds_instance.main.db_name
+    
+    # Sensitive authentication info
+    credentials = {
+      username = aws_rds_instance.main.username
+      password = aws_rds_instance.main.password
+    }
+    
+    # Connection string template
+    connection_template = "postgresql://${aws_rds_instance.main.username}:[PASSWORD]@${aws_rds_instance.main.endpoint}:${aws_rds_instance.main.port}/${aws_rds_instance.main.db_name}"
+  }
+  sensitive = true
+}
+
+# Conditional outputs
+output "monitoring_endpoints" {
+  description = "Monitoring service endpoints"
+  value = local.monitoring_enabled ? {
+    cloudwatch_log_group = aws_cloudwatch_log_group.app[0].name
+    sns_topic_arn       = aws_sns_topic.alerts[0].arn
+  } : null
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="danger">
+                        <h4>⚠️ Security Warning</h4>
+                        <p>Always mark outputs containing passwords, keys, or tokens as <code>sensitive = true</code>. This prevents them from appearing in logs and console output.</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>📈 Variable Precedence & Source Management</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Enterprise Challenge:</strong> Managing variables across multiple environments, teams, and deployment pipelines requires understanding precedence and source strategies.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <div class="highlight">
+                                <h4>🔍 Precedence Order (Highest → Lowest)</h4>
+                                <ol>
+                                    <li><strong>CLI `-var` flags</strong> (Override everything)</li>
+                                    <li><strong>CLI `-var-file`</strong> (Deployment-specific)</li>
+                                    <li><strong>Environment variables</strong> <code>TF_VAR_*</code></li>
+                                    <li><strong>terraform.tfvars</strong> (Main config)</li>
+                                    <li><strong>*.auto.tfvars</strong> (Auto-loaded, alphabetical)</li>
+                                    <li><strong>Variable defaults</strong> (Fallback values)</li>
+                                </ol>
+                            </div>
+                            <div class="info">
+                                <h4>🎯 Strategic Usage</h4>
+                                <ul>
+                                    <li><strong>Defaults:</strong> Safe fallbacks</li>
+                                    <li><strong>*.auto.tfvars:</strong> Environment configs</li>
+                                    <li><strong>CLI vars:</strong> CI/CD overrides</li>
+                                    <li><strong>ENV vars:</strong> Sensitive values</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <h4>🛠️ Enterprise Variable Strategy</h4>
+                            <div class="code-block-title">Multi-Environment Setup</div>
+                            <pre><code class="language-bash"># Environment-specific variable files
+# dev.auto.tfvars
+environment = "development"
+instance_type = "t2.micro"
+enable_monitoring = false
+max_cost = 100
+
+# prod.auto.tfvars  
+environment = "production"
+instance_type = "t3.large"
+enable_monitoring = true
+max_cost = 5000
+
+# CI/CD Pipeline Variables
+export TF_VAR_deployment_id="${BUILD_NUMBER}"
+export TF_VAR_git_commit="${GIT_COMMIT}"
+export TF_VAR_deployed_by="${BUILD_USER}"
+
+# Override for emergency deployments
+terraform apply \
+  -var="instance_type=t3.2xlarge" \
+  -var="enable_monitoring=true" \
+  -var-file="emergency.tfvars"</code></pre>
+                            <div class="code-block-title">Secure Secrets Management</div>
+                            <pre><code class="language-bash"># Never commit sensitive vars - use env vars
+export TF_VAR_db_password="$(aws secretsmanager get-secret-value --secret-id prod/db/password --query SecretString --output text)"
+export TF_VAR_api_key="$(vault kv get -field=api_key secret/app/keys)"
+
+# Or use external secret management
+terraform apply -var-file=<(aws secretsmanager get-secret-value --secret-id terraform-vars --query SecretString --output text)</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔐 Sensitive Data Management</h3>
+                    <div class="danger">
+                        <p><strong>⚠️ Security Critical:</strong> Never commit sensitive values to version control. Use proper secrets management.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Sensitive Variable Handling</h4>
+                            <pre><code class="language-hcl">variable "database_password" {
+  description = "RDS master password"
+  type        = string
+  sensitive   = true
+}
+
+variable "api_keys" {
+  description = "External API keys"
+  type = map(string)
+  sensitive = true
+  
+  validation {
+    condition = alltrue([
+      for key in values(var.api_keys) : 
+      can(regex("^[A-Za-z0-9]{32,}$", key))
+    ])
+    error_message = "API keys must be at least 32 characters."
+  }
+}
+
+# Outputs with sensitive data
+output "connection_string" {
+  value = "postgresql://${var.db_user}:${var.database_password}@${aws_db_instance.main.endpoint}/app"
+  sensitive = true
+  description = "Database connection string"
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Environment Variable Integration</h4>
+                            <pre><code class="language-bash"># Set sensitive variables via environment
+export TF_VAR_database_password="$(aws secretsmanager get-secret-value \
+  --secret-id prod/db/password \
+  --query SecretString --output text)"
+
+export TF_VAR_api_keys='{"stripe":"sk_live_...", "datadog":"dd_..."}'
+
+# Or use AWS Systems Manager
+export TF_VAR_database_password="$(aws ssm get-parameter \
+  --name /production/database/password \
+  --with-decryption \
+  --query Parameter.Value --output text)"</code></pre>
+                            
+                            <h4>Secrets Management Best Practices</h4>
+                            <ul>
+                                <li>✅ Use environment variables for CI/CD</li>
+                                <li>✅ Integrate with secret stores (Vault, AWS Secrets Manager)</li>
+                                <li>✅ Rotate credentials regularly</li>
+                                <li>✅ Audit access to sensitive values</li>
+                                <li>✅ Use separate state files for sensitive resources</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>📊 Advanced Output Patterns</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Enterprise Pattern:</strong> Structure outputs for easy consumption by other teams and systems.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Structured Output Objects</h4>
+                            <pre><code class="language-hcl">output "network_configuration" {
+  description = "Complete network setup for downstream consumption"
+  value = {
+    vpc = {
+      id         = aws_vpc.main.id
+      cidr_block = aws_vpc.main.cidr_block
+      region     = data.aws_region.current.name
+    }
+    
+    subnets = {
+      public = [for s in aws_subnet.public : {
+        id               = s.id
+        cidr_block       = s.cidr_block
+        availability_zone = s.availability_zone
+      }]
+      private = [for s in aws_subnet.private : {
+        id               = s.id
+        cidr_block       = s.cidr_block
+        availability_zone = s.availability_zone
+      }]
+    }
+    
+    security = {
+      bastion_sg_id = aws_security_group.bastion.id
+      web_sg_id     = aws_security_group.web.id
+      db_sg_id      = aws_security_group.database.id
+    }
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Conditional Outputs</h4>
+                            <pre><code class="language-hcl"># Output only in specific environments
+output "debug_information" {
+  description = "Debugging info for non-production"
+  value = var.environment != "production" ? {
+    state_bucket = data.terraform_remote_state.backend.outputs.bucket_name
+    workspace    = terraform.workspace
+    caller_arn   = data.aws_caller_identity.current.arn
+  } : null
+}
+
+# Preconditions for outputs
+output "application_endpoint" {
+  description = "Application access URL"
+  value       = "https://${aws_route53_record.app.fqdn}"
+  
+  precondition {
+    condition     = aws_lb.main.load_balancer_type == "application"
+    error_message = "Application endpoint requires ALB."
+  }
+}</code></pre>
+                            
+                            <h4>Output Documentation</h4>
+                            <div class="success">
+                                <p><strong>Best Practice:</strong> Always include descriptions and structure outputs logically for API-like consumption.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 5 Callout -->
+            <section class="lab-callout" data-background-color="#17a2b8">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">☁️</span> State Management Challenge!</h1>
+                    <h2><span class="emoji">🗄️</span> Lab 5: Remote State Management</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Set up S3 backend with DynamoDB locking</li>
+                            <li>✅ Migrate from local to remote state safely</li>
+                            <li>✅ Use workspaces for multiple environments</li>
+                            <li>✅ Share state data across infrastructure stacks</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build production-ready state management for team collaboration!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🌊 Master State Management!</h2>
+                </div>
+            </section>
+
+            <!-- Section 2: Resource Dependencies and Lifecycle -->
+            <section>
+                <section class="section-divider">
+                    <h2>🔗 Section 2: Resource Dependencies & Lifecycle</h2>
+                    <p>Master resource orchestration and lifecycle management patterns</p>
+                </section>
+
+                <section>
+                    <h3>🔗 Understanding Resource Dependencies</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Dependency Orchestration:</strong> Terraform's dependency graph determines resource creation order. Understanding implicit vs explicit dependencies is crucial for complex infrastructure.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>⚡ Implicit Dependencies</h4>
+                            <div class="success">
+                                <p><strong>Automatic Detection:</strong> Terraform analyzes resource references</p>
+                            </div>
+                            <div class="code-block-title">Automatic Dependency Chain</div>
+                            <pre><code class="language-hcl"># VPC created first
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  tags = {
+    Name = "${var.project_name}-vpc"
+  }
+}
+
+# Internet Gateway depends on VPC
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id  # ← Creates dependency
+  
+  tags = {
+    Name = "${var.project_name}-igw"
+  }
+}
+
+# Subnet depends on VPC
+resource "aws_subnet" "web" {
+  vpc_id            = aws_vpc.main.id  # ← Creates dependency
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  
+  map_public_ip_on_launch = true
+  
+  tags = {
+    Name = "${var.project_name}-public-1"
+    Type = "public"
+  }
+}
+
+# Route table depends on VPC and IGW
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id  # ← VPC dependency
+  
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id  # ← IGW dependency
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>🎯 Explicit Dependencies</h4>
+                            <div class="highlight">
+                                <p><strong>Manual Control:</strong> Force dependencies when Terraform can't detect them</p>
+                            </div>
+                            <div class="code-block-title">Complex Dependency Management</div>
+                            <pre><code class="language-hcl"># EC2 instance with explicit dependencies
+resource "aws_instance" "web" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.web.id
+  vpc_security_group_ids = [aws_security_group.web.id]
+  
+  # Explicit dependencies for proper ordering
+  depends_on = [
+    aws_security_group.web,        # Security must be ready
+    aws_iam_role_policy.s3_access, # IAM permissions ready
+    aws_s3_bucket.app_data,        # S3 bucket exists
+    aws_nat_gateway.main           # NAT gateway operational
+  ]
+  
+  # User data script that needs S3 access
+  user_data = <<-EOF
+    #!/bin/bash
+    aws s3 cp s3://${aws_s3_bucket.app_data.id}/bootstrap.sh /tmp/
+    chmod +x /tmp/bootstrap.sh
+    /tmp/bootstrap.sh
+  EOF
+  
+  tags = {
+    Name = "${var.project_name}-web-server"
+    Role = "web"
+  }
+}
+
+# Application Load Balancer with health check dependencies
+resource "aws_lb" "main" {
+  name               = "${var.project_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = aws_subnet.public[*].id
+  security_groups    = [aws_security_group.alb.id]
+  
+  depends_on = [
+    aws_internet_gateway.main,  # Internet access required
+    aws_route_table_association.public  # Routing configured
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="info">
+                        <h4>🔍 When to Use Explicit Dependencies</h4>
+                        <ul>
+                            <li><strong>IAM Permissions:</strong> Ensure roles/policies exist before resource creation</li>
+                            <li><strong>Network Readiness:</strong> Guarantee routing/gateways are operational</li>
+                            <li><strong>External Resources:</strong> Dependencies on resources outside Terraform control</li>
+                            <li><strong>Timing Issues:</strong> Resources that need time to become fully operational</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔄 Advanced Resource Lifecycle Management</h3>
+                    <div class="info">
+                        <p><strong>Production Reality:</strong> Lifecycle rules prevent downtime, data loss, and configuration drift in enterprise environments.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>🛡️ Protection Strategies</h4>
+                            <div class="code-block-title">Critical Resource Protection</div>
+                            <pre><code class="language-hcl"># Database with comprehensive protection
+resource "aws_rds_instance" "production" {
+  identifier = "${var.project_name}-prod-db"
+  engine     = "postgresql"
+  engine_version = "14.9"
+  instance_class = "db.t3.large"
+  
+  allocated_storage     = 100
+  max_allocated_storage = 1000
+  storage_encrypted     = true
+  
+  db_name  = var.database_name
+  username = var.database_username
+  password = var.database_password
+  
+  backup_retention_period = 30
+  backup_window          = "03:00-04:00"
+  maintenance_window     = "sun:04:00-sun:05:00"
+  
+  skip_final_snapshot = false
+  final_snapshot_identifier = "${var.project_name}-prod-db-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  
+  lifecycle {
+    # Critical: Prevent accidental deletion
+    prevent_destroy = true
+    
+    # Ignore password changes (managed externally)
+    ignore_changes = [
+      password,
+      final_snapshot_identifier
+    ]
+  }
+  
+  tags = {
+    Name        = "${var.project_name}-production-database"
+    Environment = "production"
+    Critical    = "true"
+    BackupTier  = "tier-1"
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>🔄 Zero-Downtime Updates</h4>
+                            <div class="code-block-title">Application Server with Rolling Updates</div>
+                            <pre><code class="language-hcl"># Web server with zero-downtime replacement
+resource "aws_launch_template" "web" {
+  name_prefix   = "${var.project_name}-web-"
+  image_id      = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
+  
+  vpc_security_group_ids = [aws_security_group.web.id]
+  
+  user_data = base64encode(templatefile("userdata.sh", {
+    app_version = var.app_version
+    environment = var.environment
+  }))
+  
+  tag_specifications {
+    resource_type = "instance"
+    tags = local.common_tags
+  }
+  
+  lifecycle {
+    # Replace launch template before updating ASG
+    create_before_destroy = true
+    
+    # Force replacement when user data changes
+    replace_triggered_by = [
+      var.app_version
+    ]
+  }
+}
+
+resource "aws_autoscaling_group" "web" {
+  name                = "${var.project_name}-web-asg"
+  vpc_zone_identifier = aws_subnet.private[*].id
+  target_group_arns   = [aws_lb_target_group.web.arn]
+  health_check_type   = "ELB"
+  health_check_grace_period = 300
+  
+  min_size         = var.min_size
+  max_size         = var.max_size
+  desired_capacity = var.desired_capacity
+  
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+  
+  # Lifecycle for zero-downtime deployments
+  lifecycle {
+    create_before_destroy = true
+    
+    # Ignore desired capacity changes (managed by auto-scaling)
+    ignore_changes = [desired_capacity]
+  }
+  
+  # Rolling update configuration
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+      instance_warmup       = 300
+    }
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="danger">
+                        <h4>⚠️ Lifecycle Best Practices</h4>
+                        <ul class="warning-list">
+                            <li><strong>prevent_destroy:</strong> Use on databases, state stores, and critical data resources</li>
+                            <li><strong>create_before_destroy:</strong> Essential for load-balanced services and DNS records</li>
+                            <li><strong>ignore_changes:</strong> Use sparingly - can hide important configuration drift</li>
+                            <li><strong>replace_triggered_by:</strong> Force replacement when dependencies change significantly</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔢 Count vs For_Each: Enterprise Patterns</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Scale Challenge:</strong> Choose the right iteration pattern for maintainable, scalable infrastructure that adapts to changing requirements.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>🔢 Count: Sequential Resources</h4>
+                            <div class="success">
+                                <p><strong>Best for:</strong> Fixed-size lists, sequential naming, simple replication</p>
+                            </div>
+                            <div class="code-block-title">Multi-AZ Subnet Creation</div>
+                            <pre><code class="language-hcl"># Private subnets across AZs
+resource "aws_subnet" "private" {
+  count = length(data.aws_availability_zones.available.names)
+  
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 10)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  
+  map_public_ip_on_launch = false
+  
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-private-${count.index + 1}"
+    Type = "private"
+    AZ   = data.aws_availability_zones.available.names[count.index]
+    Tier = "application"
+  })
+}
+
+# NAT Gateways for each private subnet
+resource "aws_nat_gateway" "private" {
+  count = var.multi_az_nat ? length(aws_subnet.private) : 1
+  
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+  
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-nat-${count.index + 1}"
+    AZ   = aws_subnet.public[count.index].availability_zone
+  })
+  
+  depends_on = [aws_internet_gateway.main]
+}</code></pre>
+                            <div class="highlight">
+                                <p><strong>💡 Pro Tip:</strong> Count is ideal when you need predictable indexing and resource ordering.</p>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <h4>🔁 For_Each: Dynamic Resources</h4>
+                            <div class="info">
+                                <p><strong>Best for:</strong> Named resources, complex configurations, flexible scaling</p>
+                            </div>
+                            <div class="code-block-title">Dynamic Security Group Rules</div>
+                            <pre><code class="language-hcl"># Complex security rules from variable
+variable "security_rules" {
+  type = map(object({
+    description = string
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+    source_sg   = optional(string)
+  }))
+  default = {
+    "web_http" = {
+      description = "HTTP access from ALB"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = []
+      source_sg   = "alb"
+    },
+    "web_https" = {
+      description = "HTTPS access from ALB"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = []
+      source_sg   = "alb"
+    },
+    "ssh_admin" = {
+      description = "SSH access from admin network"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["10.0.0.0/8"]
+      source_sg   = null
+    }
+  }
+}
+
+resource "aws_security_group_rule" "ingress" {
+  for_each = var.security_rules
+  
+  type              = "ingress"
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  protocol          = each.value.protocol
+  description       = each.value.description
+  security_group_id = aws_security_group.web.id
+  
+  # Conditional source configuration
+  cidr_blocks = length(each.value.cidr_blocks) > 0 ? each.value.cidr_blocks : null
+  source_security_group_id = each.value.source_sg != null ? aws_security_group[each.value.source_sg].id : null
+}</code></pre>
+                            <div class="highlight">
+                                <p><strong>💡 Pro Tip:</strong> For_each provides stable resource addressing even when the middle item is removed.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="danger">
+                        <h4>⚠️ Common Pitfalls</h4>
+                        <table>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Problem</th>
+                                <th>Solution</th>
+                            </tr>
+                            <tr>
+                                <td><strong>Count</strong></td>
+                                <td>Removing middle items causes resource recreation</td>
+                                <td>Use for_each for stable resource names</td>
+                            </tr>
+                            <tr>
+                                <td><strong>For_each</strong></td>
+                                <td>Cannot use with unknown values at plan time</td>
+                                <td>Use known values or locals with known keys</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Both</strong></td>
+                                <td>Cannot mix count and for_each on same resource</td>
+                                <td>Choose one pattern per resource type</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>⚡ Dynamic Blocks: Flexible Resource Configuration</h3>
+                    <div class="info">
+                        <p><strong>Advanced Pattern:</strong> Dynamic blocks allow conditional and iterative configuration within resources, perfect for complex enterprise requirements.</p>
+                    </div>
+                    <div class="code-block-title">Enterprise Security Group with Dynamic Configuration</div>
+                    <pre><code class="language-hcl"># Complex security group with multiple dynamic blocks
+resource "aws_security_group" "application" {
+  name_prefix = "${var.project_name}-${var.environment}-app-"
+  vpc_id      = var.vpc_id
+  description = "Application security group with dynamic rules"
+  
+  # Dynamic ingress rules based on environment
+  dynamic "ingress" {
+    for_each = var.ingress_rules
+    content {
+      description = "${ingress.value.description} (${var.environment})"
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      
+      # Conditional CIDR blocks based on environment
+      cidr_blocks = var.environment == "production" ? 
+        ingress.value.prod_cidrs : 
+        ingress.value.dev_cidrs
+      
+      # Optional security group references
+      security_groups = lookup(ingress.value, "source_security_groups", [])
+    }
+  }
+  
+  # Environment-specific egress rules
+  dynamic "egress" {
+    for_each = var.environment == "production" ? var.prod_egress_rules : var.dev_egress_rules
+    content {
+      description = egress.value.description
+      from_port   = egress.value.from_port
+      to_port     = egress.value.to_port
+      protocol    = egress.value.protocol
+      cidr_blocks = egress.value.cidr_blocks
+    }
+  }
+  
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-application-sg"
+    Type = "application"
+  })
+}
+
+# Advanced Launch Template with dynamic block patterns
+resource "aws_launch_template" "app" {
+  name_prefix   = "${var.project_name}-app-"
+  image_id      = data.aws_ami.app.id
+  instance_type = var.instance_type
+  key_name      = var.key_pair_name
+  
+  vpc_security_group_ids = [aws_security_group.application.id]
+  
+  # Dynamic network interfaces for multi-ENI instances
+  dynamic "network_interfaces" {
+    for_each = var.multi_eni_config != null ? [var.multi_eni_config] : []
+    content {
+      associate_public_ip_address = network_interfaces.value.public_ip
+      subnet_id                   = network_interfaces.value.subnet_id
+      security_groups            = network_interfaces.value.security_groups
+      device_index               = network_interfaces.value.device_index
+    }
+  }
+  
+  # Dynamic EBS block devices
+  dynamic "block_device_mappings" {
+    for_each = var.additional_ebs_volumes
+    content {
+      device_name = block_device_mappings.key
+      ebs {
+        volume_size           = block_device_mappings.value.size
+        volume_type           = block_device_mappings.value.type
+        encrypted            = var.environment == "production" ? true : block_device_mappings.value.encrypted
+        delete_on_termination = block_device_mappings.value.delete_on_termination
+        
+        # Conditional IOPS for high-performance volumes
+        iops = block_device_mappings.value.type == "gp3" ? block_device_mappings.value.iops : null
+      }
+    }
+  }
+  
+  # Dynamic tags for resources created from this template
+  dynamic "tag_specifications" {
+    for_each = ["instance", "volume", "network-interface"]
+    content {
+      resource_type = tag_specifications.value
+      tags = merge(local.common_tags, {
+        Name = "${var.project_name}-${var.environment}-app"
+        LaunchedFrom = "launch-template"
+      })
+    }
+  }
+}</code></pre>
+                    <div class="two-column">
+                        <div class="column">
+                            <div class="success">
+                                <h4>🚀 Dynamic Block Benefits</h4>
+                                <ul>
+                                    <li>Conditional resource configuration</li>
+                                    <li>Environment-specific adaptability</li>
+                                    <li>Reduced code duplication</li>
+                                    <li>Complex nested structures</li>
+                                    <li>Runtime configuration flexibility</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="highlight">
+                                <h4>💡 Best Practices</h4>
+                                <ul>
+                                    <li>Use for optional resource blocks</li>
+                                    <li>Combine with conditional expressions</li>
+                                    <li>Keep iterator names descriptive</li>
+                                    <li>Test with different input combinations</li>
+                                    <li>Document complex dynamic patterns</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔄 Advanced Lifecycle Management</h3>
+                    <div class="terraform-brand">
+                        <p><strong>Production Requirement:</strong> Control resource replacement behavior to prevent service disruptions and data loss.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Lifecycle Rules in Practice</h4>
+                            <pre><code class="language-hcl">resource "aws_instance" "critical_server" {
+  ami           = data.aws_ami.latest.id
+  instance_type = var.instance_type
+  
+  lifecycle {
+    # Prevent accidental deletion
+    prevent_destroy = true
+    
+    # Create new before destroying old
+    create_before_destroy = true
+    
+    # Ignore AMI changes (managed externally)
+    ignore_changes = [ami, user_data]
+    
+    # Replace only when specific changes occur
+    replace_triggered_by = [
+      aws_security_group.web.id
+    ]
+  }
+  
+  # Custom condition for replacement
+  precondition {
+    condition = can(regex("^t[23]\\.", var.instance_type))
+    error_message = "Instance must be T2 or T3 family."
+  }
+  
+  postcondition {
+    condition = self.instance_state == "running"
+    error_message = "Instance failed to start properly."
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Data Persistence Patterns</h4>
+                            <pre><code class="language-hcl"># RDS with snapshot on deletion
+resource "aws_db_instance" "production" {
+  identifier = "${var.project}-db"
+  
+  # Snapshot before deletion
+  skip_final_snapshot = false
+  final_snapshot_identifier = "${var.project}-final-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  
+  # Prevent deletion in production
+  deletion_protection = var.environment == "production"
+  
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [password]
+  }
+}
+
+# EBS Volume with lifecycle management
+resource "aws_ebs_volume" "data" {
+  availability_zone = var.az
+  size             = var.volume_size
+  type             = "gp3"
+  encrypted        = true
+  
+  lifecycle {
+    prevent_destroy = true
+    
+    # Prevent shrinking
+    precondition {
+      condition = var.volume_size >= 100
+      error_message = "Volume must be at least 100GB."
+    }
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🎯 Resource Targeting and Partial Applies</h3>
+                    <div class="danger">
+                        <p><strong>⚠️ Use with Caution:</strong> Resource targeting can create state inconsistencies. Use only for debugging or emergency fixes.</p>
+                    </div>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Targeted Operations</h4>
+                            <pre><code class="language-bash"># Apply only specific resources
+terraform apply -target=aws_instance.web
+terraform apply -target=module.networking
+
+# Destroy specific resources
+terraform destroy -target=aws_instance.temp
+
+# Plan with targets
+terraform plan -target=aws_security_group.web \
+               -target=aws_security_group_rule.web_ingress
+
+# Refresh specific resources
+terraform apply -refresh-only \
+                -target=data.aws_ami.latest</code></pre>
+                            
+                            <h4>When to Use Targeting</h4>
+                            <ul>
+                                <li>🔧 Debugging resource-specific issues</li>
+                                <li>🚨 Emergency rollbacks</li>
+                                <li>🔄 Incremental migrations</li>
+                                <li>⚡ Testing individual changes</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>Resource Replacement Strategies</h4>
+                            <pre><code class="language-bash"># Force replacement of a resource
+terraform apply -replace=aws_instance.web
+
+# Taint resource for replacement
+terraform taint aws_instance.web
+terraform apply
+
+# Untaint if mistake
+terraform untaint aws_instance.web
+
+# Import existing resources
+terraform import aws_instance.existing i-1234567890abcdef0
+
+# Remove from state without destroying
+terraform state rm aws_instance.old</code></pre>
+                            
+                            <div class="highlight">
+                                <p><strong>💡 Best Practice:</strong> Always run `terraform plan` after targeted operations to ensure state consistency.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 6 Callout -->
+            <section class="lab-callout" data-background-color="#6610f2">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🔐</span> Advanced State Mastery!</h1>
+                    <h2><span class="emoji">🗂️</span> Lab 6: Enterprise State Management Patterns</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Implement state file encryption and versioning</li>
+                            <li>✅ Configure cross-region state replication</li>
+                            <li>✅ Set up state file migration strategies</li>
+                            <li>✅ Build multi-account state management</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Master enterprise-grade state management!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🔒 Secure State Management!</h2>
+                </div>
+            </section>
+
+            <!-- Section 3: Data Sources and Remote State -->
+            <section>
+                <section class="section-divider">
+                    <h2>📊 Section 3: Data Sources & Remote State</h2>
+                    <p>Integrate existing infrastructure and enable cross-stack collaboration</p>
+                </section>
+
+                <section>
+                    <h3>Data Sources Patterns</h3>
+                    <pre><code class="language-hcl"># Get latest AMI
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+  
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+  
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# Get existing VPC by tags
+data "aws_vpc" "existing" {
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Get all availability zones
+data "aws_availability_zones" "available" {
+  state = "available"
+  
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Remote State Data Source</h3>
+                    <pre><code class="language-hcl"># Reference another Terraform state
+data "terraform_remote_state" "network" {
+  backend = "s3"
+  config = {
+    bucket = "my-terraform-state"
+    key    = "network/terraform.tfstate"
+    region = "us-east-2"
+  }
+}
+
+# Use remote state outputs
+resource "aws_instance" "app" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  subnet_id              = data.terraform_remote_state.network.outputs.private_subnet_ids[0]
+  vpc_security_group_ids = [data.terraform_remote_state.network.outputs.app_security_group_id]
+  
+  tags = {
+    Name = "app-server"
+  }
+}</code></pre>
+                    <div class="info">
+                        <strong>Best Practice:</strong> Structure your infrastructure into logical layers (network, security, compute) with separate state files.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Remote State Configuration</h3>
+                    <pre><code class="language-hcl"># Backend configuration
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "infrastructure/production/terraform.tfstate"
+    region         = "us-east-2"
+    encrypt        = true
+    dynamodb_table = "terraform-state-lock"
+  }
+}</code></pre>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Benefits</h4>
+                            <ul>
+                                <li>Team collaboration</li>
+                                <li>State locking</li>
+                                <li>Backup and versioning</li>
+                                <li>Security and encryption</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>Configuration Options</h4>
+                            <ul>
+                                <li>S3 + DynamoDB (AWS)</li>
+                                <li>Azure Storage</li>
+                                <li>GCS (Google Cloud)</li>
+                                <li>Consul (HashiCorp)</li>
+                                <li>etcd (Kubernetes)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 7 Callout -->
+            <section class="lab-callout" data-background-color="#e83e8c">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🚀</span> Advanced Automation Challenge!</h1>
+                    <h2><span class="emoji">⚙️</span> Lab 7: Advanced Patterns and CI/CD</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Implement advanced configuration patterns and structures</li>
+                            <li>✅ Set up GitHub Actions CI/CD pipeline for Terraform</li>
+                            <li>✅ Add automated validation and security scanning</li>
+                            <li>✅ Implement policy as code governance</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Create a complete automated deployment pipeline!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🔧 Automate Everything!</h2>
+                </div>
+            </section>
+
+            <!-- Section 4: Introduction to Modules -->
+            <section>
+                <section>
+                    <h2>Section 4: Introduction to Terraform Modules</h2>
+                </section>
+
+                <section>
+                    <h3>What are Terraform Modules?</h3>
+                    <div class="success">
+                        <strong>Modules</strong> are containers for multiple resources that are used together. They enable you to create reusable components and organize your Terraform code.
+                    </div>
+                    <h4>Benefits:</h4>
+                    <ul>
+                        <li><strong>Reusability:</strong> Use the same module across environments</li>
+                        <li><strong>Organization:</strong> Logical grouping of resources</li>
+                        <li><strong>Abstraction:</strong> Hide complexity behind simple interfaces</li>
+                        <li><strong>Consistency:</strong> Standardize infrastructure patterns</li>
+                        <li><strong>Testing:</strong> Test modules independently</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>Module Structure</h3>
+                    <pre><code class="language-text">modules/
+├── networking/
+│   ├── main.tf          # Primary resource definitions
+│   ├── variables.tf     # Input variable declarations
+│   ├── outputs.tf       # Output value declarations
+│   ├── versions.tf      # Provider requirements
+│   └── README.md        # Module documentation
+├── security/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── versions.tf
+└── compute/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    └── versions.tf</code></pre>
+                </section>
+
+                <section>
+                    <h3>Creating a Simple Module</h3>
+                    <h4>modules/networking/variables.tf</h4>
+                    <pre><code class="language-hcl">variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "availability_zones" {
+  description = "List of AZs to use"
+  type        = list(string)
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+}
+
+variable "tags" {
+  description = "Common tags for all resources"
+  type        = map(string)
+  default     = {}
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Main Configuration</h3>
+                    <h4>modules/networking/main.tf</h4>
+                    <pre><code class="language-hcl">resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-vpc"
+  })
+}
+
+resource "aws_subnet" "private" {
+  count = length(var.availability_zones)
+  
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
+  availability_zone = var.availability_zones[count.index]
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-private-${count.index + 1}"
+    Type = "private"
+  })
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-igw"
+  })
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Outputs</h3>
+                    <h4>modules/networking/outputs.tf</h4>
+                    <pre><code class="language-hcl">output "vpc_id" {
+  description = "ID of the VPC"
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr_block" {
+  description = "CIDR block of the VPC"
+  value       = aws_vpc.main.cidr_block
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = aws_subnet.private[*].id
+}
+
+output "internet_gateway_id" {
+  description = "ID of the Internet Gateway"
+  value       = aws_internet_gateway.main.id
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Using Modules</h3>
+                    <pre><code class="language-hcl">module "networking" {
+  source = "./modules/networking"
+  
+  vpc_cidr           = "10.0.0.0/16"
+  availability_zones = ["us-east-2a", "us-east-2b", "us-east-2c"]
+  environment        = var.environment
+  
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "Terraform"
+  }
+}
+
+# Reference module outputs
+resource "aws_instance" "web" {
+  ami       = data.aws_ami.ubuntu.id
+  subnet_id = module.networking.private_subnet_ids[0]
+  
+  tags = {
+    Name = "${var.environment}-web-server"
+  }
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Sources</h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Local Modules</h4>
+                            <pre><code class="language-hcl">module "networking" {
+  source = "./modules/networking"
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Remote Modules</h4>
+                            <pre><code class="language-hcl"># Git repository
+module "vpc" {
+  source = "git::https://github.com/company/terraform-modules.git//networking?ref=v1.0.0"
+}
+
+# Terraform Registry
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 3.0"
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="highlight">
+                        <strong>Best Practice:</strong> Always pin module versions in production to ensure consistency.
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 8 Callout -->
+            <section class="lab-callout" data-background-color="#20c997">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🌐</span> Networking Architecture Challenge!</h1>
+                    <h2><span class="emoji">🏗️</span> Lab 8: Advanced Networking with VPC</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Design multi-tier VPC with public/private/database subnets</li>
+                            <li>✅ Implement Network ACLs and advanced security patterns</li>
+                            <li>✅ Configure VPC endpoints and hybrid connectivity</li>
+                            <li>✅ Optimize network performance and cost</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build production-grade network infrastructure!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🌊 Complete Day 2 Mastery!</h2>
+                </div>
+            </section>
+
+            <!-- Section 5: Error Handling and Debugging -->
+            <section>
+                <section>
+                    <h2>Section 5: Error Handling and Debugging</h2>
+                </section>
+
+                <section>
+                    <h3>Common Error Types</h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Syntax Errors</h4>
+                            <ul>
+                                <li>Invalid HCL syntax</li>
+                                <li>Missing brackets/quotes</li>
+                                <li>Incorrect block structure</li>
+                            </ul>
+                            <h4>Configuration Errors</h4>
+                            <ul>
+                                <li>Invalid resource arguments</li>
+                                <li>Type mismatches</li>
+                                <li>Circular dependencies</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>Runtime Errors</h4>
+                            <ul>
+                                <li>API authentication issues</li>
+                                <li>Resource conflicts</li>
+                                <li>Quota limits</li>
+                            </ul>
+                            <h4>State Errors</h4>
+                            <ul>
+                                <li>State file corruption</li>
+                                <li>Resource drift</li>
+                                <li>State locking issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Debugging Techniques</h3>
+                    <pre><code class="language-bash"># Enable debug logging
+export TF_LOG=DEBUG
+export TF_LOG_PATH=terraform.log
+terraform plan
+
+# Validate configuration
+terraform validate
+
+# Check formatting
+terraform fmt -check
+
+# Detailed error output
+terraform plan -detailed-exitcode
+
+# Target specific resources
+terraform plan -target=aws_instance.web</code></pre>
+                </section>
+
+                <section>
+                    <h3>Error Prevention Strategies</h3>
+                    <div class="info">
+                        <h4>Validation Best Practices</h4>
+                        <ul>
+                            <li>Use variable validation rules</li>
+                            <li>Implement provider version constraints</li>
+                            <li>Add lifecycle rules for critical resources</li>
+                            <li>Use data sources to verify external dependencies</li>
+                        </ul>
+                    </div>
+                    <pre><code class="language-hcl">variable "environment" {
+  description = "Environment name"
+  type        = string
+  
+  validation {
+    condition     = can(regex("^(dev|staging|prod)$", var.environment))
+    error_message = "Environment must be dev, staging, or prod."
+  }
+}
+
+# Check for existing resources before creating
+data "aws_vpc" "existing" {
+  count = var.create_vpc ? 0 : 1
+  tags = {
+    Name = "${var.environment}-vpc"
+  }
+}</code></pre>
+                </section>
+            </section>
+
+            <!-- Hands-on Activities -->
+            <section>
+                <section>
+                    <h2>🛠️ Hands-on Activities</h2>
+                </section>
+
+                <section>
+                    <h3>Lab 2: Advanced Variable Management</h3>
+                    <div class="success">
+                        <p><strong>Focus:</strong> Advanced Configuration Patterns</p>
+                        <p><strong>Objective:</strong> Master advanced variable patterns and data transformations</p>
+                    </div>
+                    <h4>What you'll build:</h4>
+                    <ul>
+                        <li>Complex variable validation rules</li>
+                        <li>Environment-specific configurations</li>
+                        <li>Dynamic resource generation with for_each</li>
+                        <li>Advanced locals and data transformations</li>
+                    </ul>
+                    <p><em>Detailed lab instructions in lab2_advanced_variable_management.md</em></p>
+                </section>
+
+                <section>
+                    <h3>Lab 3: Creating and Using Modules</h3>
+                    <div class="success">
+                        <p><strong>Focus:</strong> Real-World Applications</p>
+                        <p><strong>Objective:</strong> Create reusable Terraform modules</p>
+                    </div>
+                    <h4>What you'll build:</h4>
+                    <ul>
+                        <li>Networking module with VPC, subnets, and gateways</li>
+                        <li>Security module with security groups</li>
+                        <li>Compute module using the other modules</li>
+                        <li>Module composition and dependency management</li>
+                    </ul>
+                    <p><em>Detailed lab instructions in lab3_creating_using_modules.md</em></p>
+                </section>
+            </section>
+
+            <!-- Best Practices -->
+            <section>
+                <section>
+                    <h2>Terraform Best Practices</h2>
+                </section>
+
+                <section>
+                    <h3>Code Organization</h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>File Structure</h4>
+                            <pre><code class="language-text">├── main.tf           # Primary resources
+├── variables.tf      # Input variables
+├── outputs.tf        # Output values
+├── versions.tf       # Provider requirements
+├── locals.tf         # Local values
+├── data.tf           # Data sources
+├── terraform.tfvars  # Variable values
+└── modules/          # Custom modules</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Naming Conventions</h4>
+                            <ul>
+                                <li>Use descriptive resource names</li>
+                                <li>Follow consistent patterns</li>
+                                <li>Use underscores in identifiers</li>
+                                <li>Prefix with resource type if helpful</li>
+                            </ul>
+                            <pre><code class="language-hcl"># Good
+resource "aws_instance" "web_server" {
+  # ...
+}
+
+# Better with context
+resource "aws_instance" "web_server_primary" {
+  # ...
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Version Management</h3>
+                    <pre><code class="language-hcl">terraform {
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"  # Allow patch updates
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.4.3"   # Pin exact version for stability
+    }
+  }
+}</code></pre>
+                    <div class="highlight">
+                        <strong>Best Practices:</strong>
+                        <ul>
+                            <li>Pin provider versions in production</li>
+                            <li>Use version constraints appropriately</li>
+                            <li>Test provider upgrades in staging first</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Security Best Practices</h3>
+                    <div class="danger">
+                        <h4>Never commit sensitive data:</h4>
+                        <ul>
+                            <li>API keys or passwords in .tf files</li>
+                            <li>terraform.tfvars with secrets</li>
+                            <li>State files with sensitive outputs</li>
+                        </ul>
+                    </div>
+                    <pre><code class="language-hcl"># Use AWS Secrets Manager
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = "database-password"
+}
+
+# Mark sensitive outputs
+output "db_password" {
+  value     = data.aws_secretsmanager_secret_version.db_password.secret_string
+  sensitive = true
+}
+
+# Use environment variables
+variable "api_key" {
+  description = "API key (set via TF_VAR_api_key)"
+  type        = string
+  sensitive   = true
+}</code></pre>
+                </section>
+            </section>
+
+            <!-- Summary -->
+            <section>
+                <section>
+                    <h2>Module 2 Summary</h2>
+                    <h3>Key Takeaways</h3>
+                    <ul>
+                        <li><strong>Advanced Variables:</strong> Complex types, validation, and dynamic configuration</li>
+                        <li><strong>Dependencies:</strong> Understanding implicit/explicit dependencies and lifecycle management</li>
+                        <li><strong>Data Sources:</strong> Leverage existing resources and remote state</li>
+                        <li><strong>Modules:</strong> Create reusable, maintainable infrastructure components</li>
+                        <li><strong>Error Handling:</strong> Debug effectively and prevent common issues</li>
+                        <li><strong>Best Practices:</strong> Organize code, manage versions, and maintain security</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>What's Next?</h2>
+                    <h3>Module 3: Advanced Terraform Techniques</h3>
+                    <ul>
+                        <li>Multi-cloud and hybrid infrastructure</li>
+                        <li>Advanced state management and workspaces</li>
+                        <li>CI/CD integration and automation</li>
+                        <li>Policy as code and governance</li>
+                        <li>Performance optimization and scaling</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Questions & Discussion</h2>
+                    <div style="text-align: center; margin-top: 50px;">
+                        <h3>Ready for the hands-on labs?</h3>
+                        <p>Lab 2: Advanced Variable Management</p>
+                        <p>Lab 3: Creating and Using Modules</p>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/notes/notes.min.js"></script>
+    <script>
+        Reveal.initialize({
+            // Display configuration optimized for all screen sizes
+            width: 1920,
+            height: 1080,
+            margin: 0.02,
+            
+            // Scaling configuration to prevent content cutoff
+            minScale: 0.3,
+            maxScale: 1.5,
+            
+            // Navigation and controls
+            hash: true,
+            controls: true,
+            progress: true,
+            center: false,
+            touch: true,
+            keyboard: true,
+            overview: true,
+            
+            // Transitions
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            
+            // Content handling
+            embedded: false,
+            autoSlide: 0,
+            loop: false,
+            shuffle: false,
+            fragments: true,
+            
+            // Plugins
+            plugins: [ RevealHighlight, RevealNotes ],
+            
+            // Code highlighting
+            highlight: {
+                highlightOnLoad: true,
+                theme: 'monokai'
+            },
+            
+            // Enhanced keyboard shortcuts
+            keyboard: {
+                13: 'next', // Enter key
+                32: 'next', // Space key
+                37: 'left', // Left arrow
+                39: 'right', // Right arrow
+                38: 'up',   // Up arrow
+                40: 'down'  // Down arrow
+            }
+        });
+    </script>
+</body>
+</html>
