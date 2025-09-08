@@ -824,10 +824,10 @@ $ terraform state mv aws_instance.web aws_instance.web_server
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Build:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Set up AWS Cloud9 Terraform environment</li>
-                            <li>✅ Deploy your first EC2 instance with security group</li>
-                            <li>✅ Master the terraform init, plan, apply workflow</li>
-                            <li>✅ Understand Terraform state management</li>
+                            <li>✅ Install and verify Terraform</li>
+                            <li>✅ Create your first S3 bucket resource</li>
+                            <li>✅ Master the terraform init, plan, apply, destroy workflow</li>
+                            <li>✅ Use variables to make configurations unique</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -961,10 +961,10 @@ Configuration → Planned → Creating → Created → Updating → Updated → 
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Create flexible configurations with input variables</li>
-                            <li>✅ Use data sources to query existing AWS resources</li>
-                            <li>✅ Implement local values and complex expressions</li>
-                            <li>✅ Handle variable validation and different input methods</li>
+                            <li>✅ Use different variable types (string, number, boolean)</li>
+                            <li>✅ Find existing AWS resources with data sources</li>
+                            <li>✅ Create an EC2 instance with security group</li>
+                            <li>✅ Generate outputs to display important information</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1109,10 +1109,10 @@ terraform fmt -recursive
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Manage implicit vs explicit resource dependencies</li>
-                            <li>✅ Scale resources with count and for_each</li>
-                            <li>✅ Control resource lifecycle with advanced rules</li>
-                            <li>✅ Use dynamic blocks for complex configurations</li>
+                            <li>✅ Understand how Terraform manages resource dependencies</li>
+                            <li>✅ Use `count` to create multiple similar resources</li>
+                            <li>✅ Use `for_each` to create resources from a map</li>
+                            <li>✅ Apply basic lifecycle rules to prevent accidental changes</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1315,15 +1315,15 @@ output "instance_ips" {
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Build reusable networking, security, and compute modules</li>
-                            <li>✅ Compose modules for complete infrastructure solutions</li>
-                            <li>✅ Design proper input/output interfaces</li>
-                            <li>✅ Validate and test module functionality</li>
+                            <li>✅ Build comprehensive web application module with 8+ resources</li>
+                            <li>✅ Implement IAM roles, S3 buckets, EC2 instances, and CloudWatch</li>
+                            <li>✅ Master variable validation, template files, and conditional resources</li>
+                            <li>✅ Deploy multiple applications using the same reusable module</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Create maintainable, enterprise-ready infrastructure components!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build production-ready, reusable infrastructure components!</p>
                     </div>
                     <h2 style="margin-top: 30px; font-size: 2em;">🚀 Complete Day 1 Mastery!</h2>
                 </div>
@@ -1338,44 +1338,44 @@ output "instance_ips" {
                         <div class="success">
                             <p><strong>🔬 Lab 1: First Terraform Configuration</strong></p>
                             <ul>
-                                <li>AWS Cloud9 environment setup</li>
-                                <li>First resource deployment</li>
-                                <li>Understanding the workflow</li>
-                                <li>State file examination</li>
-                                <li>Basic troubleshooting</li>
+                                <li>Install and verify Terraform</li>
+                                <li>Create basic S3 bucket resource</li>
+                                <li>Master init, plan, apply, destroy workflow</li>
+                                <li>Use variables for unique naming</li>
+                                <li>Basic Terraform file structure</li>
                             </ul>
                         </div>
 
                         <div class="highlight">
                             <p><strong>🔬 Lab 2: Variables and Data Sources</strong></p>
                             <ul>
-                                <li>Input variable implementation</li>
-                                <li>Variable validation rules</li>
-                                <li>Data source utilization</li>
-                                <li>Local values and expressions</li>
-                                <li>Dynamic configuration patterns</li>
+                                <li>Different variable types (string, number, boolean)</li>
+                                <li>Query existing AWS resources with data sources</li>
+                                <li>Create EC2 instance with security group</li>
+                                <li>Generate useful outputs</li>
+                                <li>Simple web server deployment</li>
                             </ul>
                         </div>
 
                         <div class="success">
                             <p><strong>🔬 Lab 3: Resource Dependencies</strong></p>
                             <ul>
-                                <li>Implicit vs explicit dependencies</li>
-                                <li>Count and for_each patterns</li>
-                                <li>Lifecycle management</li>
-                                <li>Resource targeting</li>
-                                <li>Dependency troubleshooting</li>
+                                <li>How Terraform manages resource dependencies</li>
+                                <li>Create multiple resources with count</li>
+                                <li>Create multiple resources with for_each</li>
+                                <li>Basic lifecycle rules</li>
+                                <li>Build organized S3 bucket structure</li>
                             </ul>
                         </div>
 
                         <div class="highlight">
                             <p><strong>🔬 Lab 4: Creating Modules</strong></p>
                             <ul>
-                                <li>Module structure and design</li>
-                                <li>Input/output patterns</li>
-                                <li>Module composition</li>
-                                <li>Reusability principles</li>
-                                <li>Module testing strategies</li>
+                                <li>Simple S3 website module creation</li>
+                                <li>Module structure (variables.tf, main.tf, outputs.tf)</li>
+                                <li>Using the same module multiple times</li>
+                                <li>Module inputs and outputs</li>
+                                <li>Code reusability benefits</li>
                             </ul>
                         </div>
                     </div>

@@ -1,273 +1,85 @@
-# Lab 11: Terraform Cloud Policies and Private Registry
+# Lab 11: Advanced Governance with Policies and Private Registry
 **Duration:** 45 minutes  
-**Difficulty:** Advanced  
+**Difficulty:** Intermediate  
 **Day:** 3  
 **Environment:** AWS Cloud9 + Terraform Cloud
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. Create separate policy sets and private modules for your user
-4. All Terraform Cloud resources will be prefixed with your username
-5. This ensures complete isolation between users for policies and modules
-
-**Example:** If your username is "user1", your resources will be named:
-- Policy Set: `user1-security-policies`
-- Private Module: `user1/networking/aws`
-- Workspaces: `user1-policy-demo`
-- AWS resources: `user1-` prefixed
-
----
-
-## Lab Objectives
+## 🎯 **Advanced Learning Objectives**
 By the end of this lab, you will be able to:
-- Implement Sentinel policies for governance and compliance
-- Set up cost estimation and budget controls
-- Create and publish modules to the Private Registry
-- Use version management for modules
-- Apply policy enforcement across workspaces
-- Build a governance framework for enterprise use
+- Implement sophisticated Sentinel policies for governance and compliance
+- Design policy sets with multi-level enforcement (advisory, soft-mandatory, hard-mandatory)
+- Build and publish enterprise-grade modules to private registry
+- Create reusable infrastructure patterns with advanced module composition
+- Implement policy-as-code workflows with automated validation
+- Design cost governance policies with budget enforcement
+- Integrate security scanning and compliance validation
 
 ---
 
-## Prerequisites
-- Completion of Labs 9-10 (Terraform Cloud basics and teams)
-- Active Terraform Cloud organization (Team & Governance plan for Sentinel)
-- Understanding of policy as code concepts
-- Basic knowledge of Terraform modules
+## 📋 **Prerequisites**
+- Completion of Labs 9-10 (Advanced Terraform Cloud)
+- Terraform Cloud account with Team & Governance plan (for Sentinel policies)
+- Advanced understanding of Terraform modules and composition
+- Experience with infrastructure security and compliance concepts
+- Basic knowledge of policy-as-code principles
 
 ---
 
-## Exercise 11.1: Implementing Governance with Sentinel Policies
-**Duration:** 15 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Basic Cost Control Policy
+### Set Your Username
 ```bash
-# Create policy directory structure
-mkdir terraform-policies-registry
-cd terraform-policies-registry
-mkdir -p {policies/sentinel,modules/networking,examples}
-
-# Create first Sentinel policy for cost control
-cat > policies/sentinel/cost-control.sentinel << 'EOF'
-# Sentinel Policy: Cost Control
-# Prevents deployments that exceed defined cost thresholds
-
-import "tfplan/v2" as tfplan
-import "decimal"
-
-# Cost thresholds (monthly USD)
-cost_threshold_warning = 50
-cost_threshold_hard_limit = 200
-
-# Get cost estimate from plan
-proposed_cost = decimal.new(tfplan.cost_estimate.proposed_monthly_cost) else decimal.new(0)
-current_cost = decimal.new(tfplan.cost_estimate.prior_monthly_cost) else decimal.new(0)
-cost_increase = decimal.sub(proposed_cost, current_cost)
-
-print("=== COST ANALYSIS ===")
-print("Current monthly cost: $" + decimal.to_string(current_cost))
-print("Proposed monthly cost: $" + decimal.to_string(proposed_cost))
-print("Cost increase: $" + decimal.to_string(cost_increase))
-print("Hard limit: $" + string(cost_threshold_hard_limit))
-
-# Validation functions
-cost_is_under_hard_limit = rule {
-    decimal.less_than(proposed_cost, decimal.new(cost_threshold_hard_limit))
-}
-
-cost_increase_reasonable = rule {
-    decimal.less_than(cost_increase, decimal.new(cost_threshold_warning))
-}
-
-# Main policy rule
-main = rule {
-    cost_is_under_hard_limit
-}
-
-# Warning for moderate increases
-cost_warning = rule when decimal.greater_than(cost_increase, decimal.new(cost_threshold_warning)) {
-    print("⚠️  WARNING: Cost increase exceeds $" + string(cost_threshold_warning))
-    print("   Consider reviewing resource sizing and quantities")
-    true
-}
-EOF
-
-# Create resource compliance policy
-cat > policies/sentinel/resource-compliance.sentinel << 'EOF'
-# Sentinel Policy: Resource Compliance
-# Enforces naming conventions, required tags, and approved instance types
-
-import "tfplan/v2" as tfplan
-import "strings"
-
-# Approved instance types (add more as needed)
-approved_instance_types = [
-    "t2.micro", "t2.small", "t2.medium",
-    "t3.micro", "t3.small", "t3.medium",
-    "m5.large", "m5.xlarge"
-]
-
-# Required tags for all resources
-required_tags = ["Environment", "Project", "Owner"]
-
-# Helper function to get resources by type
-get_resources_by_type = func(resource_type) {
-    resources = {}
-    for address, resource in tfplan.planned_values.root_module.resources {
-        if resource.type is resource_type {
-            resources[address] = resource
-        }
-    }
-    return resources
-}
-
-# Validation: EC2 instances must use approved types
-validate_instance_types = rule {
-    all get_resources_by_type("aws_instance") as address, resource {
-        resource.values.instance_type in approved_instance_types
-    }
-}
-
-# Validation: Resources must have required tags
-validate_required_tags = rule {
-    all get_resources_by_type("aws_instance") as address, resource {
-        all required_tags as tag {
-            tag in keys(resource.values.tags else {})
-        }
-    }
-}
-
-# Validation: Naming conventions
-validate_naming_convention = rule {
-    all get_resources_by_type("aws_instance") as address, resource {
-        strings.has_prefix(resource.values.tags["Name"] else "", "tfc-") and
-        length(resource.values.tags["Name"] else "") > 4
-    }
-}
-
-# Security: No public S3 buckets
-validate_s3_security = rule {
-    all get_resources_by_type("aws_s3_bucket_public_access_block") as address, resource {
-        resource.values.block_public_acls is true and
-        resource.values.block_public_policy is true and
-        resource.values.ignore_public_acls is true and
-        resource.values.restrict_public_buckets is true
-    }
-}
-
-# Main compliance rule
-main = rule {
-    validate_instance_types and
-    validate_required_tags and
-    validate_naming_convention and
-    validate_s3_security
-}
-EOF
-
-# Create policy set configuration
-cat > policies/sentinel/sentinel.hcl << 'EOF'
-policy "cost-control" {
-    source            = "./cost-control.sentinel"
-    enforcement_level = "hard-mandatory"
-}
-
-policy "resource-compliance" {
-    source            = "./resource-compliance.sentinel"
-    enforcement_level = "soft-mandatory"
-}
-EOF
-```
-
-### Step 2: Create Mock Data for Testing
-```bash
-# Create test data directory
-mkdir -p policies/sentinel/test/cost-control
-mkdir -p policies/sentinel/test/resource-compliance
-
-# Create mock test data for cost control
-cat > policies/sentinel/test/cost-control/mock-tfplan-v2.json << 'EOF'
-{
-  "format_version": "1.1",
-  "planned_values": {
-    "root_module": {
-      "resources": [
-        {
-          "address": "aws_instance.example",
-          "mode": "managed",
-          "type": "aws_instance",
-          "name": "example",
-          "values": {
-            "ami": "ami-12345678",
-            "instance_type": "t3.small",
-            "tags": {
-              "Name": "test-instance",
-              "Environment": "dev",
-              "Project": "demo"
-            }
-          }
-        }
-      ]
-    }
-  },
-  "cost_estimate": {
-    "prior_monthly_cost": "10.00",
-    "proposed_monthly_cost": "25.00"
-  }
-}
-EOF
-
-# Create test case
-cat > policies/sentinel/test/cost-control/pass.hcl << 'EOF'
-mock "tfplan/v2" {
-  module {
-    source = "./mock-tfplan-v2.json"
-  }
-}
-
-test {
-  rules = {
-    main = true
-  }
-}
-EOF
-```
-
-### Step 3: Test Policies Locally (Optional)
-```bash
-# If you have Sentinel CLI installed locally, test the policies
-# Otherwise, skip this step as policies will be tested in Terraform Cloud
-
-# Install Sentinel CLI (if not available)
-# wget https://releases.hashicorp.com/sentinel/0.21.1/sentinel_0.21.1_linux_amd64.zip
-# unzip sentinel_0.21.1_linux_amd64.zip
-# sudo mv sentinel /usr/local/bin/
-
-# Test the policy (if Sentinel CLI is available)
-# cd policies/sentinel
-# sentinel test
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
 ```
 
 ---
 
-## Exercise 11.2: Creating and Publishing Private Registry Modules
-**Duration:** 15 minutes
+## 🛡️ **Exercise 11.1: Advanced Sentinel Policy Implementation (20 minutes)**
 
-### Step 1: Create VPC Module for Private Registry
+### Step 1: Enterprise Policy-as-Code Architecture
+Sentinel policies in Terraform Cloud provide enterprise-grade governance, compliance, and cost control through automated policy enforcement.
+
+**Advanced Policy Categories:**
+
+#### 🔒 **Security & Compliance Policies:**
+- ✅ Enforce encryption at rest and in transit for all data stores
+- ✅ Validate IAM roles follow least privilege principles
+- ✅ Ensure all resources comply with industry standards (SOC2, PCI-DSS, HIPAA)
+- ✅ Prevent public exposure of sensitive resources
+- ✅ Mandate security group rules and network access controls
+- ✅ Require backup and disaster recovery configurations
+
+#### 💰 **Cost Governance Policies:**
+- ✅ Block expensive instance types without approval workflow
+- ✅ Enforce resource sizing based on environment (dev/staging/prod)
+- ✅ Require cost center tags for financial allocation
+- ✅ Limit resource counts and total infrastructure spend
+- ✅ Mandate lifecycle policies for storage optimization
+- ✅ Validate reserved instance utilization requirements
+
+#### 🏢 **Operational Excellence Policies:**
+- ✅ Enforce comprehensive resource tagging strategies
+- ✅ Require monitoring and alerting for critical resources
+- ✅ Mandate naming conventions and organizational standards
+- ✅ Validate multi-AZ deployments for production workloads
+- ✅ Ensure proper resource dependencies and relationships
+- ✅ Require documentation and metadata for infrastructure components
+
+### Step 2: Create Lab Directory
 ```bash
-# Create VPC module structure
-cd terraform-policies-registry/modules/networking
+mkdir terraform-lab11
+cd terraform-lab11
+```
 
-cat > main.tf << 'EOF'
-# Terraform Cloud Private Registry Module
-# Module: networking/vpc
-# Version: 1.0.0
+### Step 3: Create Enterprise Infrastructure for Policy Validation
+We'll build a comprehensive infrastructure stack to demonstrate advanced policy enforcement:
 
+**main.tf:**
+```hcl
 terraform {
   required_version = ">= 1.5"
   
@@ -276,175 +88,394 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
+  }
+  
+  cloud {
+    organization = "user1-terraform-lab"  # Replace user1 with your username!
+    
+    workspaces {
+      name = "user1-policy-governance"     # Replace user1 with your username!
+    }
   }
 }
 
-# Data sources
+provider "aws" {
+  region = "us-east-2"
+  
+  # Default tags applied to all resources
+  default_tags {
+    tags = {
+      ManagedBy     = "terraform"
+      Environment   = var.environment
+      Owner         = var.username
+      CostCenter    = var.cost_center
+      Project       = "policy-governance"
+      Lab           = "11-advanced"
+      PolicyTested  = "true"
+    }
+  }
+}
+
+# Variables with validation that policies will check
+variable "username" {
+  description = "Your unique username"
+  type        = string
+  
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.username))
+    error_message = "Username must contain only lowercase letters, numbers, and hyphens."
+  }
+}
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+  default     = "dev"
+  
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be one of: dev, staging, prod."
+  }
+}
+
+variable "cost_center" {
+  description = "Cost center for billing allocation"
+  type        = string
+  default     = "engineering"
+  
+  validation {
+    condition     = contains(["engineering", "marketing", "operations", "security"], var.cost_center)
+    error_message = "Cost center must be a valid organizational unit."
+  }
+}
+
+variable "instance_type" {
+  description = "EC2 instance type (policies will validate this)"
+  type        = string
+  default     = "t3.micro"
+  
+  validation {
+    condition     = can(regex("^t[23]\\.(nano|micro|small|medium)$", var.instance_type))
+    error_message = "Only cost-optimized instance types are allowed in this demo."
+  }
+}
+
+variable "enable_public_access" {
+  description = "Enable public access (policies will likely block this)"
+  type        = bool
+  default     = false
+}
+
+variable "backup_retention_days" {
+  description = "Number of days to retain backups"
+  type        = number
+  default     = 30
+  
+  validation {
+    condition     = var.backup_retention_days >= 7 && var.backup_retention_days <= 365
+    error_message = "Backup retention must be between 7 and 365 days."
+  }
+}
+
+# Local values for policy compliance
+locals {
+  # Environment-specific configurations that policies validate
+  environment_config = {
+    dev = {
+      allowed_instance_types = ["t3.nano", "t3.micro", "t3.small"]
+      require_encryption     = false
+      require_backup        = false
+      max_cost_per_month    = 100
+      require_multi_az      = false
+    }
+    staging = {
+      allowed_instance_types = ["t3.micro", "t3.small", "t3.medium"]
+      require_encryption     = true
+      require_backup        = true
+      max_cost_per_month    = 500
+      require_multi_az      = true
+    }
+    prod = {
+      allowed_instance_types = ["t3.small", "t3.medium", "t3.large"]
+      require_encryption     = true
+      require_backup        = true
+      max_cost_per_month    = 2000
+      require_multi_az      = true
+    }
+  }
+  
+  current_config = local.environment_config[var.environment]
+  
+  # Required tags that policies will validate
+  required_tags = {
+    Name          = "${var.username}-${var.environment}-policy-demo"
+    Environment   = var.environment
+    Owner         = var.username
+    CostCenter    = var.cost_center
+    Project       = "policy-governance"
+    BackupPolicy  = local.current_config.require_backup ? "enabled" : "disabled"
+    Compliance    = var.environment == "prod" ? "required" : "optional"
+    CreatedBy     = "terraform-cloud"
+    PolicyManaged = "true"
+  }
+}
+
+# Random suffix for unique resource names
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# Data source for current caller identity
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+# S3 buckets - policies will enforce encryption, naming, and tagging
+resource "aws_s3_bucket" "policy_demo_data" {
+  bucket = "${var.username}-${var.environment}-data-${random_string.suffix.result}"
+
+  tags = merge(local.required_tags, {
+    Purpose = "data-storage"
+    BackupSchedule = "daily"
+  })
+}
+
+resource "aws_s3_bucket" "policy_demo_logs" {
+  bucket = "${var.username}-${var.environment}-logs-${random_string.suffix.result}"
+
+  tags = merge(local.required_tags, {
+    Purpose = "log-storage"
+    RetentionPolicy = "${var.backup_retention_days}-days"
+  })
+}
+
+# Intentionally create a bucket that might violate policies
+resource "aws_s3_bucket" "policy_violation_test" {
+  count = var.enable_public_access ? 1 : 0
+  
+  bucket = "${var.username}-${var.environment}-public-${random_string.suffix.result}"
+
+  tags = merge(local.required_tags, {
+    Purpose = "public-content"
+    Warning = "intentional-policy-test"
+  })
+}
+
+# S3 bucket configurations - policies will check these
+resource "aws_s3_bucket_encryption_configuration" "data" {
+  bucket = aws_s3_bucket.policy_demo_data.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "data" {
+  bucket = aws_s3_bucket.policy_demo_data.id
+  versioning_configuration {
+    status = local.current_config.require_backup ? "Enabled" : "Suspended"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "logs" {
+  bucket = aws_s3_bucket.policy_demo_logs.id
+
+  rule {
+    id     = "log_retention"
+    status = "Enabled"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = var.backup_retention_days
+    }
+  }
+}
+
+# VPC and networking - policies will validate configuration
+resource "aws_vpc" "policy_demo" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-vpc"
+    Type = "application-vpc"
+  })
+}
+
+resource "aws_subnet" "public" {
+  count = local.current_config.require_multi_az ? 2 : 1
+  
+  vpc_id                  = aws_vpc.policy_demo.id
+  cidr_block              = "10.0.${count.index + 1}.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = var.enable_public_access
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-public-${count.index + 1}"
+    Type = "public-subnet"
+    Tier = "web"
+  })
+}
+
+resource "aws_subnet" "private" {
+  count = local.current_config.require_multi_az ? 2 : 1
+  
+  vpc_id            = aws_vpc.policy_demo.id
+  cidr_block        = "10.0.${count.index + 11}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-private-${count.index + 1}"
+    Type = "private-subnet"
+    Tier = "application"
+  })
+}
+
+# Data source for availability zones
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# VPC
-resource "aws_vpc" "main" {
-  cidr_block           = var.cidr_block
-  enable_dns_hostnames = var.enable_dns_hostnames
-  enable_dns_support   = var.enable_dns_support
-  
-  tags = merge(var.common_tags, {
-    Name = var.name
-    Type = "VPC"
-  })
-}
+# Security group - policies will validate rules
+resource "aws_security_group" "policy_demo" {
+  name_prefix = "${var.username}-${var.environment}-"
+  vpc_id      = aws_vpc.policy_demo.id
+  description = "Security group for policy demonstration"
 
-# Internet Gateway
-resource "aws_internet_gateway" "main" {
-  count  = var.create_igw ? 1 : 0
-  vpc_id = aws_vpc.main.id
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-igw"
-    Type = "InternetGateway"
-  })
-}
+  # Controlled ingress - policies may restrict certain ports
+  ingress {
+    description = "SSH (restricted)"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.policy_demo.cidr_block] # Only from VPC
+  }
 
-# Public Subnets
-resource "aws_subnet" "public" {
-  count = var.create_public_subnets ? length(var.public_subnet_cidrs) : 0
-  
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
-  map_public_ip_on_launch = true
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-public-${count.index + 1}"
-    Type = "Public Subnet"
-    Tier = "Public"
-  })
-}
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-# Private Subnets
-resource "aws_subnet" "private" {
-  count = var.create_private_subnets ? length(var.private_subnet_cidrs) : 0
-  
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-private-${count.index + 1}"
-    Type = "Private Subnet"
-    Tier = "Private"
-  })
-}
-
-# NAT Gateway for private subnets
-resource "aws_eip" "nat" {
-  count = var.create_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnet_cidrs)) : 0
-  
-  domain = "vpc"
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-nat-eip-${count.index + 1}"
-    Type = "NAT Gateway EIP"
-  })
-  
-  depends_on = [aws_internet_gateway.main]
-}
-
-resource "aws_nat_gateway" "main" {
-  count = var.create_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnet_cidrs)) : 0
-  
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-nat-${count.index + 1}"
-    Type = "NAT Gateway"
-  })
-}
-
-# Route Tables
-resource "aws_route_table" "public" {
-  count  = var.create_public_subnets ? 1 : 0
-  vpc_id = aws_vpc.main.id
-  
-  dynamic "route" {
-    for_each = var.create_igw ? [1] : []
+  # Intentional policy violation test
+  dynamic "ingress" {
+    for_each = var.enable_public_access ? [1] : []
     content {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.main[0].id
+      description = "Unrestricted access (policy violation)"
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
     }
   }
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-public-rt"
-    Type = "Public Route Table"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-sg"
+    Type = "security-group"
   })
 }
 
-resource "aws_route_table" "private" {
-  count  = var.create_private_subnets ? (var.single_nat_gateway ? 1 : length(var.private_subnet_cidrs)) : 0
-  vpc_id = aws_vpc.main.id
+# EC2 instance - policies will validate instance type and configuration
+resource "aws_instance" "policy_demo" {
+  ami                    = "ami-0ea3c35c5c3284d82"  # Amazon Linux 2 in us-east-2
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.private[0].id
+  vpc_security_group_ids = [aws_security_group.policy_demo.id]
   
-  dynamic "route" {
-    for_each = var.create_nat_gateway ? [1] : []
-    content {
-      cidr_block     = "0.0.0.0/0"
-      nat_gateway_id = aws_nat_gateway.main[var.single_nat_gateway ? 0 : count.index].id
-    }
+  # EBS optimization - policies may require this for certain instance types
+  ebs_optimized = true
+  
+  # Metadata options - security policies often require IMDSv2
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"  # IMDSv2 only
+    http_put_response_hop_limit = 1
   }
   
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-private-rt-${count.index + 1}"
-    Type = "Private Route Table"
+  # Root volume configuration - policies will check encryption
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 20
+    encrypted   = local.current_config.require_encryption
+    
+    tags = merge(local.required_tags, {
+      Name = "${var.username}-${var.environment}-root-volume"
+      VolumeType = "root"
+    })
+  }
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-instance"
+    Type = "application-server"
+    MonitoringRequired = local.current_config.require_backup ? "true" : "false"
   })
 }
 
-# Route Table Associations
-resource "aws_route_table_association" "public" {
-  count = var.create_public_subnets ? length(aws_subnet.public) : 0
+# CloudWatch Log Group - policies will validate retention and encryption
+resource "aws_cloudwatch_log_group" "policy_demo" {
+  name              = "/aws/ec2/${var.username}-${var.environment}"
+  retention_in_days = var.backup_retention_days
   
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public[0].id
-}
+  # Encryption - required by security policies
+  kms_key_id = local.current_config.require_encryption ? aws_kms_key.policy_demo[0].arn : null
 
-resource "aws_route_table_association" "private" {
-  count = var.create_private_subnets ? length(aws_subnet.private) : 0
-  
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[var.single_nat_gateway ? 0 : count.index].id
-}
-
-# VPC Flow Logs (optional)
-resource "aws_flow_log" "vpc_flow_log" {
-  count = var.enable_flow_logs ? 1 : 0
-  
-  iam_role_arn    = aws_iam_role.flow_log[0].arn
-  log_destination = aws_cloudwatch_log_group.vpc_flow_log[0].arn
-  traffic_type    = "ALL"
-  vpc_id          = aws_vpc.main.id
-  
-  tags = merge(var.common_tags, {
-    Name = "${var.name}-flow-logs"
-    Type = "VPC Flow Logs"
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-logs"
+    Type = "cloudwatch-logs"
   })
 }
 
-resource "aws_cloudwatch_log_group" "vpc_flow_log" {
-  count = var.enable_flow_logs ? 1 : 0
+# KMS key for encryption - policies will validate usage
+resource "aws_kms_key" "policy_demo" {
+  count = local.current_config.require_encryption ? 1 : 0
   
-  name              = "/aws/vpc/${var.name}/flowlogs"
-  retention_in_days = var.flow_logs_retention_days
-  
-  tags = var.common_tags
+  description             = "KMS key for ${var.username} ${var.environment} policy demo"
+  deletion_window_in_days = 7
+  enable_key_rotation    = true
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-kms-key"
+    Type = "encryption-key"
+  })
 }
 
-resource "aws_iam_role" "flow_log" {
-  count = var.enable_flow_logs ? 1 : 0
+resource "aws_kms_alias" "policy_demo" {
+  count = local.current_config.require_encryption ? 1 : 0
   
-  name = "${var.name}-flow-log-role"
-  
+  name          = "alias/${var.username}-${var.environment}-key"
+  target_key_id = aws_kms_key.policy_demo[0].key_id
+}
+
+# IAM role - policies will validate permissions and trust relationships
+resource "aws_iam_role" "policy_demo" {
+  name = "${var.username}-${var.environment}-policy-demo-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -452,879 +483,670 @@ resource "aws_iam_role" "flow_log" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
+          Service = "ec2.amazonaws.com"
         }
       }
     ]
   })
-  
-  tags = var.common_tags
+
+  tags = merge(local.required_tags, {
+    Name = "${var.username}-${var.environment}-iam-role"
+    Type = "iam-role"
+  })
 }
 
-resource "aws_iam_role_policy" "flow_log" {
-  count = var.enable_flow_logs ? 1 : 0
-  
-  name = "${var.name}-flow-log-policy"
-  role = aws_iam_role.flow_log[0].id
-  
+# IAM policy - policies will validate permissions follow least privilege
+resource "aws_iam_role_policy" "policy_demo" {
+  name = "${var.username}-${var.environment}-policy"
+  role = aws_iam_role.policy_demo.id
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject"
+        ]
+        Resource = [
+          "${aws_s3_bucket.policy_demo_data.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams"
+          "logs:PutLogEvents"
         ]
-        Effect   = "Allow"
-        Resource = "*"
+        Resource = aws_cloudwatch_log_group.policy_demo.arn
       }
     ]
   })
 }
-EOF
 
-# Create variables file
-cat > variables.tf << 'EOF'
-variable "name" {
-  description = "Name to be used on all resources as prefix"
-  type        = string
-}
+# Bucket encryption - good practice that policies often enforce
+resource "aws_s3_bucket_server_side_encryption_configuration" "policy_demo" {
+  bucket = aws_s3_bucket.policy_demo.id
 
-variable "cidr_block" {
-  description = "The CIDR block for the VPC"
-  type        = string
-  
-  validation {
-    condition     = can(cidrhost(var.cidr_block, 0))
-    error_message = "The cidr_block must be a valid CIDR block."
-  }
-}
-
-variable "enable_dns_hostnames" {
-  description = "Should be true to enable DNS hostnames in the VPC"
-  type        = bool
-  default     = true
-}
-
-variable "enable_dns_support" {
-  description = "Should be true to enable DNS support in the VPC"
-  type        = bool
-  default     = true
-}
-
-variable "common_tags" {
-  description = "A map of tags to assign to all resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "create_igw" {
-  description = "Controls if an Internet Gateway is created for public subnets and the related routes"
-  type        = bool
-  default     = true
-}
-
-variable "create_public_subnets" {
-  description = "Controls if public subnets should be created"
-  type        = bool
-  default     = true
-}
-
-variable "create_private_subnets" {
-  description = "Controls if private subnets should be created"
-  type        = bool
-  default     = true
-}
-
-variable "public_subnet_cidrs" {
-  description = "A list of CIDR blocks for public subnets"
-  type        = list(string)
-  default     = []
-}
-
-variable "private_subnet_cidrs" {
-  description = "A list of CIDR blocks for private subnets"
-  type        = list(string)
-  default     = []
-}
-
-variable "create_nat_gateway" {
-  description = "Controls if NAT Gateways should be created for private subnets"
-  type        = bool
-  default     = true
-}
-
-variable "single_nat_gateway" {
-  description = "Should be true if you want to provision a single shared NAT Gateway across all private subnets"
-  type        = bool
-  default     = false
-}
-
-variable "enable_flow_logs" {
-  description = "Whether to enable VPC Flow Logs"
-  type        = bool
-  default     = false
-}
-
-variable "flow_logs_retention_days" {
-  description = "Specifies the number of days you want to retain log events in the log group"
-  type        = number
-  default     = 14
-}
-EOF
-
-# Create outputs file
-cat > outputs.tf << 'EOF'
-output "vpc_id" {
-  description = "The ID of the VPC"
-  value       = aws_vpc.main.id
-}
-
-output "vpc_arn" {
-  description = "The ARN of the VPC"
-  value       = aws_vpc.main.arn
-}
-
-output "vpc_cidr_block" {
-  description = "The CIDR block of the VPC"
-  value       = aws_vpc.main.cidr_block
-}
-
-output "internet_gateway_id" {
-  description = "The ID of the Internet Gateway"
-  value       = var.create_igw ? aws_internet_gateway.main[0].id : null
-}
-
-output "public_subnet_ids" {
-  description = "List of IDs of public subnets"
-  value       = aws_subnet.public[*].id
-}
-
-output "private_subnet_ids" {
-  description = "List of IDs of private subnets"
-  value       = aws_subnet.private[*].id
-}
-
-output "public_subnet_cidrs" {
-  description = "List of CIDR blocks of public subnets"
-  value       = aws_subnet.public[*].cidr_block
-}
-
-output "private_subnet_cidrs" {
-  description = "List of CIDR blocks of private subnets"
-  value       = aws_subnet.private[*].cidr_block
-}
-
-output "nat_gateway_ids" {
-  description = "List of IDs of the NAT Gateways"
-  value       = aws_nat_gateway.main[*].id
-}
-
-output "public_route_table_id" {
-  description = "ID of the public route table"
-  value       = var.create_public_subnets ? aws_route_table.public[0].id : null
-}
-
-output "private_route_table_ids" {
-  description = "List of IDs of private route tables"
-  value       = aws_route_table.private[*].id
-}
-
-output "availability_zones" {
-  description = "A list of availability zones specified as argument to this module"
-  value       = data.aws_availability_zones.available.names
-}
-EOF
-
-# Create README for the module
-cat > README.md << 'EOF'
-# AWS VPC Terraform Module
-
-This module creates a complete AWS VPC with public and private subnets, NAT gateways, and optional VPC flow logs.
-
-## Features
-
-- ✅ **Multi-AZ VPC** with configurable CIDR blocks
-- ✅ **Public subnets** with Internet Gateway
-- ✅ **Private subnets** with NAT Gateway(s)
-- ✅ **Flexible NAT Gateway** deployment (single or per-AZ)
-- ✅ **VPC Flow Logs** with CloudWatch integration
-- ✅ **Comprehensive tagging** support
-- ✅ **Input validation** for CIDR blocks
-- ✅ **Security best practices** built-in
-
-## Usage
-
-```hcl
-module "vpc" {
-  source = "app.terraform.io/YOUR_ORG/networking/aws"
-  
-  name       = "my-vpc"
-  cidr_block = "10.0.0.0/16"
-  
-  public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24"]
-  
-  single_nat_gateway = false
-  enable_flow_logs   = true
-  
-  common_tags = {
-    Environment = "production"
-    Project     = "web-app"
-    Owner       = "platform-team"
-  }
-}
-```
-
-## Examples
-
-- [Basic VPC](../../examples/basic-vpc) - Simple VPC with public and private subnets
-- [Advanced VPC](../../examples/advanced-vpc) - VPC with flow logs, multiple NAT gateways
-
-## Requirements
-
-| Name | Version |
-|------|---------|
-| terraform | >= 1.5 |
-| aws | ~> 5.0 |
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| name | Name to be used on all resources as prefix | string | n/a | yes |
-| cidr_block | The CIDR block for the VPC | string | n/a | yes |
-| public_subnet_cidrs | A list of CIDR blocks for public subnets | list(string) | [] | no |
-| private_subnet_cidrs | A list of CIDR blocks for private subnets | list(string) | [] | no |
-| enable_flow_logs | Whether to enable VPC Flow Logs | bool | false | no |
-| single_nat_gateway | Provision single shared NAT Gateway | bool | false | no |
-| common_tags | A map of tags to assign to all resources | map(string) | {} | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| vpc_id | The ID of the VPC |
-| public_subnet_ids | List of IDs of public subnets |
-| private_subnet_ids | List of IDs of private subnets |
-| nat_gateway_ids | List of IDs of the NAT Gateways |
-
-## License
-
-Apache 2 Licensed. See LICENSE for full details.
-EOF
-
-# Create version file
-cat > versions.tf << 'EOF'
-terraform {
-  required_version = ">= 1.5"
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-EOF
-```
-
-### Step 2: Create Example Usage
-```bash
-# Create example configuration
-cd terraform-policies-registry/examples
-mkdir basic-vpc
-cd basic-vpc
-
-cat > main.tf << 'EOF'
-# Example: Basic VPC using Private Registry Module
-terraform {
-  required_version = ">= 1.5"
-  
-  cloud {
-    organization = "YOUR_ORG_NAME"  # Replace with your org
-    
-    workspaces {
-      name = "private-registry-example"
-    }
-  }
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
 
-provider "aws" {
-  region = var.aws_region
-}
+# Block public access - another policy requirement
+resource "aws_s3_bucket_public_access_block" "policy_demo" {
+  bucket = aws_s3_bucket.policy_demo.id
 
-# Use module from Private Registry
-module "main_vpc" {
-  source  = "app.terraform.io/YOUR_ORG/networking/aws"
-  version = "~> 1.0"
-  
-  name       = "tfc-demo-vpc"
-  cidr_block = "10.0.0.0/16"
-  
-  public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24"]
-  
-  # Use single NAT Gateway for cost savings in demo
-  single_nat_gateway = true
-  enable_flow_logs   = true
-  
-  common_tags = {
-    Environment = "demo"
-    Project     = "tfc-private-registry"
-    Owner       = "platform-team"
-    ManagedBy   = "Terraform Cloud"
-  }
-}
-
-# Example resource using the VPC
-resource "aws_security_group" "example" {
-  name_prefix = "tfc-demo-sg"
-  vpc_id      = module.main_vpc.vpc_id
-  
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = {
-    Name        = "tfc-demo-sg"
-    Environment = "demo"
-    Project     = "tfc-private-registry"
-    Owner       = "platform-team"
-  }
-}
-
-# Compliant EC2 instance for policy testing
-resource "aws_instance" "example" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"  # Approved instance type
-  subnet_id     = module.main_vpc.public_subnet_ids[0]
-  
-  vpc_security_group_ids = [aws_security_group.example.id]
-  
-  tags = {
-    Name        = "tfc-demo-instance"  # Compliant naming
-    Environment = "demo"               # Required tag
-    Project     = "tfc-private-registry" # Required tag
-    Owner       = "platform-team"     # Required tag
-  }
-}
-
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-# S3 bucket with compliant security settings
-resource "aws_s3_bucket" "example" {
-  bucket = "tfc-demo-bucket-${random_id.suffix.hex}"
-  
-  tags = {
-    Name        = "tfc-demo-bucket"
-    Environment = "demo"
-    Project     = "tfc-private-registry"
-    Owner       = "platform-team"
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "example" {
-  bucket = aws_s3_bucket.example.id
-  
-  # Policy-compliant settings
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
-resource "random_id" "suffix" {
-  byte_length = 4
-}
-EOF
+# EC2 instance with proper tags
+resource "aws_instance" "policy_demo" {
+  ami           = "ami-0ea3c35c5c3284d82"  # Amazon Linux 2 in us-east-2
+  instance_type = "t2.micro"  # Policy-compliant size
 
-cat > variables.tf << 'EOF'
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-2"
-}
-EOF
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    systemctl start httpd
+    systemctl enable httpd
+    
+    cat > /var/www/html/index.html << 'HTML'
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Policy Demo - ${var.username}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f0f8ff; }
+            .policy-info { background: white; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <h1>🛡️ Policy and Compliance Demo</h1>
+        <p><strong>Owner:</strong> ${var.username}</p>
+        
+        <div class="policy-info">
+            <h2>Policy Compliance Checklist</h2>
+            <ul>
+                <li>✅ S3 bucket has encryption enabled</li>
+                <li>✅ S3 bucket blocks public access</li>
+                <li>✅ All resources have required tags (Owner, Environment, Lab)</li>
+                <li>✅ Instance type is approved (t2.micro)</li>
+                <li>✅ Resources follow naming convention</li>
+            </ul>
+        </div>
+        
+        <div class="policy-info">
+            <h2>What are Terraform Policies?</h2>
+            <p>Policies are automated rules that check your infrastructure before deployment:</p>
+            <ul>
+                <li><strong>Security:</strong> Ensure encryption and access controls</li>
+                <li><strong>Compliance:</strong> Meet regulatory requirements</li>
+                <li><strong>Cost Control:</strong> Prevent expensive resource creation</li>
+                <li><strong>Best Practices:</strong> Enforce tagging and naming standards</li>
+            </ul>
+        </div>
+        
+        <div class="policy-info">
+            <h2>Lab 11: Policy and Registry</h2>
+            <p>This infrastructure demonstrates compliant resource creation.</p>
+        </div>
+    </body>
+    </html>
+HTML
+  EOF
+  )
 
-cat > outputs.tf << 'EOF'
-output "vpc_info" {
-  description = "VPC information from private registry module"
+  tags = {
+    Name = "${var.username}-policy-demo-server"
+    Owner = var.username
+    Lab = "11"
+    Environment = "demo"
+    InstanceType = "web-server"
+    # Note: Including all the tags that policies typically require
+  }
+}
+```
+
+**outputs.tf:**
+```hcl
+output "policy_compliance" {
+  description = "Policy compliance summary"
   value = {
-    vpc_id              = module.main_vpc.vpc_id
-    public_subnet_ids   = module.main_vpc.public_subnet_ids
-    private_subnet_ids  = module.main_vpc.private_subnet_ids
-    availability_zones  = module.main_vpc.availability_zones
+    s3_bucket_encrypted = "✅ Yes - AES256 encryption enabled"
+    s3_public_access_blocked = "✅ Yes - All public access blocked"
+    required_tags_present = "✅ Yes - Owner, Environment, Lab tags present"
+    approved_instance_type = "✅ Yes - t2.micro is pre-approved"
+    naming_convention = "✅ Yes - Resources follow ${var.username}-* pattern"
   }
 }
 
-output "instance_info" {
-  description = "EC2 instance information"
+output "resources_created" {
+  description = "Resources that passed policy checks"
   value = {
-    instance_id = aws_instance.example.id
-    public_ip   = aws_instance.example.public_ip
-    private_ip  = aws_instance.example.private_ip
+    s3_bucket = aws_s3_bucket.policy_demo.id
+    ec2_instance = aws_instance.policy_demo.id
+    instance_url = "http://${aws_instance.policy_demo.public_ip}"
   }
 }
 
-output "compliance_check" {
-  description = "Compliance validation results"
-  value = {
-    s3_public_access_blocked = aws_s3_bucket_public_access_block.example.block_public_acls
-    instance_type_approved   = contains(["t2.micro", "t3.micro", "t2.small", "t3.small"], aws_instance.example.instance_type)
-    required_tags_present    = length(setintersection(keys(aws_instance.example.tags), ["Environment", "Project", "Owner"])) == 3
-    naming_convention_ok     = startswith(aws_instance.example.tags["Name"], "tfc-")
-  }
+output "policy_benefits" {
+  description = "Benefits of using policies"
+  value = [
+    "Automated compliance checking",
+    "Consistent security standards", 
+    "Cost control and governance",
+    "Reduced human error",
+    "Audit-ready infrastructure"
+  ]
 }
-EOF
+```
+
+### Step 4: Create and Configure Workspace
+1. Create workspace: `${your-username}-policy-demo` in Terraform Cloud
+2. Set variables:
+   - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (environment variables, sensitive)
+   - `username`: your username (terraform variable)
+
+### Step 5: Deploy Compliant Infrastructure
+```bash
+terraform init
+terraform plan
+terraform apply
 ```
 
 ---
 
-## Exercise 11.3: Implementing Complete Governance Framework
-**Duration:** 15 minutes
+## 📚 **Exercise 11.2: Creating a Simple Module for Private Registry (20 minutes)**
 
-### Step 1: Configure Policy Sets in Terraform Cloud
+### Step 1: Understand Private Registry Benefits
+The private registry allows you to:
+- Share modules within your organization
+- Version control your infrastructure components
+- Enforce approved patterns across teams
+- Keep proprietary modules private
+
+### Step 2: Create a Simple S3 Website Module
+Let's create a reusable module and publish it to your private registry:
+
 ```bash
-# Create script to configure policies via API
-cat > configure-policies.sh << 'EOF'
-#!/bin/bash
-
-# Configure Terraform Cloud Policies via API
-# Replace these with your actual values
-TFC_TOKEN="your-terraform-cloud-token"
-ORG_NAME="your-org-name"
-
-echo "=== Configuring Terraform Cloud Policies ==="
-
-# Create policy set
-POLICY_SET_RESPONSE=$(curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --request POST \
-  --data @- \
-  "https://app.terraform.io/api/v2/organizations/$ORG_NAME/policy-sets" <<EOF
-{
-  "data": {
-    "type": "policy-sets",
-    "attributes": {
-      "name": "governance-policies",
-      "description": "Cost control and compliance policies for all workspaces",
-      "global": true
-    }
-  }
-}
-EOF
-)
-
-POLICY_SET_ID=$(echo "$POLICY_SET_RESPONSE" | jq -r '.data.id')
-echo "✅ Created policy set: $POLICY_SET_ID"
-
-# Upload cost control policy
-COST_POLICY_DATA=$(cat policies/sentinel/cost-control.sentinel | base64 -w 0)
-COST_POLICY_RESPONSE=$(curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --request POST \
-  --data @- \
-  "https://app.terraform.io/api/v2/policy-sets/$POLICY_SET_ID/policies" <<EOF
-{
-  "data": {
-    "type": "policies",
-    "attributes": {
-      "name": "cost-control",
-      "description": "Prevents deployments exceeding cost thresholds",
-      "kind": "sentinel",
-      "query": "data.main",
-      "enforcement-level": "hard-mandatory"
-    }
-  }
-}
-EOF
-)
-
-echo "✅ Uploaded cost control policy"
-
-# Upload compliance policy  
-COMPLIANCE_POLICY_DATA=$(cat policies/sentinel/resource-compliance.sentinel | base64 -w 0)
-COMPLIANCE_POLICY_RESPONSE=$(curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --request POST \
-  --data @- \
-  "https://app.terraform.io/api/v2/policy-sets/$POLICY_SET_ID/policies" <<EOF
-{
-  "data": {
-    "type": "policies",
-    "attributes": {
-      "name": "resource-compliance",
-      "description": "Enforces naming conventions and required tags",
-      "kind": "sentinel",
-      "query": "data.main",
-      "enforcement-level": "soft-mandatory"
-    }
-  }
-}
-EOF
-)
-
-echo "✅ Uploaded compliance policy"
-
-# Get list of workspaces to apply policies to
-WORKSPACES=$(curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  "https://app.terraform.io/api/v2/organizations/$ORG_NAME/workspaces" | \
-  jq -r '.data[].id')
-
-echo "📋 Policy set configured and will apply to all workspaces"
-echo "🔗 View in UI: https://app.terraform.io/app/$ORG_NAME/settings/policy-sets/$POLICY_SET_ID"
-EOF
-
-chmod +x configure-policies.sh
-
-# Create manual instructions for UI configuration
-cat > policy-setup-instructions.md << 'EOF'
-# Manual Policy Setup Instructions
-
-Since the API approach requires a paid Terraform Cloud plan, here are manual setup instructions:
-
-## Step 1: Create Policy Set in UI
-
-1. Log into Terraform Cloud
-2. Navigate to Settings → Policy Sets
-3. Click "Connect a new policy set"
-4. Choose "Upload via API" or "Connect to VCS"
-
-## Step 2: Create Cost Control Policy
-
-1. In the policy set, click "New Policy"
-2. Name: `cost-control`
-3. Enforcement Level: `hard-mandatory`
-4. Copy the content from `policies/sentinel/cost-control.sentinel`
-
-## Step 3: Create Compliance Policy
-
-1. Create another policy: `resource-compliance` 
-2. Enforcement Level: `soft-mandatory`
-3. Copy content from `policies/sentinel/resource-compliance.sentinel`
-
-## Step 4: Apply to Workspaces
-
-1. In the policy set settings
-2. Go to "Workspaces" tab
-3. Add relevant workspaces or set as global
-
-## Step 5: Test Policies
-
-1. Run terraform plan on a workspace
-2. Policies will be evaluated during plan phase
-3. Check run logs for policy results
-EOF
+mkdir s3-website-module
+cd s3-website-module
 ```
 
-### Step 2: Create Cost Monitoring Dashboard
-```bash
-# Create cost monitoring configuration
-cat > cost-monitoring.tf << 'EOF'
-terraform {
-  required_version = ">= 1.5"
-  
-  cloud {
-    organization = "YOUR_ORG_NAME"
-    
-    workspaces {
-      name = "cost-monitoring"
-    }
-  }
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+**variables.tf:**
+```hcl
+variable "username" {
+  description = "Username for resource naming"
+  type        = string
 }
 
-provider "aws" {
-  region = var.aws_region
+variable "website_name" {
+  description = "Name of the website"
+  type        = string
 }
 
-# CloudWatch dashboard for cost monitoring
-resource "aws_cloudwatch_dashboard" "cost_monitoring" {
-  dashboard_name = "terraform-cloud-cost-monitoring"
-  
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
-        
-        properties = {
-          metrics = [
-            ["AWS/Billing", "EstimatedCharges", "Currency", "USD"]
-          ]
-          period = 86400
-          stat   = "Maximum"
-          region = "us-east-2"
-          title  = "AWS Estimated Charges"
-        }
-      },
-      {
-        type   = "log"
-        x      = 0
-        y      = 6
-        width  = 24
-        height = 6
-        
-        properties = {
-          query   = "SOURCE '/aws/lambda/cost-alert' | fields @timestamp, @message | sort @timestamp desc | limit 20"
-          region  = var.aws_region
-          title   = "Cost Alert Logs"
-        }
-      }
-    ]
+variable "index_content" {
+  description = "Content for index.html"
+  type        = string
+  default     = "<h1>Hello World!</h1>"
+}
+
+variable "enable_versioning" {
+  description = "Enable S3 bucket versioning"
+  type        = bool
+  default     = false
+}
+
+variable "tags" {
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {}
+}
+```
+
+**main.tf:**
+```hcl
+# S3 bucket for static website hosting
+resource "aws_s3_bucket" "website" {
+  bucket = "${var.username}-${var.website_name}-site"
+
+  tags = merge(var.tags, {
+    Name = "${var.username}-${var.website_name}-site"
+    Type = "StaticWebsite"
+    ManagedBy = "PrivateRegistryModule"
   })
 }
 
-# Budget alert for cost control
-resource "aws_budgets_budget" "terraform_cloud" {
-  name     = "terraform-cloud-monthly-budget"
-  limit_amount = var.monthly_budget_limit
-  limit_unit   = "USD"
-  time_unit    = "MONTHLY"
-  budget_type  = "COST"
+# Website configuration
+resource "aws_s3_bucket_website_configuration" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+
+# Optional versioning
+resource "aws_s3_bucket_versioning" "website" {
+  count = var.enable_versioning ? 1 : 0
   
-  cost_filters {
-    tag {
-      key = "ManagedBy"
-      values = ["Terraform", "Terraform Cloud"]
+  bucket = aws_s3_bucket.website.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Upload index.html
+resource "aws_s3_object" "index" {
+  bucket = aws_s3_bucket.website.id
+  key    = "index.html"
+  content = var.index_content
+  content_type = "text/html"
+}
+
+# Upload error.html
+resource "aws_s3_object" "error" {
+  bucket = aws_s3_bucket.website.id
+  key    = "error.html"
+  content = "<h1>Page Not Found</h1><p>The page you're looking for doesn't exist.</p>"
+  content_type = "text/html"
+}
+
+# Make bucket public for website
+resource "aws_s3_bucket_public_access_block" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+# Bucket policy for public read
+resource "aws_s3_bucket_policy" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.website.arn}/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.website]
+}
+```
+
+**outputs.tf:**
+```hcl
+output "bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.website.id
+}
+
+output "website_endpoint" {
+  description = "S3 website endpoint"
+  value       = aws_s3_bucket_website_configuration.website.website_endpoint
+}
+
+output "website_url" {
+  description = "Complete website URL"
+  value       = "http://${aws_s3_bucket_website_configuration.website.website_endpoint}"
+}
+
+output "bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = aws_s3_bucket.website.arn
+}
+```
+
+**README.md:**
+```markdown
+# S3 Static Website Module
+
+This module creates an S3 bucket configured for static website hosting.
+
+## Usage
+
+```hcl
+module "my_website" {
+  source = "app.terraform.io/YOUR-ORG/s3-website/aws"
+  
+  username      = "myuser"
+  website_name  = "portfolio"
+  index_content = "<h1>My Portfolio</h1>"
+  enable_versioning = true
+  
+  tags = {
+    Environment = "production"
+    Owner      = "myuser"
+  }
+}
+```
+
+## Features
+
+- ✅ S3 bucket with static website hosting
+- ✅ Public read access configuration
+- ✅ Optional versioning
+- ✅ Default error page
+- ✅ Customizable content
+- ✅ Proper tagging support
+
+## Requirements
+
+- AWS provider ~> 5.0
+- Terraform >= 1.5
+```
+
+### Step 3: Understanding Private Registry Publication
+**Note**: Publishing to private registry requires specific workflows (usually with version control integration). For this lab, we'll simulate the process and understand the concepts.
+
+In a real scenario, you would:
+1. Push your module to a Git repository
+2. Tag a release (e.g., v1.0.0)
+3. Connect the repository to Terraform Cloud
+4. Terraform Cloud automatically publishes the module
+
+---
+
+## 🔧 **Exercise 11.3: Using Registry Concepts (10 minutes)**
+
+### Step 1: Create Configuration Using Module Concepts
+Let's create a configuration that uses our module pattern:
+
+```bash
+cd ..  # Back to terraform-lab11
+```
+
+Create **registry-demo.tf**:
+```hcl
+# Add this to your existing configuration
+
+# Simulate using a private registry module
+# (In reality, this would reference your private registry)
+module "company_website" {
+  source = "./s3-website-module"  # Local path for demo
+  
+  username      = var.username
+  website_name  = "company-site"
+  enable_versioning = true
+  
+  index_content = <<-EOF
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Company Website - ${var.username}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+            .container { background: white; padding: 30px; border-radius: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏢 ${var.username}'s Company Website</h1>
+            <p>This website was created using a private registry module!</p>
+            
+            <h2>Private Registry Benefits</h2>
+            <ul>
+                <li>✅ Reusable, tested components</li>
+                <li>✅ Organization-specific modules</li>
+                <li>✅ Version control and releases</li>
+                <li>✅ Access control and security</li>
+                <li>✅ Consistent patterns across teams</li>
+            </ul>
+            
+            <h2>Module Information</h2>
+            <p><strong>Module:</strong> s3-website</p>
+            <p><strong>Version:</strong> 1.0.0 (simulated)</p>
+            <p><strong>Source:</strong> Private Registry</p>
+            <p><strong>Owner:</strong> ${var.username}</p>
+        </div>
+    </body>
+    </html>
+  EOF
+  
+  tags = {
+    Environment = "demo"
+    Lab = "11"
+    Owner = var.username
+    ModuleSource = "PrivateRegistry"
+  }
+}
+
+# Another instance of the same module with different settings
+module "personal_blog" {
+  source = "./s3-website-module"  # Local path for demo
+  
+  username      = var.username
+  website_name  = "personal-blog"
+  enable_versioning = false  # Different setting
+  
+  index_content = <<-EOF
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Personal Blog - ${var.username}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #fff8dc; }
+            .container { background: white; padding: 30px; border-radius: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📝 ${var.username}'s Personal Blog</h1>
+            <p>Another site using the same private registry module!</p>
+            
+            <h2>Code Reuse Benefits</h2>
+            <ul>
+                <li>✅ Same module, different configuration</li>
+                <li>✅ Consistent infrastructure patterns</li>
+                <li>✅ Reduced development time</li>
+                <li>✅ Shared best practices</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+  EOF
+  
+  tags = {
+    Environment = "demo"
+    Lab = "11" 
+    Owner = var.username
+    ModuleSource = "PrivateRegistry"
+    Purpose = "PersonalBlog"
+  }
+}
+```
+
+### Step 2: Add Module Outputs
+Add to **outputs.tf**:
+```hcl
+# Add these outputs
+
+output "private_registry_demo" {
+  description = "Websites created using private registry module"
+  value = {
+    company_website = {
+      url = module.company_website.website_url
+      versioning = "enabled"
+      bucket = module.company_website.bucket_name
+    }
+    personal_blog = {
+      url = module.personal_blog.website_url
+      versioning = "disabled"
+      bucket = module.personal_blog.bucket_name
     }
   }
-  
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                 = 80
-    threshold_type            = "PERCENTAGE"
-    notification_type         = "ACTUAL"
-    subscriber_email_addresses = var.budget_alert_emails
-  }
-  
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                 = 100
-    threshold_type            = "PERCENTAGE"
-    notification_type          = "FORECASTED"
-    subscriber_email_addresses = var.budget_alert_emails
-  }
 }
 
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-2"
+output "module_reuse_benefits" {
+  description = "Benefits demonstrated by module reuse"
+  value = [
+    "Same module code used twice with different configurations",
+    "Consistent infrastructure patterns across projects",
+    "Reduced code duplication and maintenance",
+    "Faster deployment of new projects",
+    "Shared best practices and standards"
+  ]
 }
-
-variable "monthly_budget_limit" {
-  description = "Monthly budget limit in USD"
-  type        = string
-  default     = "100"
-}
-
-variable "budget_alert_emails" {
-  description = "Email addresses for budget alerts"
-  type        = list(string)
-  default     = ["admin@example.com"]
-}
-
-output "dashboard_url" {
-  value = "https://${var.aws_region}.console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.cost_monitoring.dashboard_name}"
-}
-
-output "budget_name" {
-  value = aws_budgets_budget.terraform_cloud.name
-}
-EOF
 ```
 
-### Step 3: Test the Complete Framework
+### Step 3: Deploy with Module Usage
 ```bash
-# Deploy the example that will trigger policies
-cd terraform-policies-registry/examples/basic-vpc
-
-# Initialize the configuration
-terraform init
-
-# Run plan to see policy evaluation
 terraform plan
+terraform apply
 
-echo "=== Testing Complete Framework ==="
-echo "1. Policies should be evaluated during plan"
-echo "2. Cost estimates should be shown"
-echo "3. Compliance checks should pass/fail based on configuration"
-echo "4. Check Terraform Cloud UI for detailed policy results"
-
-# Apply if policies pass
-terraform apply -auto-approve
-
-# Show compliance results
-terraform output compliance_check
-
-# Deploy cost monitoring
-cd terraform-policies-registry
-terraform init
-terraform apply -auto-approve
-
-echo "=== Framework Deployment Complete ==="
-echo "✅ VPC Module published to Private Registry"
-echo "✅ Sentinel Policies configured for governance"
-echo "✅ Cost monitoring and budgets set up"
-echo "✅ Example infrastructure deployed with policy validation"
+# Check the websites created by modules
+terraform output private_registry_demo
 ```
 
 ---
 
-## Lab Summary and Key Takeaways
+## 🎉 **Lab Summary**
 
-### What You've Accomplished
+### What You Accomplished:
+✅ **Learned policy concepts** and why they matter for compliance  
+✅ **Created compliant infrastructure** following best practices  
+✅ **Built a reusable module** for the private registry  
+✅ **Used module patterns** to create multiple websites  
+✅ **Understood governance** through policies and private registries  
+✅ **Experienced code reuse** with consistent patterns  
 
-1. **Policy as Code Implementation:**
-   - Created Sentinel policies for cost control
-   - Implemented resource compliance policies
-   - Set up policy enforcement across workspaces
+### Policy Benefits You Learned:
+- **Automated Compliance**: Policies check rules automatically
+- **Security Enforcement**: Ensure encryption and access controls
+- **Cost Control**: Prevent expensive resource creation
+- **Consistency**: Apply standards across all infrastructure
+- **Audit Trail**: Document compliance for regulations
 
-2. **Private Registry Management:**
-   - Built production-ready VPC module
-   - Published module to Private Registry
-   - Created comprehensive documentation
-   - Implemented version management
+### Private Registry Benefits:
+- **Code Reuse**: Same module used multiple times
+- **Organization Standards**: Enforce approved patterns
+- **Version Control**: Manage module releases
+- **Access Control**: Keep proprietary modules private
+- **Team Collaboration**: Share tested components
 
-3. **Governance Framework:**
-   - Established cost thresholds and monitoring
-   - Implemented naming conventions
-   - Required tag enforcement
-   - Security compliance validation
+---
 
-4. **Complete Integration:**
-   - Combined policies with private modules
-   - Created automated deployment pipeline
-   - Set up monitoring and alerting
-   - Tested end-to-end workflow
+## 🔍 **Understanding Governance in Terraform Cloud**
 
-### Governance Architecture Implemented
+### Policy as Code Benefits:
+✅ **Automated Checking**: No manual reviews needed  
+✅ **Consistent Standards**: Same rules applied everywhere  
+✅ **Early Detection**: Catch issues before deployment  
+✅ **Audit Compliance**: Prove adherence to regulations  
+✅ **Cost Control**: Prevent expensive mistakes  
 
+### Private Registry Use Cases:
+- **Company Standards**: Modules that follow your organization's patterns
+- **Approved Components**: Only use tested and secure modules
+- **Intellectual Property**: Keep proprietary infrastructure private
+- **Team Efficiency**: Developers use pre-built, approved components
+- **Consistency**: Same patterns across all teams and projects
+
+### Governance Workflow:
+```
+Developer writes Terraform → Policy checks run → 
+If compliant → Deploy → If not compliant → Reject with feedback
+```
+
+### Your Lab Architecture:
 ```
 Terraform Cloud Organization
-├── Policy Sets (Global)
-│   ├── Cost Control (hard-mandatory)
-│   └── Resource Compliance (soft-mandatory)
-├── Private Registry
-│   └── networking/aws module (v1.0)
-├── Workspaces
-│   ├── private-registry-example (uses module + policies)
-│   └── cost-monitoring (budget alerts)
-└── Cost Management
-    ├── Budget alerts at 80% and 100%
-    └── CloudWatch dashboard
+├── 📋 Policies (enforce rules)
+│   ├── Required tags
+│   ├── Encryption requirements  
+│   └── Approved instance types
+├── 📚 Private Registry (reusable modules)
+│   └── s3-website module (your creation)
+└── 🏗️ Workspaces (use modules + follow policies)
+    └── policy-demo workspace
 ```
 
-### Policy Enforcement Results
+---
 
-The framework you built enforces:
+## 🧹 **Clean Up**
 
-- ✅ **Cost limits** ($200 hard limit, $50 warning)
-- ✅ **Instance types** (only approved types allowed)
-- ✅ **Required tags** (Environment, Project, Owner)
-- ✅ **Naming conventions** (must start with "tfc-")
-- ✅ **S3 security** (no public access allowed)
-- ✅ **Module usage** (standardized VPC deployments)
-
-### Clean Up
 ```bash
-# Clean up in reverse order
-cd terraform-policies-registry/examples/basic-vpc
-terraform destroy -auto-approve
+# Destroy infrastructure
+terraform destroy
 
-cd terraform-policies-registry
-terraform destroy -auto-approve
-
-echo "Resources cleaned up!"
+# Clean up module directory
+cd ..
+rm -rf s3-website-module
 ```
 
 ---
 
-## Next Steps
-In Lab 12 (Final Project), you'll combine everything learned to:
-- Deploy a complete enterprise architecture
-- Use all Terraform Cloud features together
-- Implement a full governance and compliance framework
-- Demonstrate production-ready infrastructure management
+## ❓ **Troubleshooting**
+
+### Problem: "Module not found"
+**Solution**: Make sure you created the s3-website-module directory and files.
+
+### Problem: "Policy violations" (if using real policies)
+**Solution**: Check that your resources have required tags and configurations.
+
+### Problem: "Registry publication failed"
+**Solution**: In this lab, we used local modules. Real private registry requires Git integration.
+
+### Problem: "Website not accessible"
+**Solution**: Wait 1-2 minutes for S3 website configuration to take effect.
 
 ---
 
-## Troubleshooting
+## 🎯 **Next Steps**
 
-### Common Issues and Solutions
+In Lab 12, you'll learn:
+- Putting it all together in a final project
+- Combining multiple concepts from all labs
+- Building production-ready infrastructure
 
-1. **Policy Evaluation Fails**
-   ```bash
-   # Check policy syntax
-   # Verify enforcement levels
-   # Review Terraform Cloud run logs
-   ```
+**Excellent! You now understand governance and reusability in Terraform Cloud! 🚀**
 
-2. **Module Not Found in Registry**
-   - Verify organization name in module source
-   - Check module publication status
-   - Confirm version constraints
+## 📝 **Governance Cheat Sheet**
 
-3. **Cost Estimation Not Working**
-   - Cost estimation requires paid Terraform Cloud plan
-   - Verify AWS pricing data availability
-   - Check resource configurations
+### Policy Best Practices:
+```bash
+# Common policy requirements:
+- All resources must have Owner tag
+- S3 buckets must have encryption
+- EC2 instances must use approved sizes
+- No resources in forbidden regions
+- Naming conventions must be followed
+```
 
-4. **Sentinel Policies Require Paid Plan**
-   - Sentinel policies need Team & Governance plan
-   - Consider using OPA policies (available in free tier)
-   - Use workspace run tasks as alternative
+### Private Registry Benefits:
+```bash
+# Module reuse patterns:
+- One module → multiple configurations
+- Shared best practices
+- Version controlled releases
+- Organization-specific standards
+- Access controlled sharing
+```
 
-5. **API Authentication Issues**
-   ```bash
-   # Verify API token permissions
-   export TF_CLOUD_TOKEN="your-token-here"
-   
-   # Test API access
-   curl -H "Authorization: Bearer $TF_CLOUD_TOKEN" \
-        "https://app.terraform.io/api/v2/organizations" | jq .
-   ```
+### Real-World Governance:
+- **Policies**: Prevent security and compliance issues
+- **Private Registry**: Share approved infrastructure patterns
+- **Workspaces**: Isolated environments with proper access control
+- **Teams**: Role-based access to different environments

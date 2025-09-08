@@ -11,6 +11,7 @@
 
 **Duration**: 3 days (9 hours hands-on)  
 **Format**: 70% Hands-on / 30% Theory  
+**Level**: Fundamentals to Intermediate/Advanced  
 **Environment**: AWS Cloud9  
 **Specialty**: Terraform Cloud Enterprise Features
 
@@ -18,7 +19,7 @@
 
 - **Day 3 Terraform Cloud Enterprise Focus** - The only course with comprehensive enterprise Terraform Cloud training
 - **Production-Ready Skills** - Every lab teaches immediately applicable enterprise patterns
-- **Progressive Learning** - Structured progression from beginner to advanced enterprise practitioner
+- **Progressive Learning** - Structured progression from fundamentals to advanced enterprise practitioner
 - **Certification Preparation** - Aligned with HashiCorp Terraform Associate certification objectives
 
 ## 📚 Course Structure
@@ -31,15 +32,15 @@
 
 ### **Day 2: Configuration Mastery**
 - **Lab 5**: Remote State Management (45 min)
-- **Lab 6**: Terraform Cloud Integration (45 min)
-- **Lab 7**: Advanced Patterns and CI/CD (45 min)
+- **Lab 6**: Advanced Multi-Module Composition (45 min)
+- **Lab 7**: Advanced Multi-Environment Patterns (45 min)
 - **Lab 8**: Advanced Networking with VPC (45 min)
 
 ### **Day 3: Terraform Cloud Enterprise Mastery** ⭐
-- **Lab 9**: Terraform Cloud Workspaces (45 min)
-- **Lab 10**: Terraform Cloud Policies and Governance (45 min)
-- **Lab 11**: Terraform Cloud Private Registry (45 min)
-- **Lab 12**: Terraform Cloud Enterprise Integration (45 min)
+- **Lab 9**: Terraform Cloud Integration and Remote Execution (45 min)
+- **Lab 10**: Advanced Terraform Cloud Workspaces and Team Management (45 min)
+- **Lab 11**: Advanced Governance with Policies and Private Registry (45 min)
+- **Lab 12**: Capstone Project - Enterprise Infrastructure Integration (45 min)
 
 ## 📁 Course Materials
 

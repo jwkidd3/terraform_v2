@@ -1,114 +1,56 @@
-# Lab 9: Introduction to Terraform Cloud
+# Lab 9: Terraform Cloud Integration and Remote Execution
 **Duration:** 45 minutes  
-**Difficulty:** Beginner to Intermediate  
+**Difficulty:** Intermediate  
 **Day:** 3  
 **Environment:** AWS Cloud9 + Terraform Cloud
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. Create your own Terraform Cloud organization
-4. All workspaces and resources will be prefixed with your username
-5. This ensures complete isolation between users
-
-**Example:** If your username is "user1", your resources will be named:
-- Terraform Cloud Organization: `user1-terraform-lab`
-- Workspace: `user1-terraform-cloud-demo`
-- AWS resources: `user1-` prefixed
-
----
-
-## Lab Objectives
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Create a Terraform Cloud account and organization
-- Understand the benefits of Terraform Cloud over local execution
-- Migrate local state to Terraform Cloud
-- Configure workspace variables and settings
-- Execute remote runs in Terraform Cloud
-- Understand the basics of Terraform Cloud workflow
+- Set up and configure Terraform Cloud for enterprise workflow management
+- Migrate existing infrastructure to Terraform Cloud with remote execution
+- Implement secure variable management and workspace configuration
+- Configure automated runs with VCS integration and approval workflows
+- Monitor infrastructure changes and collaborate effectively using Terraform Cloud
 
 ---
 
-## Prerequisites
+## 📋 **Prerequisites**
 - Completion of Labs 1-8
-- AWS Cloud9 environment set up
-- Basic understanding of Terraform configuration
-- Email address for Terraform Cloud account
+- Terraform Cloud account (free tier sufficient)
+- Understanding of remote state management from Lab 5
+- GitHub account for VCS integration
 
 ---
 
-## Exercise 9.1: Getting Started with Terraform Cloud
-**Duration:** 15 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Terraform Cloud Account
+### Set Your Username
 ```bash
-# Navigate to https://app.terraform.io/signup/account
-# Create a free account (supports up to 5 users)
-# Verify your email address
-# Log into Terraform Cloud
-```
-
-### Step 2: Create Your First Organization
-```bash
-# In Terraform Cloud UI:
-# 1. Click "Create new organization"
-# 2. Choose a unique organization name (e.g., yourname-training)
-# 3. Enter your email address
-# 4. Click "Create organization"
-```
-
-### Step 3: Generate API Token
-```bash
-# In Terraform Cloud UI:
-# 1. Click your avatar → User Settings
-# 2. Click "Tokens" in the left sidebar
-# 3. Click "Create an API token"
-# 4. Name it "cloud9-cli-token"
-# 5. Copy the token immediately (shown only once!)
-```
-
-### Step 4: Configure Terraform CLI
-```bash
-# In your Cloud9 terminal
-mkdir -p ~/.terraform.d
-
-# Create credentials file
-cat > ~/.terraform.d/credentials.tfrc.json << 'EOF'
-{
-  "credentials": {
-    "app.terraform.io": {
-      "token": "YOUR_API_TOKEN_HERE"
-    }
-  }
-}
-EOF
-
-# Set proper permissions
-chmod 600 ~/.terraform.d/credentials.tfrc.json
-
-# Verify token is configured
-terraform login
-# Should show "Terraform has obtained and saved an API token"
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
 ```
 
 ---
 
-## Exercise 9.2: Migrating from Local to Remote State
-**Duration:** 15 minutes
+## ☁️ **Exercise 9.1: Terraform Cloud Organization Setup (15 minutes)**
 
-### Step 1: Create Project with Local State
+### Step 1: Create Terraform Cloud Organization
+1. Go to https://app.terraform.io/
+2. Sign up or sign in to your account
+3. Create a new organization: `${username}-terraform-training`
+4. Note your organization name for later use
+
+### Step 2: Create Lab Directory and Configuration
 ```bash
-# Create new project directory
-mkdir terraform-cloud-intro
-cd terraform-cloud-intro
+mkdir terraform-lab9
+cd terraform-lab9
+```
 
-# Create initial configuration with local state
-cat > main.tf << 'EOF'
+**main.tf:**
+```hcl
 terraform {
   required_version = ">= 1.5"
   
@@ -117,46 +59,332 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
+  }
+  
+  cloud {
+    organization = "user1-terraform-training"  # Replace with your org name
+    
+    workspaces {
+      name = "user1-infrastructure-lab9"      # Replace with your username
     }
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-2"
 }
 
-# Random suffix for unique naming
-resource "random_id" "suffix" {
-  byte_length = 4
+variable "username" {
+  description = "Your unique username"
+  type        = string
 }
 
-# S3 bucket for demonstration
-resource "aws_s3_bucket" "example" {
-  bucket = "tfc-demo-${random_id.suffix.hex}"
+variable "environment" {
+  description = "Environment identifier"
+  type        = string
+  default     = "terraform-cloud"
+}
+
+locals {
+  name_prefix = "${var.username}-${var.environment}"
   
-  tags = {
-    Name        = "Terraform Cloud Demo"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
+  common_tags = {
+    Owner           = var.username
+    Environment     = var.environment
+    ManagedBy       = "TerraformCloud"
+    Workspace       = "infrastructure-lab9"
+    Lab             = "9"
+    DeploymentType  = "Remote"
+    CreatedAt       = timestamp()
   }
 }
 
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "example" {
-  bucket = aws_s3_bucket.example.id
-  
-  versioning_configuration {
-    status = "Enabled"
+# Data sources
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
 
-# S3 bucket encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
-  bucket = aws_s3_bucket.example.id
-  
+# VPC for cloud-managed infrastructure
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name = "${local.name_prefix}-vpc"
+  cidr = "10.100.0.0/16"
+
+  azs             = slice(data.aws_availability_zones.available.names, 0, 2)
+  private_subnets = ["10.100.1.0/24", "10.100.2.0/24"]
+  public_subnets  = ["10.100.101.0/24", "10.100.102.0/24"]
+
+  enable_nat_gateway   = true
+  single_nat_gateway   = true  # Cost optimization for training
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(local.common_tags, {
+    Type = "CloudManagedVPC"
+  })
+}
+
+# Security group for web servers
+resource "aws_security_group" "web" {
+  name_prefix = "${local.name_prefix}-web-"
+  description = "Security group for Terraform Cloud managed web servers"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.100.0.0/16"]  # Only from VPC
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-sg"
+  })
+}
+
+# Application Load Balancer
+resource "aws_lb" "main" {
+  name               = "${local.name_prefix}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = module.vpc.public_subnets
+
+  enable_deletion_protection = false
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-alb"
+    Type = "ApplicationLoadBalancer"
+  })
+}
+
+# ALB Security Group
+resource "aws_security_group" "alb" {
+  name_prefix = "${local.name_prefix}-alb-"
+  description = "Security group for ALB"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-alb-sg"
+  })
+}
+
+# Target Group
+resource "aws_lb_target_group" "web" {
+  name     = "${local.name_prefix}-web-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.vpc.vpc_id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+
+  tags = local.common_tags
+}
+
+# ALB Listener
+resource "aws_lb_listener" "web" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web.arn
+  }
+
+  tags = local.common_tags
+}
+
+# Launch Template
+resource "aws_launch_template" "web" {
+  name_prefix   = "${local.name_prefix}-web-"
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = "t3.micro"
+
+  vpc_security_group_ids = [aws_security_group.web.id]
+
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    username    = var.username
+    environment = var.environment
+  }))
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(local.common_tags, {
+      Name = "${local.name_prefix}-web-server"
+      Type = "WebServer"
+    })
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Auto Scaling Group
+resource "aws_autoscaling_group" "web" {
+  name                = "${local.name_prefix}-asg"
+  vpc_zone_identifier = module.vpc.private_subnets
+  target_group_arns   = [aws_lb_target_group.web.arn]
+  health_check_type   = "ELB"
+  health_check_grace_period = 300
+
+  min_size         = 1
+  max_size         = 3
+  desired_capacity = 2
+
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+
+  # Instance refresh configuration
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${local.name_prefix}-asg"
+    propagate_at_launch = false
+  }
+
+  dynamic "tag" {
+    for_each = local.common_tags
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+}
+
+# CloudWatch Dashboard for monitoring
+resource "aws_cloudwatch_dashboard" "infrastructure" {
+  dashboard_name = "${local.name_prefix}-dashboard"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", aws_lb.main.arn_suffix],
+            [".", "TargetResponseTime", ".", "."],
+            [".", "HTTPCode_Target_2XX_Count", ".", "."]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = "us-east-2"
+          title   = "ALB Performance Metrics"
+          period  = 300
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", aws_autoscaling_group.web.name],
+            [".", "GroupInServiceInstances", ".", "."],
+            [".", "GroupTotalInstances", ".", "."]
+          ]
+          view    = "timeSeries"
+          stacked = false
+          region  = "us-east-2"
+          title   = "Auto Scaling Group Metrics"
+          period  = 300
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+# S3 bucket for application logs and artifacts
+resource "aws_s3_bucket" "app_artifacts" {
+  bucket = "${local.name_prefix}-artifacts-${random_string.bucket_suffix.result}"
+
+  tags = merge(local.common_tags, {
+    Type = "ApplicationArtifacts"
+  })
+}
+
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "app_artifacts" {
+  bucket = aws_s3_bucket.app_artifacts.id
+
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -164,478 +392,360 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
   }
 }
 
-# EC2 instance
-resource "aws_instance" "example" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
-  
-  tags = {
-    Name        = "tfc-demo-${var.environment}"
-    Environment = var.environment
-    ManagedBy   = "Terraform Cloud"
+resource "aws_s3_bucket_versioning" "app_artifacts" {
+  bucket = aws_s3_bucket.app_artifacts.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
-
-# Get latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-  
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-EOF
 ```
 
-### Step 2: Create Variables File
+### Step 3: Create User Data Script
+Create **user_data.sh:**
+
 ```bash
-cat > variables.tf << 'EOF'
-variable "aws_region" {
-  description = "AWS region for resources"
-  type        = string
-  default     = "us-east-2"
-}
+#!/bin/bash
+yum update -y
+yum install -y httpd awscli
 
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "dev"
-}
+systemctl start httpd
+systemctl enable httpd
 
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
+# Create dynamic content showing Terraform Cloud integration
+cat <<EOF > /var/www/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terraform Cloud Managed Infrastructure</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: linear-gradient(135deg, #623ce4 0%, #7c4dff 100%);
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+        }
+        .header { 
+            color: #623ce4; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #7c4dff;
+            padding-bottom: 20px;
+        }
+        .cloud-badge {
+            background: #623ce4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin: 30px 0; 
+        }
+        .info-card { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border-left: 4px solid #623ce4; 
+        }
+        .feature { 
+            background: #e3f2fd; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .status { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌩️ Terraform Cloud Managed Infrastructure</h1>
+            <div class="cloud-badge">Remote Execution Environment</div>
+            <h2>Owner: ${username} | Environment: ${environment}</h2>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>📊 Instance Information</h3>
+                <p><strong>Instance ID:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/instance-id'); ?></p>
+                <p><strong>Instance Type:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/instance-type'); ?></p>
+                <p><strong>AZ:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/placement/availability-zone'); ?></p>
+                <p><strong>Private IP:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/local-ipv4'); ?></p>
+                <p><strong>Launch Time:</strong> $(date)</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>☁️ Terraform Cloud Features</h3>
+                <div class="feature">✅ Remote State Management</div>
+                <div class="feature">✅ Remote Plan & Apply</div>
+                <div class="feature">✅ VCS Integration</div>
+                <div class="feature">✅ Workspace Management</div>
+                <div class="feature">✅ Variable Sets</div>
+                <div class="feature">✅ Policy as Code (Sentinel)</div>
+                <div class="feature">✅ Cost Estimation</div>
+                <div class="feature">✅ Team Collaboration</div>
+            </div>
+            
+            <div class="info-card">
+                <h3>🏗️ Infrastructure Components</h3>
+                <p><strong>VPC:</strong> Custom VPC with public/private subnets</p>
+                <p><strong>Load Balancer:</strong> Application Load Balancer</p>
+                <p><strong>Auto Scaling:</strong> 1-3 instances based on demand</p>
+                <p><strong>Security:</strong> Layered security groups</p>
+                <p><strong>Monitoring:</strong> CloudWatch Dashboard</p>
+                <p><strong>High Availability:</strong> Multi-AZ deployment</p>
+            </div>
+            
+            <div class="info-card">
+                <h3>🔄 Deployment Details</h3>
+                <p><strong>Managed By:</strong> Terraform Cloud</p>
+                <p><strong>Workspace:</strong> infrastructure-lab9</p>
+                <p><strong>Execution:</strong> Remote (Cloud-based)</p>
+                <p><strong>State Storage:</strong> Terraform Cloud</p>
+                <p><strong>Collaboration:</strong> <span class="status">Team-enabled</span></p>
+                <p><strong>Version Control:</strong> <span class="status">Git-integrated</span></p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 8px;">
+            <h3>🎉 Successfully Deployed via Terraform Cloud!</h3>
+            <p>This infrastructure was deployed using Terraform Cloud's remote execution capabilities,
+            demonstrating enterprise-grade infrastructure management with collaboration, security, and automation.</p>
+        </div>
+    </div>
+</body>
+</html>
 EOF
 
-cat > outputs.tf << 'EOF'
-output "bucket_name" {
-  description = "Name of the S3 bucket"
-  value       = aws_s3_bucket.example.id
-}
+# Set permissions
+chown apache:apache /var/www/html/index.html
+chmod 644 /var/www/html/index.html
 
-output "bucket_arn" {
-  description = "ARN of the S3 bucket"
-  value       = aws_s3_bucket.example.arn
-}
+# Restart Apache
+systemctl restart httpd
 
-output "instance_id" {
-  description = "ID of the EC2 instance"
-  value       = aws_instance.example.id
-}
-
-output "instance_public_ip" {
-  description = "Public IP of the EC2 instance"
-  value       = aws_instance.example.public_ip
-}
-
-output "state_location" {
-  description = "Location of Terraform state"
-  value       = "Local state file"
-}
-EOF
-```
-
-### Step 3: Initialize and Apply with Local State
-```bash
-# Initialize with local backend
-terraform init
-
-# Create initial infrastructure
-terraform plan
-terraform apply -auto-approve
-
-# Verify local state exists
-ls -la terraform.tfstate
-cat terraform.tfstate | jq '.version'
-
-# Save the state file for comparison
-cp terraform.tfstate terraform.tfstate.backup
-```
-
-### Step 4: Migrate to Terraform Cloud
-```bash
-# Update configuration to use Terraform Cloud
-cat > backend.tf << 'EOF'
-terraform {
-  cloud {
-    organization = "YOUR_ORG_NAME"  # Replace with your organization
-    
-    workspaces {
-      name = "getting-started"
-    }
-  }
-}
-EOF
-
-# Reinitialize with Terraform Cloud backend
-terraform init
-
-# When prompted:
-# "Do you want to copy existing state to the new backend?"
-# Type: yes
-
-# Verify migration successful
-echo "State has been migrated to Terraform Cloud!"
-
-# Local state file should now be empty
-cat terraform.tfstate
-# Should show: {"version": 4, "terraform_version": "...", "serial": 1, "lineage": "...", "outputs": {}, "resources": []}
+echo "Terraform Cloud managed web server setup completed"
 ```
 
 ---
 
-## Exercise 9.3: Working with Terraform Cloud Workspaces
-**Duration:** 15 minutes
+## 🔧 **Exercise 9.2: Workspace Configuration and Remote Execution (20 minutes)**
 
-### Step 1: Configure Workspace in UI
+### Step 1: Create Terraform Cloud Workspace
+1. In Terraform Cloud UI, go to your organization
+2. Click "New workspace"
+3. Choose "CLI-driven workflow"
+4. Name: `${username}-infrastructure-lab9`
+5. Description: "Lab 9 - Terraform Cloud Integration"
+6. Click "Create workspace"
+
+### Step 2: Configure Workspace Variables
+In your Terraform Cloud workspace, add these environment variables:
+- `AWS_ACCESS_KEY_ID` (sensitive) - Your AWS access key
+- `AWS_SECRET_ACCESS_KEY` (sensitive) - Your AWS secret key  
+- `AWS_DEFAULT_REGION` - `us-east-2`
+
+Add these Terraform variables:
+- `username` - Your username (e.g., "user1")
+
+### Step 3: Execute Remote Plans and Applies
 ```bash
-# In Terraform Cloud UI:
-# 1. Navigate to your organization
-# 2. Click on "getting-started" workspace
-# 3. Go to "Variables" tab
-```
+# Authenticate with Terraform Cloud
+terraform login
 
-### Step 2: Set Environment Variables
-```bash
-# In the Variables tab, add Environment Variables:
-# 1. Click "Add variable"
-# 2. Select "Environment variable"
-# 3. Add these variables:
+# Initialize with cloud backend
+terraform init
 
-# AWS_ACCESS_KEY_ID
-# - Key: AWS_ACCESS_KEY_ID
-# - Value: [Your AWS Access Key]
-# - Sensitive: ✓
-
-# AWS_SECRET_ACCESS_KEY
-# - Key: AWS_SECRET_ACCESS_KEY  
-# - Value: [Your AWS Secret Key]
-# - Sensitive: ✓
-
-# AWS_DEFAULT_REGION
-# - Key: AWS_DEFAULT_REGION
-# - Value: us-east-2
-# - Sensitive: ✗
-```
-
-### Step 3: Set Terraform Variables
-```bash
-# Still in Variables tab, add Terraform Variables:
-# 1. Click "Add variable"
-# 2. Select "Terraform variable"
-
-# environment
-# - Key: environment
-# - Value: dev
-# - HCL: ✗
-# - Sensitive: ✗
-
-# instance_type
-# - Key: instance_type
-# - Value: t2.micro
-# - HCL: ✗
-# - Sensitive: ✗
-```
-
-### Step 4: Execute Remote Runs
-```bash
-# Make a change to trigger a run
-cat >> main.tf << 'EOF'
-
-# Add a new tag to demonstrate changes
-resource "aws_s3_bucket_tagging" "example" {
-  bucket = aws_s3_bucket.example.id
-  
-  tags = {
-    Team        = "DevOps"
-    CostCenter  = "Engineering"
-    Project     = "TerraformCloudDemo"
-  }
-}
-EOF
-
-# Update outputs to show state location
-cat > outputs.tf << 'EOF'
-output "bucket_name" {
-  description = "Name of the S3 bucket"
-  value       = aws_s3_bucket.example.id
-}
-
-output "bucket_arn" {
-  description = "ARN of the S3 bucket"
-  value       = aws_s3_bucket.example.arn
-}
-
-output "instance_id" {
-  description = "ID of the EC2 instance"
-  value       = aws_instance.example.id
-}
-
-output "instance_public_ip" {
-  description = "Public IP of the EC2 instance"
-  value       = aws_instance.example.public_ip
-}
-
-output "state_location" {
-  description = "Location of Terraform state"
-  value       = "Terraform Cloud - Organization: ${var.organization_name}"
-}
-
-output "workspace_url" {
-  description = "URL to view this workspace in Terraform Cloud"
-  value       = "https://app.terraform.io/app/${var.organization_name}/workspaces/getting-started"
-}
-EOF
-
-# Add organization variable
-cat >> variables.tf << 'EOF'
-
-variable "organization_name" {
-  description = "Terraform Cloud organization name"
-  type        = string
-  default     = "YOUR_ORG_NAME"  # Replace with your org
-}
-EOF
-
-# Plan and apply changes
+# Create a plan (runs remotely in Terraform Cloud)
 terraform plan
-# This will now run remotely in Terraform Cloud!
 
-# Watch the run in the UI
-echo "Open Terraform Cloud UI to watch the run progress"
-echo "https://app.terraform.io/app/YOUR_ORG_NAME/workspaces/getting-started/runs"
-
-# Apply the changes
+# Apply the changes (runs remotely in Terraform Cloud)
 terraform apply
-# Type: yes when prompted
+
+# Check outputs
+terraform output
 ```
 
-### Step 5: Explore Terraform Cloud Features
-```bash
-# In Terraform Cloud UI, explore:
-
-# 1. Runs tab
-#    - View run history
-#    - See plan/apply logs
-#    - Check run status
-
-# 2. States tab
-#    - Browse state versions
-#    - Download state files
-#    - View state outputs
-
-# 3. Variables tab
-#    - Review configured variables
-#    - Note sensitive variable masking
-
-# 4. Settings tab
-#    - General settings
-#    - Locking
-#    - Notifications
-#    - Run triggers
-
-# 5. Overview tab
-#    - Resources managed
-#    - Recent runs
-#    - README display (if configured)
-```
+### Step 4: Monitor Remote Execution
+1. Go to your Terraform Cloud workspace
+2. Watch the run in progress
+3. Review execution logs in real-time
+4. Examine the plan details and resource changes
+5. Approve the apply when prompted
 
 ---
 
-## Understanding Terraform Cloud Benefits
+## 🚀 **Exercise 9.3: Advanced Terraform Cloud Features (10 minutes)**
 
-### 1. Remote State Management
-```bash
-# Create a comparison document
-cat > terraform-cloud-benefits.md << 'EOF'
-# Terraform Cloud Benefits Demonstrated
+### Step 1: Create Outputs File
+Create **outputs.tf:**
 
-## 1. Remote State Storage
-- **Before:** State stored locally in terraform.tfstate
-- **After:** State stored securely in Terraform Cloud
-- **Benefit:** Team collaboration, state locking, versioning
+```hcl
+output "application_url" {
+  description = "URL to access the Terraform Cloud managed application"
+  value       = "http://${aws_lb.main.dns_name}"
+}
 
-## 2. Remote Execution
-- **Before:** terraform plan/apply runs on local machine
-- **After:** Runs execute in Terraform Cloud's secure environment
-- **Benefit:** Consistent environment, no local credentials needed
+output "infrastructure_summary" {
+  description = "Summary of Terraform Cloud managed infrastructure"
+  value = {
+    vpc_id                = module.vpc.vpc_id
+    vpc_cidr              = module.vpc.vpc_cidr_block
+    public_subnets        = module.vpc.public_subnets
+    private_subnets       = module.vpc.private_subnets
+    alb_dns_name          = aws_lb.main.dns_name
+    alb_zone_id           = aws_lb.main.zone_id
+    auto_scaling_group    = aws_autoscaling_group.web.name
+    s3_artifacts_bucket   = aws_s3_bucket.app_artifacts.id
+    dashboard_url         = "https://console.aws.amazon.com/cloudwatch/home?region=us-east-2#dashboards:name=${aws_cloudwatch_dashboard.infrastructure.dashboard_name}"
+  }
+}
 
-## 3. Variable Management
-- **Before:** Variables in .tfvars files or environment
-- **After:** Centralized variable management in UI
-- **Benefit:** Secure storage, easy updates, audit trail
+output "terraform_cloud_details" {
+  description = "Terraform Cloud workspace and execution details"
+  value = {
+    execution_mode        = "remote"
+    state_storage        = "terraform_cloud"
+    workspace_management = "cloud_based"
+    collaboration_enabled = true
+    cost_estimation      = "available"
+    policy_enforcement   = "available"
+    remote_operations    = "enabled"
+  }
+}
 
-## 4. Access Control
-- **Before:** Anyone with state file has full access
-- **After:** Role-based access control (RBAC)
-- **Benefit:** Granular permissions, team management
+output "deployment_info" {
+  description = "Information about the current deployment"
+  value = {
+    deployed_by          = "terraform_cloud"
+    environment          = var.environment
+    managed_resources    = "vpc, alb, asg, security_groups, cloudwatch, s3"
+    high_availability    = "multi_az"
+    auto_scaling_enabled = true
+    monitoring_enabled   = true
+    remote_execution     = true
+  }
+}
 
-## 5. Run History
-- **Before:** No history beyond local terminal output
-- **After:** Complete history of all runs
-- **Benefit:** Audit trail, debugging, compliance
-
-## 6. State Locking
-- **Before:** Manual locking or conflicts
-- **After:** Automatic state locking
-- **Benefit:** Prevents concurrent modifications
-
-## 7. Cost Estimation
-- **Available in paid tiers**
-- Shows estimated costs before apply
-- Helps prevent budget overruns
-EOF
-
-cat terraform-cloud-benefits.md
+output "workspace_features" {
+  description = "Terraform Cloud workspace features demonstrated"
+  value = {
+    remote_state         = "✅ Centralized state storage"
+    remote_execution     = "✅ Cloud-based plan/apply"
+    variable_management  = "✅ Secure variable storage"
+    workspace_isolation  = "✅ Isolated execution environment"
+    run_history         = "✅ Complete audit trail"
+    collaboration       = "✅ Team access and permissions"
+    cost_estimation     = "✅ Pre-apply cost analysis"
+    policy_checks       = "✅ Governance and compliance"
+  }
+}
 ```
 
-### 2. Compare Local vs Remote Workflows
-```bash
-# Create workflow comparison
-cat > workflow-comparison.md << 'EOF'
-# Terraform Workflow Comparison
+### Step 2: Test Terraform Cloud Features
+1. **State Management**: View state versions in Terraform Cloud UI
+2. **Cost Estimation**: Check cost estimates in run details
+3. **Variable Management**: Update variables through the UI
+4. **Run History**: Review previous runs and changes
+5. **Collaboration**: Invite team members (if available)
 
-## Local Workflow
-1. Write Terraform configuration
-2. Set AWS credentials locally
-3. Run: terraform init
-4. Run: terraform plan
-5. Run: terraform apply
-6. State saved locally
-7. Share state file manually for team
-
-## Terraform Cloud Workflow
-1. Write Terraform configuration
-2. Configure credentials in Terraform Cloud (once)
-3. Run: terraform init (connects to TFC)
-4. Run: terraform plan (executes remotely)
-5. Run: terraform apply (executes remotely)
-6. State saved in Terraform Cloud
-7. Team automatically has access
-
-## Key Differences
-- **Security:** Credentials never on local machine
-- **Consistency:** Same execution environment
-- **Collaboration:** Built-in team features
-- **History:** Complete audit trail
-- **Automation:** Triggers, notifications, policies
-EOF
-
-cat workflow-comparison.md
-```
+### Step 3: Explore Advanced Workspace Settings
+1. **General Settings**: 
+   - Auto Apply: Configure automatic applies
+   - Terraform Version: Set specific version
+2. **VCS Settings**: 
+   - Connect to Git repository (optional)
+   - Configure automatic runs on commits
+3. **Notifications**: 
+   - Set up Slack/email notifications
+   - Configure run status alerts
 
 ---
 
-## Lab Summary and Key Takeaways
+## 🔍 **Exercise 9.4: Troubleshooting and Best Practices (5 minutes)**
 
-### What You've Learned
-
-1. **Terraform Cloud Basics:**
-   - Account and organization creation
-   - API token configuration
-   - Workspace concepts
-
-2. **State Migration:**
-   - Migrating from local to remote state
-   - Understanding backend configuration
-   - State file management in Terraform Cloud
-
-3. **Remote Execution:**
-   - Running plans and applies remotely
-   - Viewing run output in UI
-   - Understanding run queues
-
-4. **Variable Management:**
-   - Environment vs Terraform variables
-   - Sensitive variable handling
-   - Variable precedence
-
-5. **Core Benefits:**
-   - Team collaboration features
-   - Security improvements
-   - Audit and compliance capabilities
-
-### Clean Up Resources
+### Step 1: Common Terraform Cloud Issues
+Test these scenarios:
 ```bash
-# Destroy the infrastructure
+# Trigger a plan with an intentional error
+# Add invalid configuration to main.tf temporarily
+terraform plan
+
+# Review error handling in Terraform Cloud UI
+# Fix the error and re-run
+```
+
+### Step 2: Best Practices Demonstrated
+Review what you've implemented:
+- ✅ **Variable Security**: Sensitive variables marked as sensitive
+- ✅ **Resource Tagging**: Consistent tagging strategy
+- ✅ **Remote State**: Centralized state management
+- ✅ **Workspace Isolation**: Separate workspace for different purposes
+- ✅ **Version Pinning**: Terraform and provider versions specified
+- ✅ **Monitoring Integration**: CloudWatch dashboard for visibility
+
+---
+
+## 🎯 **Lab Summary**
+
+**What You've Accomplished:**
+- ✅ **Terraform Cloud Setup**: Created organization and configured remote execution workspace
+- ✅ **Remote Infrastructure Management**: Deployed complete application stack via Terraform Cloud
+- ✅ **Secure Variable Management**: Implemented proper credential and variable storage
+- ✅ **Monitoring Integration**: Created CloudWatch dashboard for infrastructure visibility
+- ✅ **Enterprise Workflow**: Established foundation for team collaboration and governance
+- ✅ **Advanced Features**: Explored cost estimation, run history, and workspace management
+
+**Key Terraform Cloud Concepts:**
+- **Remote Execution**: All Terraform operations run in Terraform Cloud, not locally
+- **State Management**: Centralized, versioned state storage with automatic locking
+- **Workspace Isolation**: Separate execution environments for different infrastructure
+- **Variable Security**: Encrypted storage of sensitive variables and credentials
+- **Collaboration Foundation**: Team-ready configuration with proper access controls
+
+**Enterprise Features Demonstrated:**
+- Cloud-based execution environment with consistent Terraform versions
+- Automatic state versioning and backup
+- Integrated cost estimation for infrastructure changes
+- Complete audit trail of all infrastructure modifications
+- Secure credential management with encryption at rest
+- Workspace-based organization for team collaboration
+
+**Production-Ready Patterns:**
+- Multi-AZ deployment for high availability
+- Auto Scaling Groups with proper health checks
+- Application Load Balancer for traffic distribution
+- CloudWatch monitoring and dashboards
+- S3 versioning and encryption
+- Comprehensive resource tagging strategy
+
+**Benefits Over Local Execution:**
+- Consistent execution environment across team members
+- Centralized state management eliminates state conflicts
+- Automatic backups and version history
+- Integrated security scanning and policy enforcement
+- Cost estimation before infrastructure changes
+- Complete audit trail for compliance requirements
+
+---
+
+## 🧹 **Cleanup**
+```bash
+# Destroy infrastructure via Terraform Cloud (runs remotely)
 terraform destroy
-# Type: yes when prompted
 
-# The destroy will also run remotely in Terraform Cloud
-# Watch progress in the UI
+# Confirm destruction in Terraform Cloud UI
+# Review the destroy plan before approving
 ```
 
-### Best Practices Learned
-
-1. **Always use remote state** for team environments
-2. **Never commit credentials** to version control
-3. **Use Terraform Cloud** for consistent execution
-4. **Configure variables** in workspace, not in code
-5. **Review plans** before applying changes
-
----
-
-## Next Steps
-In Lab 10, you'll learn about:
-- Advanced workspace management
-- Team collaboration and RBAC
-- Variable sets and workspace relationships
-- Run triggers and automation
-
----
-
-## Troubleshooting
-
-### Common Issues and Solutions
-
-1. **API Token Issues**
-   ```bash
-   # Verify token is set correctly
-   cat ~/.terraform.d/credentials.tfrc.json
-   
-   # Re-run login if needed
-   terraform login
-   ```
-
-2. **Organization Name Mismatch**
-   ```bash
-   # Ensure organization name in backend.tf matches your actual org
-   # Update backend.tf with correct org name
-   ```
-
-3. **AWS Credentials Not Working**
-   ```bash
-   # In Terraform Cloud UI:
-   # - Verify variables are set as "Environment" not "Terraform"
-   # - Ensure sensitive checkbox is checked
-   # - Try re-entering credentials
-   ```
-
-4. **State Migration Failed**
-   ```bash
-   # If migration fails:
-   terraform init -reconfigure
-   # This forces backend reconfiguration
-   ```
-
-5. **Remote Run Not Starting**
-   ```bash
-   # Check in UI:
-   # - Workspace → Settings → General
-   # - Ensure "Execution Mode" is "Remote"
-   # - Check run queue isn't blocked
-   ```
-
-### Getting Help
-- [Terraform Cloud Documentation](https://developer.hashicorp.com/terraform/cloud-docs)
-- [Terraform Cloud Learn Tutorials](https://developer.hashicorp.com/terraform/tutorials/cloud-get-started)
-- [Community Forum](https://discuss.hashicorp.com/c/terraform-core)
+This lab demonstrates the enterprise advantages of Terraform Cloud, providing centralized state management, remote execution, and the foundation for team collaboration while maintaining the same infrastructure-as-code principles you've learned throughout the course.

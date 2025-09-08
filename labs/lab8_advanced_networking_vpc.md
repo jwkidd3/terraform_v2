@@ -1,4 +1,4 @@
-# Lab 8: Advanced Networking with VPC
+# Lab 8: VPC Networking and Multi-Tier Architecture
 **Duration:** 45 minutes  
 **Difficulty:** Intermediate  
 **Day:** 2  
@@ -6,149 +6,45 @@
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. All resources will be prefixed with your username
-4. Network resources (VPC, subnets, gateways) will be user-specific
-5. This ensures complete network isolation between users
-
-**Example:** If your username is "user1", your resources will be named:
-- `user1-advanced-vpc-main`
-- `user1-advanced-vpc-public-subnet-1`
-- `user1-advanced-vpc-nat-gateway-1`
-- State file: `terraform-user1.tfstate`
-
----
-
-## Lab Objectives
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Design and implement complex VPC architectures
-- Configure multi-tier networking with public and private subnets
-- Set up NAT Gateways and Internet Gateways
-- Implement Network ACLs and routing tables
-- Create VPC peering connections
+- Design and implement a production-ready VPC with public and private subnets
+- Configure advanced routing, NAT Gateways, and Internet connectivity
+- Deploy a multi-tier application architecture across availability zones
+- Implement proper security group rules for network segmentation
+- Configure Application Load Balancer with health checks and target groups
 
 ---
 
-## Prerequisites
+## 📋 **Prerequisites**
 - Completion of Labs 1-7
-- Understanding of AWS networking concepts
-- AWS Cloud9 environment set up
+- Understanding of networking concepts (CIDR, subnets, routing)
+- Knowledge of AWS availability zones and regions
 
 ---
 
-## Exercise 8.1: Multi-Tier VPC Architecture
-**Duration:** 20 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Lab Environment
+### Set Your Username
+```bash
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
+```
+
+---
+
+## 🌐 **Exercise 8.1: Design Multi-Tier VPC Architecture (20 minutes)**
+
+### Step 1: Create Lab Directory
 ```bash
 mkdir terraform-lab8
 cd terraform-lab8
-
-touch main.tf variables.tf outputs.tf locals.tf
 ```
 
-### Step 2: Define Advanced Networking Variables
-**variables.tf:**
-```hcl
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-  default     = "advanced-networking"
-}
+### Step 2: Create Production-Ready VPC Infrastructure
+Let's build a comprehensive VPC that supports a multi-tier application.
 
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "lab"
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-  
-  validation {
-    condition     = can(cidrhost(var.vpc_cidr, 0))
-    error_message = "VPC CIDR must be a valid CIDR block."
-  }
-}
-
-variable "availability_zones" {
-  description = "List of availability zones"
-  type        = list(string)
-  default     = ["us-east-2a", "us-east-2b", "us-east-2c"]
-}
-
-variable "enable_nat_gateway" {
-  description = "Enable NAT Gateway for private subnets"
-  type        = bool
-  default     = true
-}
-
-variable "enable_vpn_gateway" {
-  description = "Enable VPN Gateway"
-  type        = bool
-  default     = false
-}
-
-variable "enable_dns_hostnames" {
-  description = "Enable DNS hostnames in VPC"
-  type        = bool
-  default     = true
-}
-
-variable "enable_dns_support" {
-  description = "Enable DNS support in VPC"
-  type        = bool
-  default     = true
-}
-
-variable "common_tags" {
-  description = "Common tags for all resources"
-  type        = map(string)
-  default = {
-    Project   = "advanced-networking"
-    ManagedBy = "Terraform"
-  }
-}
-```
-
-### Step 3: Create Advanced Locals for Network Calculations
-**locals.tf:**
-```hcl
-locals {
-  # Calculate subnet CIDRs for different tiers
-  public_subnet_cidrs = [
-    for i in range(length(var.availability_zones)) :
-    cidrsubnet(var.vpc_cidr, 8, i + 1)
-  ]
-  
-  private_subnet_cidrs = [
-    for i in range(length(var.availability_zones)) :
-    cidrsubnet(var.vpc_cidr, 8, i + 10)
-  ]
-  
-  database_subnet_cidrs = [
-    for i in range(length(var.availability_zones)) :
-    cidrsubnet(var.vpc_cidr, 8, i + 20)
-  ]
-  
-  # Resource naming
-  name_prefix = "${var.project_name}-${var.environment}"
-  
-  # Common tags
-  tags = merge(var.common_tags, {
-    Environment = var.environment
-  })
-}
-```
-
-### Step 4: Implement Advanced VPC Configuration
 **main.tf:**
 ```hcl
 terraform {
@@ -160,586 +56,686 @@ terraform {
       version = "~> 5.0"
     }
   }
+  
+  backend "s3" {
+    bucket         = "user1-terraform-state-backend"  # Replace with your bucket name
+    key            = "lab8/networking/terraform.tfstate"
+    region         = "us-east-2"
+    dynamodb_table = "user1-terraform-locks"         # Replace with your table name
+    encrypt        = true
+  }
 }
 
 provider "aws" {
   region = "us-east-2"
+}
+
+variable "username" {
+  description = "Your unique username"
+  type        = string
   
-  default_tags {
-    tags = local.tags
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
+  }
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "development"
+}
+
+# Data sources for dynamic resource selection
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+# Local values for consistent configuration
+locals {
+  name_prefix = "${var.username}-${var.environment}"
+  vpc_cidr    = "10.0.0.0/16"
+  
+  # Calculate subnet CIDRs dynamically
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
+  database_subnets = ["10.0.21.0/24", "10.0.22.0/24"]
+  
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
+  
+  common_tags = {
+    Owner       = var.username
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Project     = "VPC-Lab-8"
   }
 }
 
 # VPC
 resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = var.enable_dns_hostnames
-  enable_dns_support   = var.enable_dns_support
-  
-  tags = {
+  cidr_block           = local.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-vpc"
-  }
+    Type = "MainVPC"
+  })
 }
 
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-igw"
-  }
+  })
 }
 
-# Public Subnets
+# Public Subnets (for load balancers, NAT gateways)
 resource "aws_subnet" "public" {
-  count = length(var.availability_zones)
-  
+  count = length(local.public_subnets)
+
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = local.public_subnet_cidrs[count.index]
-  availability_zone       = var.availability_zones[count.index]
+  cidr_block              = local.public_subnets[count.index]
+  availability_zone       = local.availability_zones[count.index]
   map_public_ip_on_launch = true
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-public-${count.index + 1}"
-    Tier = "public"
-    AZ   = var.availability_zones[count.index]
-  }
+    Type = "PublicSubnet"
+    Tier = "Public"
+    AZ   = local.availability_zones[count.index]
+  })
 }
 
-# Private Subnets (Application Tier)
+# Private Subnets (for application servers)
 resource "aws_subnet" "private" {
-  count = length(var.availability_zones)
-  
+  count = length(local.private_subnets)
+
   vpc_id            = aws_vpc.main.id
-  cidr_block        = local.private_subnet_cidrs[count.index]
-  availability_zone = var.availability_zones[count.index]
-  
-  tags = {
+  cidr_block        = local.private_subnets[count.index]
+  availability_zone = local.availability_zones[count.index]
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-private-${count.index + 1}"
-    Tier = "private"
-    AZ   = var.availability_zones[count.index]
-  }
+    Type = "PrivateSubnet"
+    Tier = "Application"
+    AZ   = local.availability_zones[count.index]
+  })
 }
 
-# Database Subnets
+# Database Subnets (for RDS, ElastiCache)
 resource "aws_subnet" "database" {
-  count = length(var.availability_zones)
-  
+  count = length(local.database_subnets)
+
   vpc_id            = aws_vpc.main.id
-  cidr_block        = local.database_subnet_cidrs[count.index]
-  availability_zone = var.availability_zones[count.index]
-  
-  tags = {
+  cidr_block        = local.database_subnets[count.index]
+  availability_zone = local.availability_zones[count.index]
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-database-${count.index + 1}"
-    Tier = "database"
-    AZ   = var.availability_zones[count.index]
-  }
+    Type = "DatabaseSubnet"
+    Tier = "Database"
+    AZ   = local.availability_zones[count.index]
+  })
 }
 
 # Elastic IPs for NAT Gateways
 resource "aws_eip" "nat" {
-  count = var.enable_nat_gateway ? length(var.availability_zones) : 0
-  
+  count = length(local.public_subnets)
+
   domain = "vpc"
-  
   depends_on = [aws_internet_gateway.main]
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-nat-eip-${count.index + 1}"
-  }
+    Type = "NATGatewayEIP"
+  })
 }
 
-# NAT Gateways
+# NAT Gateways for private subnet internet access
 resource "aws_nat_gateway" "main" {
-  count = var.enable_nat_gateway ? length(var.availability_zones) : 0
-  
+  count = length(local.public_subnets)
+
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-nat-${count.index + 1}"
-    AZ   = var.availability_zones[count.index]
-  }
+    AZ   = local.availability_zones[count.index]
+  })
+
+  depends_on = [aws_internet_gateway.main]
 }
-```
 
----
-
-## Exercise 8.2: Advanced Routing and Network ACLs
-**Duration:** 15 minutes
-
-### Step 1: Create Route Tables
-Add to **main.tf:**
-
-```hcl
-# Public Route Table
+# Route table for public subnets
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-  
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
   }
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-public-rt"
-    Tier = "public"
-  }
+    Type = "PublicRouteTable"
+  })
 }
 
-# Public Route Table Associations
+# Route table associations for public subnets
 resource "aws_route_table_association" "public" {
   count = length(aws_subnet.public)
-  
+
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Private Route Tables (one per AZ)
+# Route tables for private subnets (one per AZ for high availability)
 resource "aws_route_table" "private" {
-  count = length(var.availability_zones)
-  
+  count = length(local.private_subnets)
+
   vpc_id = aws_vpc.main.id
-  
-  dynamic "route" {
-    for_each = var.enable_nat_gateway ? [1] : []
-    content {
-      cidr_block     = "0.0.0.0/0"
-      nat_gateway_id = aws_nat_gateway.main[count.index].id
-    }
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main[count.index].id
   }
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-private-rt-${count.index + 1}"
-    Tier = "private"
-    AZ   = var.availability_zones[count.index]
-  }
+    Type = "PrivateRouteTable"
+    AZ   = local.availability_zones[count.index]
+  })
 }
 
-# Private Route Table Associations
+# Route table associations for private subnets
 resource "aws_route_table_association" "private" {
   count = length(aws_subnet.private)
-  
+
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
 }
 
-# Database Route Table
+# Route table for database subnets (no internet access)
 resource "aws_route_table" "database" {
   vpc_id = aws_vpc.main.id
-  
-  tags = {
+
+  tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-database-rt"
-    Tier = "database"
-  }
+    Type = "DatabaseRouteTable"
+  })
 }
 
-# Database Route Table Associations
+# Route table associations for database subnets
 resource "aws_route_table_association" "database" {
   count = length(aws_subnet.database)
-  
+
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database.id
 }
-```
 
-### Step 2: Implement Network ACLs
-Add to **main.tf:**
-
-```hcl
-# Public Network ACL
-resource "aws_network_acl" "public" {
-  vpc_id     = aws_vpc.main.id
-  subnet_ids = aws_subnet.public[*].id
-  
-  # Allow inbound HTTP
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-  
-  # Allow inbound HTTPS
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-  
-  # Allow inbound SSH from VPC
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 120
-    action     = "allow"
-    cidr_block = var.vpc_cidr
-    from_port  = 22
-    to_port    = 22
-  }
-  
-  # Allow return traffic
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 900
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
-  }
-  
-  # Allow all outbound
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-  
-  tags = {
-    Name = "${local.name_prefix}-public-nacl"
-    Tier = "public"
-  }
-}
-
-# Private Network ACL
-resource "aws_network_acl" "private" {
-  vpc_id     = aws_vpc.main.id
-  subnet_ids = aws_subnet.private[*].id
-  
-  # Allow inbound from VPC
-  ingress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = var.vpc_cidr
-    from_port  = 0
-    to_port    = 0
-  }
-  
-  # Allow return traffic
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 900
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
-  }
-  
-  # Allow all outbound
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-  
-  tags = {
-    Name = "${local.name_prefix}-private-nacl"
-    Tier = "private"
-  }
-}
-
-# Database Network ACL
-resource "aws_network_acl" "database" {
-  vpc_id     = aws_vpc.main.id
+# Database subnet group for RDS
+resource "aws_db_subnet_group" "main" {
+  name       = "${local.name_prefix}-db-subnet-group"
   subnet_ids = aws_subnet.database[*].id
-  
-  # Allow MySQL/Aurora from private subnets
-  dynamic "ingress" {
-    for_each = local.private_subnet_cidrs
-    content {
-      protocol   = "tcp"
-      rule_no    = 100 + ingress.key
-      action     = "allow"
-      cidr_block = ingress.value
-      from_port  = 3306
-      to_port    = 3306
-    }
-  }
-  
-  # Allow PostgreSQL from private subnets
-  dynamic "ingress" {
-    for_each = local.private_subnet_cidrs
-    content {
-      protocol   = "tcp"
-      rule_no    = 200 + ingress.key
-      action     = "allow"
-      cidr_block = ingress.value
-      from_port  = 5432
-      to_port    = 5432
-    }
-  }
-  
-  # Allow return traffic
-  egress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
-  }
-  
-  tags = {
-    Name = "${local.name_prefix}-database-nacl"
-    Tier = "database"
-  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-db-subnet-group"
+  })
 }
 ```
 
 ---
 
-## Exercise 8.3: VPC Endpoints and Enhanced Security
-**Duration:** 10 minutes
+## 🛡️ **Exercise 8.2: Implement Security Groups (15 minutes)**
 
-### Step 1: Create VPC Endpoints
-Add to **main.tf:**
+### Step 1: Create Comprehensive Security Groups
+Add security group configurations to **main.tf**:
 
 ```hcl
-# S3 Gateway Endpoint
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id            = aws_vpc.main.id
-  service_name      = "com.amazonaws.us-east-2.s3"
-  vpc_endpoint_type = "Gateway"
-  
-  route_table_ids = concat(
-    [aws_route_table.public.id],
-    aws_route_table.private[*].id,
-    [aws_route_table.database.id]
-  )
-  
-  tags = {
-    Name = "${local.name_prefix}-s3-endpoint"
-  }
-}
-
-# DynamoDB Gateway Endpoint
-resource "aws_vpc_endpoint" "dynamodb" {
-  vpc_id            = aws_vpc.main.id
-  service_name      = "com.amazonaws.us-east-2.dynamodb"
-  vpc_endpoint_type = "Gateway"
-  
-  route_table_ids = concat(
-    [aws_route_table.public.id],
-    aws_route_table.private[*].id
-  )
-  
-  tags = {
-    Name = "${local.name_prefix}-dynamodb-endpoint"
-  }
-}
-
-# Security Group for VPC Endpoints
-resource "aws_security_group" "vpc_endpoints" {
-  name_prefix = "${local.name_prefix}-vpc-endpoints-"
-  description = "Security group for VPC endpoints"
+# Security Group for Application Load Balancer
+resource "aws_security_group" "alb" {
+  name_prefix = "${local.name_prefix}-alb-"
+  description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
-  
+
   ingress {
-    description = "HTTPS from VPC"
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from anywhere"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   egress {
+    description = "All outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
-  tags = {
-    Name = "${local.name_prefix}-vpc-endpoints-sg"
-  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-alb-sg"
+    Type = "LoadBalancerSecurityGroup"
+  })
 }
 
-# EC2 Interface Endpoint
-resource "aws_vpc_endpoint" "ec2" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.us-east-2.ec2"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  
-  private_dns_enabled = true
-  
-  tags = {
-    Name = "${local.name_prefix}-ec2-endpoint"
+# Security Group for Web Servers
+resource "aws_security_group" "web" {
+  name_prefix = "${local.name_prefix}-web-"
+  description = "Security group for web servers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "HTTP from ALB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
   }
+
+  ingress {
+    description     = "SSH from bastion"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-sg"
+    Type = "WebServerSecurityGroup"
+  })
 }
 
-# Systems Manager Interface Endpoints
-resource "aws_vpc_endpoint" "ssm" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.us-east-2.ssm"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  
-  private_dns_enabled = true
-  
-  tags = {
-    Name = "${local.name_prefix}-ssm-endpoint"
+# Security Group for Bastion Host
+resource "aws_security_group" "bastion" {
+  name_prefix = "${local.name_prefix}-bastion-"
+  description = "Security group for bastion host"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-bastion-sg"
+    Type = "BastionSecurityGroup"
+  })
+}
+
+# Security Group for Database
+resource "aws_security_group" "database" {
+  name_prefix = "${local.name_prefix}-db-"
+  description = "Security group for database servers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "MySQL/MariaDB from web servers"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  ingress {
+    description     = "PostgreSQL from web servers"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-database-sg"
+    Type = "DatabaseSecurityGroup"
+  })
 }
 ```
 
-### Step 2: Create Outputs
-**outputs.tf:**
+---
+
+## 🚀 **Exercise 8.3: Deploy Multi-Tier Application (10 minutes)**
+
+### Step 1: Add Application Infrastructure
+Continue adding to **main.tf**:
+
+```hcl
+# Application Load Balancer
+resource "aws_lb" "main" {
+  name               = "${local.name_prefix}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = aws_subnet.public[*].id
+
+  enable_deletion_protection = false
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-alb"
+    Type = "ApplicationLoadBalancer"
+  })
+}
+
+# Target Group for Web Servers
+resource "aws_lb_target_group" "web" {
+  name     = "${local.name_prefix}-web-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    path                = "/"
+    matcher             = "200"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-tg"
+    Type = "TargetGroup"
+  })
+}
+
+# Load Balancer Listener
+resource "aws_lb_listener" "web" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web.arn
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-listener"
+  })
+}
+
+# Bastion Host in Public Subnet
+resource "aws_instance" "bastion" {
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.public[0].id
+  vpc_security_group_ids      = [aws_security_group.bastion.id]
+  associate_public_ip_address = true
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y htop wget curl
+    echo "Bastion Host Ready" > /home/ec2-user/bastion-ready.txt
+  EOF
+  )
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-bastion"
+    Type = "BastionHost"
+    Tier = "Management"
+  })
+}
+
+# Web Servers in Private Subnets
+resource "aws_instance" "web" {
+  count = length(local.private_subnets)
+
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.private[count.index].id
+  vpc_security_group_ids = [aws_security_group.web.id]
+
+  user_data = base64encode(templatefile("${path.module}/user_data_web.sh", {
+    server_id   = count.index + 1
+    username    = var.username
+    environment = var.environment
+  }))
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-${count.index + 1}"
+    Type = "WebServer"
+    Tier = "Application"
+    AZ   = local.availability_zones[count.index]
+  })
+}
+
+# Register web servers with target group
+resource "aws_lb_target_group_attachment" "web" {
+  count = length(aws_instance.web)
+
+  target_group_arn = aws_lb_target_group.web.arn
+  target_id        = aws_instance.web[count.index].id
+  port             = 80
+}
+```
+
+### Step 2: Create Web Server User Data Script
+Create **user_data_web.sh**:
+
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd php mysql
+
+# Start and enable Apache
+systemctl start httpd
+systemctl enable httpd
+
+# Create dynamic web page
+cat <<EOF > /var/www/html/index.php
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Tier Application - Server ${server_id}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f4; }
+        .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 20px; }
+        .info-section { background-color: #ecf0f1; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .server-id { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Multi-Tier VPC Application</h1>
+            <h2>Server <span class="server-id">${server_id}</span> - Owner: ${username}</h2>
+        </div>
+        
+        <div class="info-section">
+            <h3>Infrastructure Details</h3>
+            <p><strong>Environment:</strong> ${environment}</p>
+            <p><strong>Instance ID:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/instance-id'); ?></p>
+            <p><strong>Availability Zone:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/placement/availability-zone'); ?></p>
+            <p><strong>Private IP:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/local-ipv4'); ?></p>
+            <p><strong>Server Time:</strong> <?php echo date('Y-m-d H:i:s T'); ?></p>
+        </div>
+        
+        <div class="info-section">
+            <h3>VPC Architecture Features</h3>
+            <ul>
+                <li>✅ Multi-AZ deployment for high availability</li>
+                <li>✅ Private subnets for application tier security</li>
+                <li>✅ NAT Gateways for secure outbound internet access</li>
+                <li>✅ Application Load Balancer with health checks</li>
+                <li>✅ Layered security groups for network segmentation</li>
+                <li>✅ Dedicated database subnets (no internet access)</li>
+                <li>✅ Bastion host for secure administrative access</li>
+            </ul>
+        </div>
+        
+        <div class="info-section">
+            <h3>Network Configuration</h3>
+            <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
+            <p><strong>Subnet Type:</strong> Private Application Subnet</p>
+            <p><strong>Route Table:</strong> Routes through NAT Gateway</p>
+            <p><strong>Security Group:</strong> Allows HTTP from ALB, SSH from Bastion</p>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+# Set proper permissions
+chown apache:apache /var/www/html/index.php
+chmod 644 /var/www/html/index.php
+
+# Restart Apache to ensure everything is loaded
+systemctl restart httpd
+
+# Create health check endpoint
+echo "OK" > /var/www/html/health.html
+```
+
+### Step 3: Create Outputs
+Create **outputs.tf**:
+
 ```hcl
 output "vpc_info" {
-  description = "VPC information"
+  description = "VPC configuration details"
   value = {
-    vpc_id     = aws_vpc.main.id
-    vpc_cidr   = aws_vpc.main.cidr_block
-    vpc_arn    = aws_vpc.main.arn
+    vpc_id                = aws_vpc.main.id
+    vpc_cidr              = aws_vpc.main.cidr_block
+    availability_zones    = local.availability_zones
+    public_subnet_ids     = aws_subnet.public[*].id
+    private_subnet_ids    = aws_subnet.private[*].id
+    database_subnet_ids   = aws_subnet.database[*].id
   }
 }
 
-output "subnet_info" {
-  description = "Subnet information"
+output "load_balancer_dns" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.main.dns_name
+}
+
+output "application_url" {
+  description = "URL to access the web application"
+  value       = "http://${aws_lb.main.dns_name}"
+}
+
+output "bastion_public_ip" {
+  description = "Public IP of the bastion host"
+  value       = aws_instance.bastion.public_ip
+}
+
+output "web_server_private_ips" {
+  description = "Private IP addresses of web servers"
+  value       = aws_instance.web[*].private_ip
+}
+
+output "security_groups" {
+  description = "Security group IDs for different tiers"
   value = {
-    public_subnets = {
-      ids   = aws_subnet.public[*].id
-      cidrs = aws_subnet.public[*].cidr_block
-      azs   = aws_subnet.public[*].availability_zone
-    }
-    private_subnets = {
-      ids   = aws_subnet.private[*].id
-      cidrs = aws_subnet.private[*].cidr_block
-      azs   = aws_subnet.private[*].availability_zone
-    }
-    database_subnets = {
-      ids   = aws_subnet.database[*].id
-      cidrs = aws_subnet.database[*].cidr_block
-      azs   = aws_subnet.database[*].availability_zone
-    }
+    alb_security_group      = aws_security_group.alb.id
+    web_security_group      = aws_security_group.web.id
+    bastion_security_group  = aws_security_group.bastion.id
+    database_security_group = aws_security_group.database.id
   }
 }
 
-output "gateway_info" {
-  description = "Gateway information"
-  value = {
-    internet_gateway_id = aws_internet_gateway.main.id
-    nat_gateway_ids     = var.enable_nat_gateway ? aws_nat_gateway.main[*].id : []
-    nat_gateway_ips     = var.enable_nat_gateway ? aws_eip.nat[*].public_ip : []
-  }
-}
-
-output "vpc_endpoints" {
-  description = "VPC endpoint information"
-  value = {
-    s3_endpoint       = aws_vpc_endpoint.s3.id
-    dynamodb_endpoint = aws_vpc_endpoint.dynamodb.id
-    ec2_endpoint      = aws_vpc_endpoint.ec2.id
-    ssm_endpoint      = aws_vpc_endpoint.ssm.id
-  }
-}
-
-output "route_table_info" {
-  description = "Route table information"
-  value = {
-    public_route_table_id    = aws_route_table.public.id
-    private_route_table_ids  = aws_route_table.private[*].id
-    database_route_table_id  = aws_route_table.database.id
-  }
+output "nat_gateway_ips" {
+  description = "Public IP addresses of NAT Gateways"
+  value       = aws_eip.nat[*].public_ip
 }
 ```
 
-### Step 3: Deploy and Test
+### Step 4: Deploy and Test the Infrastructure
 ```bash
 # Initialize and deploy
 terraform init
-terraform plan
-terraform apply
+terraform apply -var="username=$TF_VAR_username"
 
-# View outputs
-terraform output
-terraform output -json subnet_info
+# Test the application
+ALB_DNS=$(terraform output -raw load_balancer_dns)
+echo "Application URL: http://$ALB_DNS"
 
-# Test VPC endpoints
-aws s3 ls --region us-east-2 --endpoint-url https://s3.us-east-2.amazonaws.com
+# Test multiple times to see load balancing
+for i in {1..5}; do
+  echo "Request $i:"
+  curl -s "http://$ALB_DNS" | grep -o "Server [0-9]"
+  sleep 1
+done
 ```
 
 ---
 
-## Lab Summary and Key Takeaways
+## 🎯 **Lab Summary**
 
-### What You've Learned
+**What You've Accomplished:**
+- ✅ Designed and implemented a production-ready VPC with multi-tier architecture
+- ✅ Deployed infrastructure across multiple Availability Zones for high availability
+- ✅ Configured advanced networking with NAT Gateways and proper routing
+- ✅ Implemented layered security with purpose-built security groups
+- ✅ Deployed Application Load Balancer with health checks and target groups
+- ✅ Created bastion host architecture for secure administrative access
+- ✅ Separated tiers with public, private, and database subnets
 
-1. **Multi-Tier VPC Architecture:**
-   - Public, private, and database subnet tiers
-   - Proper subnet CIDR allocation and planning
-   - Cross-AZ redundancy and high availability
+**Key Networking Concepts Mastered:**
+- **VPC Design**: Multi-tier architecture with proper CIDR planning
+- **High Availability**: Multi-AZ deployment patterns
+- **Security**: Network segmentation with security groups
+- **Routing**: Advanced routing with NAT Gateways and route tables
+- **Load Balancing**: Application Load Balancer configuration and health checks
 
-2. **Advanced Routing:**
-   - Multiple route tables for different tiers
-   - NAT Gateway configuration for private subnets
-   - Route table associations and dependencies
+**Production-Ready Features:**
+- Internet Gateway for public subnet connectivity
+- NAT Gateways for secure private subnet internet access
+- Database subnet isolation (no internet access)
+- Bastion host for secure SSH access to private resources
+- Application Load Balancer for high availability and scalability
+- Health checks and automatic failover capabilities
 
-3. **Network Security:**
-   - Network ACLs for subnet-level security
-   - Security groups for instance-level security
-   - Layered security approach
+---
 
-4. **VPC Endpoints:**
-   - Gateway endpoints for S3 and DynamoDB
-   - Interface endpoints for AWS services
-   - Cost optimization through private connectivity
-
-### Network Architecture Implemented
-
-```
-Internet Gateway
-       |
-   Public Subnets (Web Tier)
-       |
-   NAT Gateways
-       |
-   Private Subnets (App Tier)
-       |
-   Database Subnets (DB Tier)
-```
-
-### Security Best Practices
-
-- **Defense in Depth:** Multiple layers of security
-- **Least Privilege:** Restrictive Network ACLs
-- **Network Segmentation:** Separate tiers with different access patterns
-- **Private Connectivity:** VPC endpoints for AWS services
-
-### Clean Up
+## 🧹 **Cleanup**
 ```bash
-terraform destroy
+terraform destroy -var="username=$TF_VAR_username"
 ```
 
----
-
-## Next Steps
-In Lab 9, you'll learn about:
-- Auto Scaling Groups and Load Balancers
-- Application deployment patterns
-- Health checks and monitoring
-- Blue-green deployment strategies
-
----
-
-## Troubleshooting
-
-### Common Issues
-1. **CIDR Conflicts:** Ensure subnet CIDRs don't overlap
-2. **Route Table Errors:** Verify route table associations
-3. **Network ACL Blocks:** Check rule numbers and precedence
-4. **VPC Endpoint Access:** Verify security group rules for interface endpoints
+This lab demonstrates enterprise networking patterns that form the foundation of production AWS workloads. The architecture supports scalability, security, and high availability while maintaining operational simplicity.

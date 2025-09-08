@@ -1,4 +1,4 @@
-# Lab 5: Remote State Management
+# Lab 5: Remote State Management and Backend Configuration
 **Duration:** 45 minutes  
 **Difficulty:** Intermediate  
 **Day:** 2  
@@ -6,104 +6,51 @@
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. All resources will be prefixed with your username
-4. State buckets and DynamoDB tables will be user-specific
-5. This ensures complete isolation between users
-
-**Example:** If your username is "user1", your resources will be named:
-- `user1-terraform-state-lab-terraform-state-xxxxx` (S3 bucket)
-- `user1-terraform-state-lab-lock-table` (DynamoDB table)
-- State key: `user1/terraform.tfstate`
-
----
-
-## Lab Objectives
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Configure remote state backends in AWS
-- Implement state locking with DynamoDB
-- Migrate local state to remote state
-- Work with multiple state files and workspaces
-- Understand remote state security considerations
+- Implement secure remote state storage with S3 and DynamoDB
+- Configure state locking to prevent concurrent modifications
+- Migrate existing local state to remote backends
+- Implement state encryption and versioning best practices
+- Handle state backup and recovery scenarios
 
 ---
 
-## Prerequisites
+## 📋 **Prerequisites**
 - Completion of Labs 1-4
-- Understanding of Terraform modules and basic concepts
-- AWS Cloud9 environment set up
+- Understanding of S3 and basic AWS services
+- Existing Terraform configuration with local state
 
 ---
 
-## Exercise 5.1: Setting Up S3 Backend Infrastructure
-**Duration:** 15 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Lab Environment
+### Set Your Username
+```bash
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
+```
+
+---
+
+## 🏗️ **Exercise 5.1: Create Backend Infrastructure (20 minutes)**
+
+### Step 1: Create Lab Directory
 ```bash
 mkdir terraform-lab5
 cd terraform-lab5
-
-# Set your username environment variable (replace YOUR_USERNAME with your actual username)
-export TF_VAR_username="YOUR_USERNAME"
-
-# Create backend setup directory
-mkdir backend-setup
-cd backend-setup
-
-touch main.tf variables.tf outputs.tf terraform.tfvars
 ```
 
 ### Step 2: Create Backend Infrastructure
-Create `terraform.tfvars` first (replace "user1" with your unique username):
-
-```hcl
-# IMPORTANT: Replace "user1" with your unique username
-username = "user1"
-region = "us-east-2"
-project_name = "terraform-state-lab"
-environment = "lab"
-```
-
-**backend-setup/variables.tf:**
-```hcl
-variable "username" {
-  description = "Unique username for resource naming and isolation"
-  type        = string
-  validation {
-    condition     = length(var.username) > 0 && length(var.username) <= 20
-    error_message = "Username must be between 1 and 20 characters."
-  }
-  validation {
-    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9-]*$", var.username))
-    error_message = "Username must start with a letter and contain only letters, numbers, and hyphens."
-  }
-}
-
-variable "region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-2"
-}
-
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-  default     = "terraform-state-lab"
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "lab"
-}
-```
+First, we'll create the S3 bucket and DynamoDB table for secure remote state management.
 
 **backend-setup/main.tf:**
+```bash
+mkdir backend-setup
+cd backend-setup
+```
+
 ```hcl
 terraform {
   required_version = ">= 1.5"
@@ -113,43 +60,52 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
   }
 }
 
 provider "aws" {
-  region = var.region
+  region = "us-east-2"
 }
 
-# Generate unique suffix for bucket name
-resource "random_id" "bucket_suffix" {
-  byte_length = 8
-}
-
-# S3 bucket for Terraform state with username prefix
-resource "aws_s3_bucket" "terraform_state" {
-  bucket = "${var.username}-${var.project_name}-terraform-state-${random_id.bucket_suffix.hex}"
-
-  tags = {
-    Name        = "${var.username} Terraform State Bucket"
-    Environment = var.environment
-    Purpose     = "terraform-state"
-    Username    = var.username
+variable "username" {
+  description = "Your unique username"
+  type        = string
+  
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
   }
 }
 
-# Configure bucket versioning
+locals {
+  common_tags = {
+    Owner       = var.username
+    Purpose     = "TerraformBackend"
+    Environment = "shared"
+    ManagedBy   = "Terraform"
+  }
+}
+
+# S3 bucket for Terraform state with enhanced security
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "${var.username}-terraform-state-backend"
+
+  tags = merge(local.common_tags, {
+    Name = "${var.username} Terraform State Backend"
+    Type = "StateStorage"
+  })
+}
+
+# Enable versioning for state file history
 resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
+  
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-# Configure server-side encryption
+# Server-side encryption for state security
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
@@ -157,11 +113,12 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+    
     bucket_key_enabled = true
   }
 }
 
-# Block public access
+# Block public access completely
 resource "aws_s3_bucket_public_access_block" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
@@ -171,19 +128,32 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
   restrict_public_buckets = true
 }
 
-# Configure lifecycle policy
+# Lifecycle policy for cost optimization
 resource "aws_s3_bucket_lifecycle_configuration" "terraform_state" {
-  depends_on = [aws_s3_bucket_versioning.terraform_state]
-  
   bucket = aws_s3_bucket.terraform_state.id
 
   rule {
-    id     = "terraform_state_lifecycle"
+    id     = "state_lifecycle"
     status = "Enabled"
 
-    noncurrent_version_expiration {
+    noncurrent_version_transition {
       noncurrent_days = 30
+      storage_class   = "STANDARD_IA"
     }
+
+    noncurrent_version_transition {
+      noncurrent_days = 60
+      storage_class   = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 365
+    }
+  }
+
+  rule {
+    id     = "abort_incomplete_uploads"
+    status = "Enabled"
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
@@ -191,9 +161,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "terraform_state" {
   }
 }
 
-# DynamoDB table for state locking with username prefix
-resource "aws_dynamodb_table" "terraform_state_lock" {
-  name           = "${var.username}-${var.project_name}-terraform-locks"
+# DynamoDB table for state locking
+resource "aws_dynamodb_table" "terraform_locks" {
+  name           = "${var.username}-terraform-locks"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "LockID"
 
@@ -202,53 +172,52 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
     type = "S"
   }
 
-  tags = {
-    Name        = "Terraform State Lock Table"
-    Environment = var.environment
-    Purpose     = "terraform-locks"
-  }
+  tags = merge(local.common_tags, {
+    Name = "${var.username} Terraform Lock Table"
+    Type = "StateLocking"
+  })
 }
 
-# Optional: Create IAM policy for Terraform state access
-resource "aws_iam_policy" "terraform_state_access" {
-  name        = "${var.project_name}-terraform-state-policy"
-  description = "IAM policy for Terraform state access"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket",
-          "s3:GetBucketVersioning"
-        ]
-        Resource = aws_s3_bucket.terraform_state.arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = "${aws_s3_bucket.terraform_state.arn}/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:DeleteItem"
-        ]
-        Resource = aws_dynamodb_table.terraform_state_lock.arn
-      }
+# IAM policy for backend access (for reference)
+data "aws_iam_policy_document" "terraform_backend_policy" {
+  statement {
+    effect = "Allow"
+    
+    actions = [
+      "s3:ListBucket"
     ]
-  })
+    
+    resources = [
+      aws_s3_bucket.terraform_state.arn
+    ]
+  }
 
-  tags = {
-    Name        = "Terraform State Access Policy"
-    Environment = var.environment
+  statement {
+    effect = "Allow"
+    
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    
+    resources = [
+      "${aws_s3_bucket.terraform_state.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem"
+    ]
+    
+    resources = [
+      aws_dynamodb_table.terraform_locks.arn
+    ]
   }
 }
 ```
@@ -261,81 +230,47 @@ output "s3_bucket_name" {
 }
 
 output "s3_bucket_arn" {
-  description = "ARN of the S3 bucket for Terraform state"
+  description = "ARN of the S3 bucket"
   value       = aws_s3_bucket.terraform_state.arn
 }
 
 output "dynamodb_table_name" {
   description = "Name of the DynamoDB table for state locking"
-  value       = aws_dynamodb_table.terraform_state_lock.name
+  value       = aws_dynamodb_table.terraform_locks.name
 }
 
-output "iam_policy_arn" {
-  description = "ARN of the IAM policy for state access"
-  value       = aws_iam_policy.terraform_state_access.arn
+output "dynamodb_table_arn" {
+  description = "ARN of the DynamoDB table"
+  value       = aws_dynamodb_table.terraform_locks.arn
 }
 
 output "backend_config" {
-  description = "Backend configuration for use in other Terraform configurations"
+  description = "Backend configuration for other Terraform configurations"
   value = {
     bucket         = aws_s3_bucket.terraform_state.id
-    region         = var.region
-    dynamodb_table = aws_dynamodb_table.terraform_state_lock.name
-    encrypt        = true
+    dynamodb_table = aws_dynamodb_table.terraform_locks.name
+    region         = "us-east-2"
   }
 }
 ```
 
 ### Step 3: Deploy Backend Infrastructure
 ```bash
-# Deploy the backend infrastructure
+# Initialize and deploy the backend infrastructure
 terraform init
-terraform plan
-terraform apply
+terraform apply -var="username=$TF_VAR_username"
 
-# Save backend configuration for later use
-terraform output backend_config > ../backend-config.txt
-terraform output -json > ../backend-outputs.json
-
-# Note the S3 bucket name and DynamoDB table name
-echo "S3 Bucket: $(terraform output -raw s3_bucket_name)"
-echo "DynamoDB Table: $(terraform output -raw dynamodb_table_name)"
+# Save the output for use in next steps
+terraform output -json > ../backend_config.json
+cd ..
 ```
 
 ---
 
-## Exercise 5.2: Configure Remote State Backend
-**Duration:** 15 minutes
+## 🔄 **Exercise 5.2: State Migration (15 minutes)**
 
-### Step 1: Create Application Infrastructure
-```bash
-# Go back to main lab directory
-cd ..
-
-# Create application infrastructure
-touch main.tf variables.tf outputs.tf backend.tf
-```
-
-**variables.tf:**
-```hcl
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-  default     = "remote-state-demo"
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "dev"
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
-```
+### Step 1: Create Application with Local State
+Let's create an application that starts with local state, then migrate it.
 
 **main.tf:**
 ```hcl
@@ -347,255 +282,117 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
   }
+  
+  # Starting with local backend - we'll change this
 }
 
 provider "aws" {
   region = "us-east-2"
 }
 
-# Generate random pet name for resources
-resource "random_pet" "name" {
-  length = 2
+variable "username" {
+  description = "Your unique username"
+  type        = string
 }
 
-# Get default VPC
-data "aws_vpc" "default" {
-  default = true
-}
+# Create some resources to manage in state
+resource "aws_s3_bucket" "app_storage" {
+  bucket = "${var.username}-app-storage-lab5"
 
-# Get latest Amazon Linux AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-# Create security group
-resource "aws_security_group" "web" {
-  name_prefix = "${var.project_name}-${var.environment}-web-"
-  description = "Security group for web server"
-  vpc_id      = data.aws_vpc.default.id
-  
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/8"]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
   tags = {
-    Name = "${var.project_name}-${var.environment}-web-sg"
-    Environment = var.environment
-    Project = var.project_name
+    Name        = "${var.username} Application Storage"
+    Environment = "development"
+    Lab         = "5"
+    Owner       = var.username
   }
 }
 
-# Create EC2 instance
-resource "aws_instance" "web" {
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
-  vpc_security_group_ids = [aws_security_group.web.id]
+resource "aws_s3_bucket_versioning" "app_storage" {
+  bucket = aws_s3_bucket.app_storage.id
   
-  user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<h1>Remote State Demo</h1>" > /var/www/html/index.html
-    echo "<p>Instance: ${random_pet.name.id}</p>" >> /var/www/html/index.html
-    echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
-  EOF
-  
-  tags = {
-    Name = "${var.project_name}-${var.environment}-${random_pet.name.id}"
-    Environment = var.environment
-    Project = var.project_name
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-# Create S3 bucket for application data
-resource "aws_s3_bucket" "app_data" {
-  bucket = "${var.project_name}-${var.environment}-data-${random_pet.name.id}"
-  
+# Create multiple objects to make state more complex
+resource "aws_s3_object" "config_files" {
+  for_each = {
+    "app.json"    = jsonencode({
+      app_name = "MyApplication"
+      version  = "1.0.0"
+      owner    = var.username
+    })
+    "settings.yaml" = <<-EOT
+      database:
+        host: localhost
+        port: 5432
+        name: myapp
+      cache:
+        type: redis
+        ttl: 3600
+    EOT
+    "README.txt" = "This is application configuration for ${var.username}"
+  }
+
+  bucket       = aws_s3_bucket.app_storage.id
+  key          = "config/${each.key}"
+  content      = each.value
+  content_type = "application/octet-stream"
+
   tags = {
-    Name = "${var.project_name}-${var.environment}-app-data"
-    Environment = var.environment
-    Project = var.project_name
+    Type  = "ConfigFile"
+    Owner = var.username
   }
 }
 ```
 
 **outputs.tf:**
 ```hcl
-output "instance_info" {
-  description = "EC2 instance information"
+output "bucket_name" {
+  description = "Application storage bucket name"
+  value       = aws_s3_bucket.app_storage.id
+}
+
+output "config_files" {
+  description = "List of configuration files created"
+  value       = keys(aws_s3_object.config_files)
+}
+
+output "state_info" {
+  description = "Information about current state backend"
   value = {
-    id         = aws_instance.web.id
-    public_ip  = aws_instance.web.public_ip
-    private_ip = aws_instance.web.private_ip
-    dns_name   = aws_instance.web.public_dns
-  }
-}
-
-output "security_group_id" {
-  description = "Security group ID"
-  value       = aws_security_group.web.id
-}
-
-output "app_bucket_name" {
-  description = "Application data bucket name"
-  value       = aws_s3_bucket.app_data.id
-}
-
-output "random_name" {
-  description = "Generated random name"
-  value       = random_pet.name.id
-}
-```
-
-### Step 2: Configure Remote Backend
-**backend.tf:**
-```hcl
-# Backend configuration - update with your actual values
-terraform {
-  backend "s3" {
-    # These values will be provided during initialization
-    # bucket         = "your-terraform-state-bucket-name"
-    # key            = "YOUR_USERNAME/terraform.tfstate"  # Replace with your username
-    # region         = "us-east-2"
-    # dynamodb_table = "your-terraform-locks-table"
-    # encrypt        = true
+    backend_type = "local"
+    state_file   = "${path.cwd}/terraform.tfstate"
   }
 }
 ```
 
-### Step 3: Initialize with Local State First
+### Step 2: Deploy with Local State
 ```bash
-# First, deploy with local state
+# Deploy with local state first
 terraform init
-terraform apply
+terraform apply -var="username=$TF_VAR_username"
 
-# View local state
-ls -la terraform.tfstate*
-terraform state list
+# Examine the local state file
+ls -la terraform.tfstate
+echo "State file size: $(wc -c < terraform.tfstate) bytes"
 ```
 
-### Step 4: Migrate to Remote State
+### Step 3: Configure Remote Backend
+Now let's migrate to remote state. Get the backend config:
+
 ```bash
-# Get backend values from the previous step
-S3_BUCKET=$(cat backend-outputs.json | jq -r '.backend_config.value.bucket')
-DYNAMODB_TABLE=$(cat backend-outputs.json | jq -r '.backend_config.value.dynamodb_table')
+# Extract backend configuration
+S3_BUCKET=$(cat backend_config.json | grep -o '"bucket": "[^"]*' | cut -d'"' -f4)
+DYNAMODB_TABLE=$(cat backend_config.json | grep -o '"dynamodb_table": "[^"]*' | cut -d'"' -f4)
 
 echo "S3 Bucket: $S3_BUCKET"
 echo "DynamoDB Table: $DYNAMODB_TABLE"
-
-# Initialize with remote backend
-terraform init \
-  -backend-config="bucket=$S3_BUCKET" \
-  -backend-config="key=${TF_VAR_username}/terraform.tfstate" \
-  -backend-config="region=us-east-2" \
-  -backend-config="dynamodb_table=$DYNAMODB_TABLE" \
-  -backend-config="encrypt=true" \
-  -migrate-state
-
-# Verify state migration
-terraform state list
-
-# Local state should be backed up
-ls -la terraform.tfstate*
 ```
 
----
-
-## Exercise 5.3: Working with Remote State
-**Duration:** 15 minutes
-
-### Step 1: Test Remote State Functionality
-```bash
-# Make a change to test remote state
-terraform plan -var="instance_type=t2.small"
-terraform apply -var="instance_type=t2.small"
-
-# Verify state is stored remotely
-aws s3 ls s3://$S3_BUCKET/dev/
-aws s3 cp s3://$S3_BUCKET/dev/terraform.tfstate - | jq '.resources[0].type'
-```
-
-### Step 2: Create Multiple Environments with Workspaces
-```bash
-# Create staging workspace
-terraform workspace new staging
-
-# List workspaces
-terraform workspace list
-
-# Deploy to staging
-terraform plan -var="environment=staging"
-terraform apply -var="environment=staging"
-
-# Switch back to default workspace
-terraform workspace select default
-
-# List resources in each workspace
-terraform workspace select default
-terraform state list
-
-terraform workspace select staging  
-terraform state list
-
-# Check S3 bucket structure
-aws s3 ls s3://$S3_BUCKET/
-aws s3 ls s3://$S3_BUCKET/env:/
-```
-
-### Step 3: State Locking Demonstration
-```bash
-# In one terminal, start a long-running operation
-terraform apply -var="environment=staging-locked" &
-
-# In another terminal/tab, try to run plan (should be locked)
-# This will fail with a state lock error
-terraform plan
-```
-
-### Step 4: Remote State Data Source
-Create a new configuration that references the remote state:
-
-**Create new directory:**
-```bash
-mkdir terraform-lab5-consumer
-cd terraform-lab5-consumer
-
-touch main.tf outputs.tf
-```
-
-**main.tf:**
+Update **main.tf** to add the backend configuration:
 ```hcl
 terraform {
   required_version = ">= 1.5"
@@ -606,162 +403,107 @@ terraform {
       version = "~> 5.0"
     }
   }
-}
-
-provider "aws" {
-  region = "us-east-2"
-}
-
-# Reference remote state from another configuration
-data "terraform_remote_state" "infrastructure" {
-  backend = "s3"
-  config = {
-    bucket = var.state_bucket_name
-    key    = "${var.username}/terraform.tfstate"
-    region = "us-east-2"
+  
+  # Remote backend with state locking
+  backend "s3" {
+    bucket         = "user1-terraform-state-backend"  # Replace with your bucket name
+    key            = "lab5/application/terraform.tfstate"
+    region         = "us-east-2"
+    dynamodb_table = "user1-terraform-locks"         # Replace with your table name
+    encrypt        = true
   }
 }
-
-# Create a resource that depends on the remote state
-resource "aws_security_group_rule" "additional_access" {
-  type                     = "ingress"
-  from_port               = 443
-  to_port                 = 443
-  protocol                = "tcp"
-  cidr_blocks             = ["0.0.0.0/0"]
-  security_group_id       = data.terraform_remote_state.infrastructure.outputs.security_group_id
-  description             = "HTTPS access added by consumer"
-}
-
-variable "state_bucket_name" {
-  description = "Name of the S3 bucket containing Terraform state"
-  type        = string
-}
 ```
 
-**outputs.tf:**
-```hcl
-output "referenced_instance_id" {
-  description = "Instance ID from remote state"
-  value       = data.terraform_remote_state.infrastructure.outputs.instance_info.id
-}
-
-output "referenced_bucket_name" {
-  description = "Bucket name from remote state"
-  value       = data.terraform_remote_state.infrastructure.outputs.app_bucket_name
-}
-```
-
+### Step 4: Migrate State to Remote Backend
 ```bash
-# Deploy consumer configuration
+# Reinitialize with remote backend - Terraform will ask about migration
 terraform init
-terraform apply -var="state_bucket_name=$S3_BUCKET"
 
-# View outputs
-terraform output
+# When prompted, type 'yes' to copy existing state to the new backend
+
+# Verify remote state is working
+terraform plan -var="username=$TF_VAR_username"
 ```
 
 ---
 
-## Lab Summary and Key Takeaways
+## 🔒 **Exercise 5.3: State Locking and Team Collaboration (10 minutes)**
 
-### What You've Learned
+### Step 1: Test State Locking
+Let's verify that state locking works to prevent conflicts.
 
-1. **Remote State Setup:**
-   - S3 bucket configuration for state storage
-   - DynamoDB table for state locking
-   - Security and lifecycle configurations
-
-2. **State Migration:**
-   - Migrating from local to remote state
-   - Backend configuration options
-   - State backup and recovery
-
-3. **Workspaces:**
-   - Creating and managing multiple environments
-   - Workspace-specific state files
-   - Switching between workspaces
-
-4. **Remote State References:**
-   - Using terraform_remote_state data source
-   - Cross-configuration dependencies
-   - State sharing between teams
-
-### Best Practices Demonstrated
-
-- Enable versioning and encryption for state buckets
-- Use state locking to prevent concurrent modifications
-- Implement lifecycle policies for state file cleanup
-- Use descriptive keys for state file organization
-- Create IAM policies for controlled state access
-
-### Security Considerations
-
-- State files can contain sensitive information
-- Use encryption at rest and in transit
-- Implement proper IAM permissions
-- Regular backup and monitoring
-- Consider using Terraform Cloud for enhanced security
-
-### Clean Up
 ```bash
-# Clean up consumer resources
-terraform destroy -var="state_bucket_name=$S3_BUCKET"
+# Open a second terminal session in Cloud9
+# In Terminal 1, start a long-running operation
+terraform apply -var="username=$TF_VAR_username" -replace="aws_s3_bucket.app_storage"
 
-# Go back to main lab
-cd ../terraform-lab5
+# Quickly switch to Terminal 2 and try to run another operation
+terraform plan -var="username=$TF_VAR_username"
+```
 
-# Clean up staging workspace
-terraform workspace select staging
-terraform destroy -var="environment=staging"
+You should see a message about the state being locked.
 
-# Clean up default workspace
-terraform workspace select default
-terraform destroy
+### Step 2: Examine State Lock in DynamoDB
+```bash
+# Check the DynamoDB table for active locks
+aws dynamodb scan --table-name $DYNAMODB_TABLE --region us-east-2
+```
+
+### Step 3: State File Analysis
+```bash
+# Download and examine the remote state
+terraform state pull > remote_state.json
+
+# Compare with local backup (if exists)
+echo "Remote state resources:"
+cat remote_state.json | grep -o '"type": "[^"]*' | sort | uniq -c
+
+# List all resources in state
+terraform state list
+```
+
+---
+
+## 🎯 **Lab Summary**
+
+**What You've Accomplished:**
+- ✅ Created production-ready backend infrastructure with S3 + DynamoDB
+- ✅ Implemented state encryption, versioning, and lifecycle policies  
+- ✅ Successfully migrated local state to secure remote backend
+- ✅ Configured state locking to prevent concurrent modifications
+- ✅ Tested team collaboration scenarios and conflict prevention
+
+**Key Remote State Concepts Learned:**
+- **Backend Security**: Encryption, access controls, and private buckets
+- **State Locking**: DynamoDB-based locking for team environments
+- **State Migration**: Safe procedures for moving from local to remote state
+- **Lifecycle Management**: Cost optimization through intelligent storage tiering
+- **Operational Excellence**: Monitoring, backup, and recovery considerations
+
+**Production-Ready Features Implemented:**
+- Server-side encryption with AES256
+- Versioning for state history and rollback capability
+- Public access blocking for security
+- Lifecycle policies for cost optimization
+- State locking with DynamoDB for team collaboration
+
+**Advanced Configurations Covered:**
+- Multi-environment state organization with key prefixes
+- IAM policy requirements for backend access
+- State file analysis and troubleshooting
+- Backup and disaster recovery considerations
+
+---
+
+## 🧹 **Cleanup**
+```bash
+# Clean up application resources first
+terraform destroy -var="username=$TF_VAR_username"
 
 # Clean up backend infrastructure
 cd backend-setup
-terraform destroy
+terraform destroy -var="username=$TF_VAR_username"
 ```
 
----
-
-## Next Steps
-In Lab 6, you'll learn about:
-- Terraform Cloud integration
-- Remote operations and policy enforcement
-- Team collaboration features
-- Cost estimation and compliance
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-1. **State Lock Errors:**
-   ```bash
-   # Force unlock (use with extreme caution)
-   terraform force-unlock LOCK_ID
-   ```
-
-2. **Backend Migration Issues:**
-   ```bash
-   # Reconfigure backend
-   terraform init -reconfigure
-   ```
-
-3. **State File Corruption:**
-   ```bash
-   # Pull state from remote
-   terraform state pull > backup.tfstate
-   ```
-
-4. **Workspace Issues:**
-   ```bash
-   # List all workspaces
-   terraform workspace list
-   
-   # Delete workspace (must be empty)
-   terraform workspace delete workspace_name
-   ```
+Remember: In production, you typically keep the backend infrastructure running and only clean up application resources. The backend serves multiple projects and environments.

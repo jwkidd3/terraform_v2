@@ -71,21 +71,21 @@ This comprehensive Terraform training course features **12 hands-on labs** speci
 - **Sharing:** Remote state data sources and cross-stack references
 - **Outcome:** Production-ready state management setup
 
-### **Lab 6: Enterprise State Management Patterns (45 minutes)**  
-**Objective:** Advanced state management and collaboration patterns
-- **Setup:** Multi-backend state architecture
-- **Encryption:** State file encryption and secrets management
-- **Isolation:** State isolation strategies and workspace patterns
-- **Sharing:** Cross-stack data sharing and dependencies
-- **Outcome:** Enterprise-grade state management implementation
+### **Lab 6: Advanced Multi-Module Composition (45 minutes)**  
+**Objective:** Enterprise infrastructure using registry modules
+- **Composition:** 6+ Terraform Registry modules (VPC, ALB, RDS, S3, ASG)
+- **Integration:** KMS encryption, Parameter Store secrets management
+- **Patterns:** Production-ready enterprise architecture patterns
+- **Monitoring:** CloudWatch integration and custom metrics
+- **Outcome:** Complex production-grade infrastructure stack
 
-### **Lab 7: Advanced Patterns and CI/CD (45 minutes)**
-**Objective:** Production automation and deployment patterns  
-- **Patterns:** Advanced configuration patterns and structures
-- **Pipeline:** GitHub Actions CI/CD pipeline setup
-- **Testing:** Automated validation and security scanning
-- **Governance:** Policy as code implementation
-- **Outcome:** Complete automated deployment pipeline
+### **Lab 7: Advanced Multi-Environment Patterns (45 minutes)**
+**Objective:** Sophisticated environment management and automation
+- **Architecture:** Complex variable structures with validation
+- **Features:** Feature flag architecture for environment-specific capabilities
+- **Optimization:** Multi-level cost optimization strategies (4 levels)
+- **Automation:** Automated environment validation scripts
+- **Outcome:** Enterprise-grade environment management patterns
 
 ### **Lab 8: Advanced Networking with VPC (45 minutes)**
 **Objective:** Complex network architecture design
@@ -106,37 +106,37 @@ This comprehensive Terraform training course features **12 hands-on labs** speci
 - Private registry and module management patterns
 - Team collaboration and enterprise workflows
 
-### **Lab 9: Introduction to Terraform Cloud (45 minutes)**
-**Objective:** Get started with Terraform Cloud fundamentals
-- **Setup:** Create Terraform Cloud account and organization
-- **Migration:** Migrate local state to Terraform Cloud
-- **Workspaces:** Create first workspace and understand remote operations
-- **Variables:** Configure workspace variables and environment settings
-- **Outcome:** Working Terraform Cloud setup with remote execution
+### **Lab 9: Terraform Cloud Integration and Remote Execution (45 minutes)**
+**Objective:** Advanced Terraform Cloud workflows with enterprise features
+- **Deployment:** Complete application stack (VPC, ALB, Auto Scaling, CloudWatch, S3)
+- **Integration:** VCS integration with automated workflows
+- **Features:** Cost estimation, collaboration, and enterprise features
+- **Execution:** Remote execution with workspace configuration
+- **Outcome:** Production-ready Terraform Cloud implementation
 
-### **Lab 10: Terraform Cloud Teams and Workspaces (45 minutes)**
-**Objective:** Master workspace management and team collaboration
-- **Workspaces:** Multi-environment workspace strategies
-- **Teams:** User management, RBAC, and permissions
-- **Variable Sets:** Shared configuration across workspaces
-- **Run Triggers:** Automated workflow orchestration
-- **Outcome:** Enterprise-ready organization with team collaboration
+### **Lab 10: Advanced Terraform Cloud Workspaces and Team Management (45 minutes)**
+**Objective:** Enterprise workspace architecture and team governance
+- **Architecture:** Multi-environment workspace architecture with advanced networking
+- **Teams:** Role-based access control (RBAC) with governance workflows
+- **Infrastructure:** Auto Scaling, multi-tier networking, advanced security
+- **Automation:** Workspace automation with run triggers and notifications
+- **Outcome:** Enterprise-grade workspace management and team collaboration
 
-### **Lab 11: Terraform Cloud Policies and Private Registry (45 minutes)**
-**Objective:** Implement governance and module management
-- **Sentinel Policies:** Cost and compliance policies
-- **Cost Estimation:** Budget controls and monitoring
-- **Private Registry:** Module publication and versioning
-- **Module Consumption:** Using registry modules in workspaces
-- **Outcome:** Governance framework with reusable modules
+### **Lab 11: Advanced Governance with Policies and Private Registry (45 minutes)**
+**Objective:** Policy-as-code implementation and enterprise module management
+- **Policies:** Sophisticated Sentinel policy implementation for governance
+- **Registry:** Enterprise-grade private module registry patterns
+- **Compliance:** Automated compliance validation and cost governance
+- **Infrastructure:** Advanced infrastructure for policy validation testing
+- **Outcome:** Complete governance framework with policy automation
 
-### **Lab 12: Terraform Cloud Enterprise Integration (45 minutes)**
-**Objective:** Deploy complete enterprise infrastructure using all Terraform Cloud features
-- **Enterprise Deployment:** Full infrastructure using private registry modules
-- **Policy Enforcement:** Real-world governance and compliance validation
-- **Team Collaboration:** Multi-environment workflow with proper controls
-- **Monitoring Integration:** Enterprise monitoring and notification setup
-- **Outcome:** Production-grade enterprise infrastructure with full Terraform Cloud integration
+### **Lab 12: Capstone Project - Enterprise Infrastructure Integration (45 minutes)**
+**Objective:** Portfolio-worthy capstone integrating all advanced patterns
+- **Integration:** Enterprise multi-tier application platform
+- **Workflows:** Advanced Terraform Cloud workflows and collaboration
+- **Security:** Production-ready security and monitoring implementation
+- **Architecture:** Comprehensive demonstration of all enterprise patterns learned
+- **Outcome:** Complete portfolio project showcasing advanced cloud architecture skills
 
 ---
 
@@ -149,13 +149,13 @@ This comprehensive Terraform training course features **12 hands-on labs** speci
 | 3 | Resource Dependencies & Lifecycle | 45 min | Intermediate | EC2, Security Groups | Dependencies, count/for_each |
 | 4 | Creating and Using Modules | 45 min | Intermediate | VPC, EC2, ALB | Modules, composition |
 | 5 | Remote State Management | 45 min | Intermediate | S3, DynamoDB | State backends, workspaces |
-| 6 | Terraform Cloud Integration | 45 min | Advanced | Terraform Cloud | Remote operations, VCS |
-| 7 | Advanced Patterns and CI/CD | 45 min | Advanced | GitHub Actions | Pipelines, automation |
+| 6 | Advanced Multi-Module Composition | 45 min | Advanced | 6+ Modules, KMS, CloudWatch | Enterprise module integration |
+| 7 | Advanced Multi-Environment Patterns | 45 min | Advanced | Feature Flags, Cost Optimization | Environment management |
 | 8 | Advanced Networking with VPC | 45 min | Intermediate | VPC, Subnets, NAT | Network architecture |
-| 9 | Terraform Cloud Workspaces | 45 min | Advanced | Terraform Cloud | Workspace management, teams |
-| 10 | Terraform Cloud Policies | 45 min | Advanced | Sentinel, OPA | Policy as code, governance |
-| 11 | Terraform Cloud Private Registry | 45 min | Advanced | Private Registry | Module management, versioning |
-| 12 | Terraform Cloud Enterprise Integration | 45 min | Expert | Full Enterprise Stack | Complete Terraform Cloud mastery |
+| 9 | Terraform Cloud Integration and Remote Execution | 45 min | Advanced | Complete App Stack, VCS | Remote operations, automation |
+| 10 | Advanced Terraform Cloud Workspaces and Team Management | 45 min | Advanced | RBAC, Multi-tier Architecture | Workspace governance |
+| 11 | Advanced Governance with Policies and Private Registry | 45 min | Advanced | Sentinel, Policy Validation | Enterprise governance |
+| 12 | Capstone Project - Enterprise Infrastructure Integration | 45 min | Expert | Portfolio Integration | Complete mastery |
 
 ---
 
@@ -167,17 +167,17 @@ This comprehensive Terraform training course features **12 hands-on labs** speci
 - **AWS Focus:** EC2, basic networking
 - **Time:** 90 minutes hands-on practice
 
-### **Intermediate Level (Labs 3-6, 8-11)**  
-- **Expansion:** Advanced configuration patterns
-- **Skills:** Modules, state management, complex deployments
+### **Intermediate Level (Labs 3-5, 8)**  
+- **Expansion:** Configuration patterns and state management
+- **Skills:** Modules, state backends, networking
 - **AWS Focus:** Multi-service architectures
-- **Time:** 360 minutes (6 hours) hands-on practice
+- **Time:** 180 minutes (3 hours) hands-on practice
 
-### **Advanced Level (Labs 7, 12)**
-- **Mastery:** Production patterns and automation
-- **Skills:** CI/CD, complete solution integration
-- **AWS Focus:** Enterprise-grade deployments  
-- **Time:** 90 minutes hands-on practice
+### **Advanced Level (Labs 6-7, 9-12)**
+- **Mastery:** Enterprise patterns and automation
+- **Skills:** Multi-module composition, governance, complete integration
+- **AWS Focus:** Enterprise-grade deployments with Terraform Cloud
+- **Time:** 270 minutes (4.5 hours) hands-on practice
 
 ---
 

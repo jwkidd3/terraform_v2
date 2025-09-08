@@ -1,100 +1,49 @@
-# Lab 3: Resource Dependencies and Lifecycle
+# Lab 3: Resource Dependencies and Lifecycle (SIMPLIFIED)
 **Duration:** 45 minutes  
-**Difficulty:** Intermediate  
+**Difficulty:** Beginner  
 **Day:** 1  
 **Environment:** AWS Cloud9
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. All resources will be prefixed with your username
-4. This ensures isolated resources for each user
-
-**Example:** If your username is "user1", your resources will be named:
-- `user1-dependency-demo-vpc` (VPC)
-- `user1-dependency-demo-igw` (Internet Gateway) 
-- `user1-dependency-demo-dev-app` (instances)
-- `terraform-user1.tfstate` (state file)
-
----
-
-## Lab Objectives
+## 🎯 **Simple Learning Objectives**
 By the end of this lab, you will be able to:
-- Understand implicit and explicit resource dependencies
-- Use count and for_each for multiple resources
-- Implement resource lifecycle management
-- Work with dynamic blocks and complex resource relationships
+- Understand how Terraform manages resource dependencies
+- Use `count` to create multiple similar resources
+- Use `for_each` to create resources from a map
+- Understand basic lifecycle rules
 
 ---
 
-## Prerequisites
+## 📋 **Prerequisites**
 - Completion of Labs 1-2
-- Understanding of Terraform variables and data sources
-- AWS Cloud9 environment set up
+- Understanding of variables and data sources
 
 ---
 
-## Exercise 3.1: Resource Dependencies
-**Duration:** 15 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Lab Environment
+### Set Your Username
+```bash
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
+```
+
+---
+
+## 🔗 **Exercise 3.1: Understanding Dependencies (15 minutes)**
+
+### Step 1: Create Lab Directory
 ```bash
 mkdir terraform-lab3
 cd terraform-lab3
-
-# Set your username environment variable (replace YOUR_USERNAME with your actual username)
-export TF_VAR_username="YOUR_USERNAME"
-
-touch main.tf variables.tf outputs.tf terraform.tfvars
 ```
 
-### Step 2: Implicit Dependencies
-Create `variables.tf`:
-
+### Step 2: Create main.tf with dependent resources
 ```hcl
-variable "username" {
-  description = "Unique username for resource naming and isolation"
-  type        = string
-  validation {
-    condition     = length(var.username) > 0 && length(var.username) <= 20
-    error_message = "Username must be between 1 and 20 characters."
-  }
-  validation {
-    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9-]*$", var.username))
-    error_message = "Username must start with a letter and contain only letters, numbers, and hyphens."
-  }
-}
+# main.tf - Resources that depend on each other
 
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-  default     = "dependency-demo"
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "lab"
-}
-```
-
-Create `terraform.tfvars` (replace "user1" with your unique username):
-
-```hcl
-# IMPORTANT: Replace "user1" with your unique username
-username = "user1"
-project_name = "dependency-demo"
-environment = "lab"
-```
-
-Create `main.tf` with implicit dependencies:
-
-```hcl
 terraform {
   required_version = ">= 1.5"
   
@@ -104,557 +53,376 @@ terraform {
       version = "~> 5.0"
     }
   }
-  
-  # Note: Backend will be configured during terraform init
-  # State file will be isolated per user
 }
 
 provider "aws" {
   region = "us-east-2"
 }
 
-# Step 1: Create VPC (no dependencies) with username prefix
-resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+variable "username" {
+  description = "Your unique username"
+  type        = string
+}
+
+# Step 1: Create an S3 bucket first
+resource "aws_s3_bucket" "app_data" {
+  bucket = "${var.username}-app-data-bucket"
   
   tags = {
-    Name = "${var.username}-${var.project_name}-vpc"
-    Environment = var.environment
-    Username = var.username
+    Name = "${var.username} App Data"
+    Owner = var.username
   }
 }
 
-# Step 2: Create Internet Gateway (depends on VPC) with username prefix
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id  # Implicit dependency
+# Step 2: Create bucket versioning (depends on bucket)
+resource "aws_s3_bucket_versioning" "app_data" {
+  bucket = aws_s3_bucket.app_data.id  # This creates a dependency!
   
-  tags = {
-    Name = "${var.username}-${var.project_name}-igw"
-    Environment = var.environment
-    Username = var.username
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-# Step 3: Create public subnet (depends on VPC) with username prefix
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id  # Implicit dependency
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-2a"
-  map_public_ip_on_launch = true
+# Step 3: Upload a file (depends on bucket and versioning)
+resource "aws_s3_object" "config" {
+  bucket = aws_s3_bucket.app_data.id         # Depends on bucket
+  key    = "config/app.json"
+  content = jsonencode({
+    username = var.username
+    version  = "1.0"
+    created  = timestamp()
+  })
+  
+  # This file will only be created AFTER the bucket and versioning exist
+  depends_on = [aws_s3_bucket_versioning.app_data]
   
   tags = {
-    Name = "${var.username}-${var.project_name}-public-subnet"
-    Environment = var.environment
-    Username = var.username
+    Owner = var.username
   }
-}
-
-# Step 4: Create route table (depends on VPC) with username prefix
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id  # Implicit dependency
-  
-  # Route to Internet Gateway (implicit dependency on IGW)
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-public-rt"
-    Environment = var.environment
-    Username = var.username
-  }
-}
-
-# Step 5: Associate subnet with route table (depends on both)
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id      # Implicit dependency
-  route_table_id = aws_route_table.public.id  # Implicit dependency
 }
 ```
 
-### Step 3: Explicit Dependencies
-Add explicit dependencies to `main.tf`:
-
+### Step 3: Create terraform.tfvars
 ```hcl
-# Security group that should be created after networking is complete
-resource "aws_security_group" "web" {
-  name_prefix = "${var.username}-${var.project_name}-web-"
-  description = "Security group for web servers (user: ${var.username})"
-  vpc_id      = aws_vpc.main.id
-  
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  # Explicit dependency - wait for route table association
-  depends_on = [aws_route_table_association.public]
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-web-sg"
-    Environment = var.environment
-    Username = var.username
-  }
-}
+# terraform.tfvars
+username = "user1"  # Replace with your username
 ```
 
-### Step 4: Test Dependencies
+### Step 4: Deploy and Observe Dependencies
 ```bash
-# Initialize with user-specific state file
-terraform init -backend-config="path=terraform-${TF_VAR_username}.tfstate"
+terraform init
 terraform plan
 
-# Notice the order of resource creation in the plan
-# Apply and observe the creation order
+# Notice the order in the plan - Terraform automatically figures out:
+# 1. Create bucket first
+# 2. Then create versioning 
+# 3. Finally upload the file
+
 terraform apply
 ```
 
 ---
 
-## Exercise 3.2: Count and For_Each
-**Duration:** 15 minutes
+## 🔢 **Exercise 3.2: Using Count (10 minutes)**
 
-### Step 1: Using Count for Multiple Resources
-Add to your `main.tf`:
+### Step 1: Add count-based resources to main.tf
+Add this to the end of your `main.tf`:
 
 ```hcl
-# Create multiple subnets using count
-resource "aws_subnet" "private" {
-  count = 2
+# Create multiple S3 objects using count
+resource "aws_s3_object" "data_files" {
+  count = 3
   
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index + 10}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  bucket = aws_s3_bucket.app_data.id
+  key    = "data/file-${count.index + 1}.txt"
+  content = "This is data file number ${count.index + 1} for ${var.username}"
   
   tags = {
-    Name = "${var.username}-${var.project_name}-private-subnet-${count.index + 1}"
-    Environment = var.environment
-    Type = "private"
-    Username = var.username
+    Owner = var.username
+    FileNumber = count.index + 1
   }
 }
 
-# Data source for availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-# Create NAT gateways for each private subnet
-resource "aws_eip" "nat" {
+# Create multiple folders using count
+resource "aws_s3_object" "folders" {
   count = 2
   
-  domain = "vpc"
-  
-  depends_on = [aws_internet_gateway.main]
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-nat-eip-${count.index + 1}"
-    Environment = var.environment
-    Username = var.username
-  }
-}
-
-resource "aws_nat_gateway" "main" {
-  count = 2
-  
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public.id  # All NAT gateways in public subnet
+  bucket = aws_s3_bucket.app_data.id
+  key    = "${["logs", "backups"][count.index]}/"  # Creates logs/ and backups/ folders
+  content = ""  # Empty content creates a folder
   
   tags = {
-    Name = "${var.username}-${var.project_name}-nat-gateway-${count.index + 1}"
-    Environment = var.environment
-    Username = var.username
+    Owner = var.username
+    Type = "Folder"
   }
 }
 ```
 
-### Step 2: Using For_Each for Complex Resources
-Add for_each resources:
+### Step 2: Apply the changes
+```bash
+terraform plan
+# You should see 5 new objects to be created (3 files + 2 folders)
 
-```hcl
-# Define environments as a local variable
-locals {
-  environments = {
-    dev = {
-      instance_type = "t2.micro"
-      min_size     = 1
-      max_size     = 2
-    }
-    staging = {
-      instance_type = "t2.small"
-      min_size     = 1
-      max_size     = 3
-    }
-  }
-  
-  # Security group rules as a map
-  security_rules = {
-    http = {
-      port        = 80
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTP access"
-    }
-    https = {
-      port        = 443
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTPS access"
-    }
-    ssh = {
-      port        = 22
-      protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/16"]
-      description = "SSH access from VPC"
-    }
-  }
-}
-
-# Create security groups for different environments
-resource "aws_security_group" "app" {
-  for_each = local.environments
-  
-  name_prefix = "${var.username}-${var.project_name}-${each.key}-app-"
-  description = "Security group for ${each.key} environment (user: ${var.username})"
-  vpc_id      = aws_vpc.main.id
-  
-  dynamic "ingress" {
-    for_each = local.security_rules
-    content {
-      from_port   = ingress.value.port
-      to_port     = ingress.value.port
-      protocol    = ingress.value.protocol
-      cidr_blocks = ingress.value.cidr_blocks
-      description = ingress.value.description
-    }
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-${each.key}-app-sg"
-    Environment = each.key
-    InstanceType = each.value.instance_type
-    Username = var.username
-  }
-}
+terraform apply
 ```
 
-### Step 3: Reference For_Each Resources
-Add instances that use the for_each security groups:
+### Step 3: Check your S3 bucket
+```bash
+aws s3 ls s3://${TF_VAR_username}-app-data-bucket --recursive
 
-```hcl
-# Get Amazon Linux AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-# Create instances for each environment
-resource "aws_instance" "app" {
-  for_each = local.environments
-  
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = each.value.instance_type
-  subnet_id     = aws_subnet.public.id
-  
-  vpc_security_group_ids = [aws_security_group.app[each.key].id]
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-${each.key}-app"
-    Environment = each.key
-    Type = "application"
-    Username = var.username
-  }
-}
+# You should see:
+# - config/app.json
+# - data/file-1.txt, file-2.txt, file-3.txt  
+# - logs/ and backups/ folders
 ```
 
 ---
 
-## Exercise 3.3: Resource Lifecycle Management
-**Duration:** 15 minutes
+## 🗺️ **Exercise 3.3: Using for_each (15 minutes)**
 
-### Step 1: Lifecycle Rules
-Add lifecycle management to your resources:
+### Step 1: Add for_each resources to main.tf
+Add this to the end of your `main.tf`:
 
 ```hcl
-# Add lifecycle management to instances
-resource "aws_instance" "app" {
-  for_each = local.environments
+# Create different file types using for_each
+resource "aws_s3_object" "app_files" {
+  for_each = {
+    "readme"    = "README.md"
+    "config"    = "config.ini" 
+    "database"  = "schema.sql"
+  }
   
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = each.value.instance_type
-  subnet_id     = aws_subnet.public.id
+  bucket = aws_s3_bucket.app_data.id
+  key    = "app/${each.value}"
+  content = "This is the ${each.key} file for ${var.username}'s application"
   
-  vpc_security_group_ids = [aws_security_group.app[each.key].id]
+  tags = {
+    Owner = var.username
+    FileType = each.key
+  }
+}
+
+# Create environment-specific configurations
+resource "aws_s3_object" "env_configs" {
+  for_each = {
+    dev     = "development.json"
+    staging = "staging.json"
+    prod    = "production.json"
+  }
   
-  # Lifecycle management
+  bucket = aws_s3_bucket.app_data.id
+  key    = "environments/${each.value}"
+  content = jsonencode({
+    environment = each.key
+    username = var.username
+    debug = each.key == "dev" ? true : false
+    replicas = each.key == "prod" ? 3 : 1
+  })
+  
+  tags = {
+    Owner = var.username
+    Environment = each.key
+  }
+}
+```
+
+### Step 2: Apply the changes
+```bash
+terraform plan
+# You should see 6 new objects (3 app files + 3 environment configs)
+
+terraform apply
+```
+
+### Step 3: Check the new files
+```bash
+aws s3 ls s3://${TF_VAR_username}-app-data-bucket --recursive
+
+# You should now see a well-organized bucket structure!
+```
+
+---
+
+## 🔄 **Exercise 3.4: Lifecycle Rules (5 minutes)**
+
+### Step 1: Add lifecycle rules to main.tf
+Add this resource to your `main.tf`:
+
+```hcl
+# A resource with lifecycle rules
+resource "aws_s3_object" "important_file" {
+  bucket = aws_s3_bucket.app_data.id
+  key    = "important/critical-data.txt"
+  content = "This file is very important for ${var.username}!"
+  
+  tags = {
+    Owner = var.username
+    Critical = "true"
+  }
+  
+  # Lifecycle rules
   lifecycle {
-    # Prevent accidental destruction of production-like environments
-    prevent_destroy = false  # Set to true for production
+    # Prevent accidental deletion
+    prevent_destroy = false  # Set to true in production!
     
-    # Create new instance before destroying old one (for zero downtime)
+    # Ignore changes to content (won't update if content changes)
+    ignore_changes = [content]
+    
+    # Create new one before destroying old one
     create_before_destroy = true
-    
-    # Ignore changes to AMI (allow updates outside Terraform)
-    ignore_changes = [
-      ami,
-      tags["LastModified"]
-    ]
-  }
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-${each.key}-app"
-    Environment = each.key
-    Type = "application"
-    Username = var.username
-    LastModified = formatdate("YYYY-MM-DD", timestamp())
-  }
-}
-
-# Database with strict lifecycle rules
-resource "aws_db_subnet_group" "main" {
-  name       = "${var.username}-${var.project_name}-db-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-db-subnet-group"
-    Environment = var.environment
-    Username = var.username
-  }
-}
-
-resource "aws_db_instance" "main" {
-  identifier = "${var.username}-${var.project_name}-database"
-  
-  allocated_storage    = 20
-  max_allocated_storage = 100
-  storage_type         = "gp2"
-  engine              = "mysql"
-  engine_version      = "8.0"
-  instance_class      = "db.t3.micro"
-  
-  db_name  = "appdb"
-  username = "admin"
-  password = "temporarypassword123!"  # In real scenarios, use AWS Secrets Manager
-  
-  db_subnet_group_name = aws_db_subnet_group.main.name
-  skip_final_snapshot  = true  # For lab purposes
-  
-  # Strict lifecycle for database
-  lifecycle {
-    prevent_destroy = true  # Prevent accidental deletion
-    
-    ignore_changes = [
-      password,  # Password changes handled outside Terraform
-    ]
-  }
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-database"
-    Environment = var.environment
-    Username = var.username
   }
 }
 ```
 
-### Step 2: Replace Triggered By
-Add a resource that gets replaced when another changes:
-
-```hcl
-# Configuration that triggers replacements
-resource "aws_s3_bucket" "config" {
-  bucket = "${var.username}-${var.project_name}-config-${random_id.bucket_suffix.hex}"
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-config"
-    Environment = var.environment
-    Username = var.username
-    Version = "1.0"
-  }
-}
-
-resource "random_id" "bucket_suffix" {
-  byte_length = 8
-}
-
-# Instance that gets replaced when S3 bucket configuration changes
-resource "aws_instance" "config_dependent" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public.id
-  
-  vpc_security_group_ids = [aws_security_group.web.id]
-  
-  # This instance will be replaced if the S3 bucket is replaced
-  lifecycle {
-    replace_triggered_by = [
-      aws_s3_bucket.config
-    ]
-  }
-  
-  tags = {
-    Name = "${var.username}-${var.project_name}-config-dependent"
-    ConfigBucket = aws_s3_bucket.config.id
-    Environment = var.environment
-    Username = var.username
-  }
-}
-```
-
-### Step 3: Test Lifecycle Behavior
-Update `outputs.tf`:
-
-```hcl
-output "vpc_info" {
-  description = "VPC information"
-  value = {
-    vpc_id     = aws_vpc.main.id
-    cidr_block = aws_vpc.main.cidr_block
-  }
-}
-
-output "subnet_info" {
-  description = "Subnet information"
-  value = {
-    public_subnet  = aws_subnet.public.id
-    private_subnets = aws_subnet.private[*].id
-  }
-}
-
-output "instance_info" {
-  description = "Instance information by environment"
-  value = {
-    for env, instance in aws_instance.app :
-    env => {
-      id         = instance.id
-      public_ip  = instance.public_ip
-      private_ip = instance.private_ip
-    }
-  }
-}
-
-output "database_info" {
-  description = "Database connection information"
-  value = {
-    endpoint = aws_db_instance.main.endpoint
-    port     = aws_db_instance.main.port
-  }
-  sensitive = true
-}
-```
-
+### Step 2: Apply and test lifecycle
 ```bash
-# Apply the configuration
 terraform apply
 
-# Try to destroy the database (should fail due to prevent_destroy)
-terraform destroy -target=aws_db_instance.main
-
-# Update the S3 bucket tags to trigger replacement
-terraform apply -var="username=${TF_VAR_username}" -var="project_name=dependency-demo-v2"
-
-# Observe what gets replaced
+# Now try to change the content in the file above and apply again
+# Terraform will ignore the content change due to ignore_changes
 ```
 
 ---
 
-## Lab Summary and Key Takeaways
+## 📤 **Exercise 3.5: Outputs for Complex Resources**
 
-### What You've Learned
+### Step 1: Create outputs.tf
+```hcl
+# outputs.tf - Show information about our resources
 
-1. **Resource Dependencies:**
-   - Implicit dependencies through resource references
-   - Explicit dependencies using `depends_on`
-   - Understanding Terraform's dependency graph
+output "bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.app_data.id
+}
 
-2. **Multiple Resources:**
-   - `count` for simple repetition with index-based access
-   - `for_each` for complex objects with key-based access
-   - When to choose count vs for_each
+output "bucket_url" {
+  description = "URL of the S3 bucket"
+  value       = "https://${aws_s3_bucket.app_data.id}.s3.amazonaws.com"
+}
 
-3. **Lifecycle Management:**
-   - `prevent_destroy` to protect critical resources
-   - `create_before_destroy` for zero-downtime updates
-   - `ignore_changes` for externally managed attributes
-   - `replace_triggered_by` for cascading updates
+output "data_files" {
+  description = "Data files created with count"
+  value       = aws_s3_object.data_files[*].key
+}
 
-4. **Dynamic Blocks:**
-   - Creating repeated nested blocks
-   - Using for_each within dynamic blocks
-   - Complex resource configurations
+output "app_files" {
+  description = "App files created with for_each"
+  value       = { for k, v in aws_s3_object.app_files : k => v.key }
+}
 
-### Best Practices Demonstrated
+output "env_configs" {
+  description = "Environment config files"
+  value       = { for k, v in aws_s3_object.env_configs : k => v.key }
+}
 
-- Use explicit dependencies when creation order matters beyond references
-- Choose for_each over count when you need to reference resources by key
-- Implement lifecycle rules to prevent accidental destruction
-- Use dynamic blocks for complex, repeated configurations
-- **Multi-User Environment:**
-  - Prefix all resource names with username for isolation
-  - Use consistent naming patterns across all resources
-  - Implement proper state file isolation
-  - Include username in resource tags for identification
+output "total_objects" {
+  description = "Total number of objects in bucket"
+  value = (
+    1 +  # config file
+    length(aws_s3_object.data_files) +
+    length(aws_s3_object.folders) + 
+    length(aws_s3_object.app_files) +
+    length(aws_s3_object.env_configs) +
+    1    # important file
+  )
+}
+```
 
-### Clean Up
+### Step 2: View your outputs
 ```bash
-# Remove prevent_destroy first
-# Edit main.tf and set prevent_destroy = false for database
-terraform apply
+terraform output
 
-# Then destroy everything (your username-prefixed resources)
+# See how count creates a list [file-1, file-2, file-3]
+# And for_each creates a map {readme => "README.md", ...}
+```
+
+---
+
+## 🎉 **Lab Summary**
+
+### What You Accomplished:
+✅ **Learned implicit dependencies**: S3 bucket → versioning → file upload  
+✅ **Used explicit dependencies**: `depends_on` to force creation order  
+✅ **Created multiple resources with count**: 3 data files, 2 folders  
+✅ **Created multiple resources with for_each**: App files and environment configs  
+✅ **Applied lifecycle rules**: Prevent destroy, ignore changes, create before destroy  
+✅ **Built a well-organized S3 structure**: 15+ objects in logical folders  
+
+### Key Concepts Learned:
+
+#### **Dependencies:**
+- **Implicit**: Terraform automatically detects when resources reference each other
+- **Explicit**: Use `depends_on` when Terraform can't detect the dependency
+
+#### **Count vs for_each:**
+- **Count**: Creates a list of similar resources (good for simple multiples)  
+- **for_each**: Creates a map of resources (good for different variations)
+
+#### **Lifecycle Rules:**
+- **prevent_destroy**: Stops accidental deletion
+- **ignore_changes**: Ignores specific attribute changes
+- **create_before_destroy**: Creates replacement before destroying original
+
+---
+
+## 🔍 **Understanding Your S3 Structure**
+
+Your bucket now contains:
+```
+username-app-data-bucket/
+├── config/
+│   └── app.json
+├── data/
+│   ├── file-1.txt
+│   ├── file-2.txt
+│   └── file-3.txt
+├── logs/
+├── backups/
+├── app/
+│   ├── README.md
+│   ├── config.ini
+│   └── schema.sql
+├── environments/
+│   ├── development.json
+│   ├── staging.json
+│   └── production.json
+└── important/
+    └── critical-data.txt
+```
+
+**15 objects total, all created with different Terraform techniques!**
+
+---
+
+## 🧹 **Clean Up**
+
+```bash
+# Remove all resources
 terraform destroy
 
-# Verify your state file is cleaned up
-ls -la terraform-*.tfstate*
+# Type 'yes' when prompted
 ```
 
 ---
 
-## Next Steps
-In Lab 4, you'll learn about:
-- Creating and structuring Terraform modules
-- Module composition and reusability
-- Publishing and consuming modules
-- Module versioning and best practices
+## ❓ **Troubleshooting**
+
+### Problem: "Cycle in dependency graph"
+**Solution**: You've created a circular dependency. Check your resource references.
+
+### Problem: "Resource already exists"  
+**Solution**: Another user may have the same username. Choose a different one.
+
+### Problem: "Objects must be deleted before bucket"
+**Solution**: Terraform handles this automatically due to dependencies.
 
 ---
 
-## Troubleshooting
+## 🎯 **Next Steps**
 
-### Common Issues
-1. **Circular dependencies:** Check for resource references that create loops
-2. **Count/for_each conflicts:** Can't use both on the same resource
-3. **Lifecycle conflicts:** prevent_destroy conflicts with destroy operations
-4. **Dynamic block syntax:** Ensure proper for_each and content structure
+In Lab 4, you'll learn:
+- How to create reusable modules  
+- How to organize your code into separate files
+- How to share modules between different projects
+
+**Excellent work! You now understand how Terraform manages resource relationships! 🚀**

@@ -6,311 +6,164 @@
 
 ---
 
-## Multi-User Environment Setup
-**IMPORTANT:** This lab supports multiple users working simultaneously. Each user must configure a unique username to prevent resource conflicts.
-
-### Before You Begin
-1. Choose a unique username (e.g., user1, user2, john, mary, etc.)
-2. Use this username consistently throughout the lab
-3. All resources will be prefixed with your username
-4. This ensures isolated resources for each user
-
-**Example:** If your username is "user1", your resources will be named:
-- `user1-modular-app-dev-vpc` (VPC)
-- `user1-modular-app-dev-web-1` (web instances)
-- `terraform-user1.tfstate` (state file)
-
----
-
-## Lab Objectives
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Create reusable Terraform modules
-- Structure modules with proper input/output interfaces
-- Compose modules to build complex infrastructure
-- Use module versioning and sources
+- Create reusable Terraform modules with multiple resources
+- Design modules with proper variable validation and outputs
+- Use modules to deploy infrastructure with consistent patterns
+- Understand module composition and dependency management
 
 ---
 
-## Prerequisites
+## 📋 **Prerequisites**
 - Completion of Labs 1-3
-- Understanding of resource dependencies and variables
-- AWS Cloud9 environment set up
+- Understanding of basic variables and resources
 
 ---
 
-## Exercise 4.1: Creating Your First Module
-**Duration:** 20 minutes
+## 🛠️ **Lab Setup**
 
-### Step 1: Create Module Structure
+### Set Your Username
+```bash
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
+```
+
+---
+
+## 📦 **Exercise 4.1: Create a Web Application Module (25 minutes)**
+
+### Step 1: Create Lab Directory
 ```bash
 mkdir terraform-lab4
 cd terraform-lab4
 
-# Set your username environment variable (replace YOUR_USERNAME with your actual username)
-export TF_VAR_username="YOUR_USERNAME"
-
-# Create module directory structure
-mkdir -p modules/networking
-mkdir -p modules/security  
-mkdir -p modules/compute
-
-# Create main configuration files
-touch main.tf variables.tf outputs.tf terraform.tfvars
+# Create module directory
+mkdir -p modules/web-application
 ```
 
-### Step 2: Build the Networking Module
-Create the networking module:
+### Step 2: Create a Comprehensive Web Application Module
+Create the module files:
 
-**modules/networking/variables.tf:**
+**modules/web-application/variables.tf:**
 ```hcl
+# Module input variables with validation
 variable "username" {
-  description = "Unique username for resource naming and isolation"
+  description = "Your unique username"
   type        = string
+  
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
+  }
 }
 
-variable "project_name" {
-  description = "Name of the project"
+variable "app_name" {
+  description = "Name of the application"
   type        = string
+  
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]{3,30}$", var.app_name))
+    error_message = "App name must be 3-30 characters, letters, numbers, and hyphens only."
+  }
 }
 
 variable "environment" {
-  description = "Environment name"
+  description = "Environment (dev, staging, prod)"
   type        = string
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "availability_zones" {
-  description = "List of availability zones"
-  type        = list(string)
-  default     = ["us-east-2a", "us-east-2b"]
-}
-
-variable "public_subnet_cidrs" {
-  description = "CIDR blocks for public subnets"
-  type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
-}
-
-variable "private_subnet_cidrs" {
-  description = "CIDR blocks for private subnets"
-  type        = list(string)
-  default     = ["10.0.10.0/24", "10.0.20.0/24"]
-}
-
-variable "tags" {
-  description = "Common tags for resources"
-  type        = map(string)
-  default     = {}
-}
-```
-
-**modules/networking/main.tf:**
-```hcl
-# VPC
-resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  default     = "dev"
   
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-vpc"
-    Username = var.username
-  })
-}
-
-# Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-igw"
-    Username = var.username
-  })
-}
-
-# Public Subnets
-resource "aws_subnet" "public" {
-  count = length(var.public_subnet_cidrs)
-  
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = var.availability_zones[count.index]
-  map_public_ip_on_launch = true
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-public-${count.index + 1}"
-    Type = "public"
-    Username = var.username
-  })
-}
-
-# Private Subnets
-resource "aws_subnet" "private" {
-  count = length(var.private_subnet_cidrs)
-  
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = var.availability_zones[count.index]
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-private-${count.index + 1}"
-    Type = "private"
-    Username = var.username
-  })
-}
-
-# Elastic IPs for NAT Gateways
-resource "aws_eip" "nat" {
-  count = length(var.private_subnet_cidrs)
-  
-  domain = "vpc"
-  
-  depends_on = [aws_internet_gateway.main]
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-nat-eip-${count.index + 1}"
-    Username = var.username
-  })
-}
-
-# NAT Gateways
-resource "aws_nat_gateway" "main" {
-  count = length(var.private_subnet_cidrs)
-  
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-nat-${count.index + 1}"
-    Username = var.username
-  })
-}
-
-# Route Table for Public Subnets
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
   }
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-public-rt"
-    Username = var.username
-  })
 }
 
-# Route Table Associations for Public Subnets
-resource "aws_route_table_association" "public" {
-  count = length(aws_subnet.public)
-  
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
 }
 
-# Route Tables for Private Subnets
-resource "aws_route_table" "private" {
-  count = length(var.private_subnet_cidrs)
+variable "enable_monitoring" {
+  description = "Enable detailed monitoring for EC2 instance"
+  type        = bool
+  default     = true
+}
+```
+
+**modules/web-application/main.tf:**
+```hcl
+# Local values for consistent resource naming
+locals {
+  name_prefix = "${var.username}-${var.app_name}-${var.environment}"
   
-  vpc_id = aws_vpc.main.id
-  
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+  common_tags = {
+    Owner       = var.username
+    Environment = var.environment
+    Application = var.app_name
+    ManagedBy   = "Terraform"
+    CreatedAt   = timestamp()
   }
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-private-rt-${count.index + 1}"
-    Username = var.username
+}
+
+# Data sources to make our module flexible
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# S3 bucket for application assets
+resource "aws_s3_bucket" "app_assets" {
+  bucket = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-assets"
+    Type = "ApplicationAssets"
   })
 }
 
-# Route Table Associations for Private Subnets
-resource "aws_route_table_association" "private" {
-  count = length(aws_subnet.private)
-  
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
-}
-```
-
-**modules/networking/outputs.tf:**
-```hcl
-output "vpc_id" {
-  description = "ID of the VPC"
-  value       = aws_vpc.main.id
+# Random string for unique bucket naming
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
 }
 
-output "vpc_cidr_block" {
-  description = "CIDR block of the VPC"
-  value       = aws_vpc.main.cidr_block
+# S3 bucket server-side encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "app_assets" {
+  bucket = aws_s3_bucket.app_assets.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
-output "public_subnet_ids" {
-  description = "IDs of the public subnets"
-  value       = aws_subnet.public[*].id
+# S3 bucket versioning
+resource "aws_s3_bucket_versioning" "app_assets" {
+  bucket = aws_s3_bucket.app_assets.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
-output "private_subnet_ids" {
-  description = "IDs of the private subnets"
-  value       = aws_subnet.private[*].id
-}
-
-output "internet_gateway_id" {
-  description = "ID of the Internet Gateway"
-  value       = aws_internet_gateway.main.id
-}
-
-output "nat_gateway_ids" {
-  description = "IDs of the NAT Gateways"
-  value       = aws_nat_gateway.main[*].id
-}
-```
-
-### Step 3: Build the Security Module
-**modules/security/variables.tf:**
-```hcl
-variable "username" {
-  description = "Unique username for resource naming and isolation"
-  type        = string
-}
-
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "ID of the VPC"
-  type        = string
-}
-
-variable "tags" {
-  description = "Common tags for resources"
-  type        = map(string)
-  default     = {}
-}
-```
-
-**modules/security/main.tf:**
-```hcl
-# Web Server Security Group
+# Security group for web server
 resource "aws_security_group" "web" {
-  name_prefix = "${var.username}-${var.project_name}-${var.environment}-web-"
-  description = "Security group for web servers (user: ${var.username})"
-  vpc_id      = var.vpc_id
-  
+  name_prefix = "${local.name_prefix}-web-"
+  description = "Security group for ${var.app_name} web server"
+
   ingress {
     description = "HTTP"
     from_port   = 80
@@ -318,137 +171,232 @@ resource "aws_security_group" "web" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
+
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-web-sg"
-    Username = var.username
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-sg"
   })
 }
 
-# Application Security Group
-resource "aws_security_group" "app" {
-  name_prefix = "${var.username}-${var.project_name}-${var.environment}-app-"
-  description = "Security group for application servers (user: ${var.username})"
-  vpc_id      = var.vpc_id
-  
-  ingress {
-    description     = "Application Port"
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-app-sg"
-    Username = var.username
+# IAM role for EC2 to access S3
+resource "aws_iam_role" "web_server" {
+  name = "${local.name_prefix}-web-server-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+# IAM policy for S3 access
+resource "aws_iam_role_policy" "web_server_s3" {
+  name = "${local.name_prefix}-s3-access"
+  role = aws_iam_role.web_server.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.app_assets.arn,
+          "${aws_s3_bucket.app_assets.arn}/*"
+        ]
+      }
+    ]
   })
 }
 
-# Database Security Group
-resource "aws_security_group" "db" {
-  name_prefix = "${var.username}-${var.project_name}-${var.environment}-db-"
-  description = "Security group for database (user: ${var.username})"
-  vpc_id      = var.vpc_id
-  
-  ingress {
-    description     = "MySQL/Aurora"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-db-sg"
-    Username = var.username
+# Instance profile
+resource "aws_iam_instance_profile" "web_server" {
+  name = "${local.name_prefix}-web-server-profile"
+  role = aws_iam_role.web_server.name
+
+  tags = local.common_tags
+}
+
+# EC2 instance
+resource "aws_instance" "web" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = [aws_security_group.web.id]
+  availability_zone      = data.aws_availability_zones.available.names[0]
+  iam_instance_profile   = aws_iam_instance_profile.web_server.name
+  monitoring             = var.enable_monitoring
+
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    app_name    = var.app_name
+    environment = var.environment
+    username    = var.username
+    bucket_name = aws_s3_bucket.app_assets.id
+  }))
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-web-server"
   })
+}
+
+# CloudWatch alarm for CPU utilization
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  count = var.enable_monitoring ? 1 : 0
+
+  alarm_name          = "${local.name_prefix}-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors ec2 cpu utilization"
+
+  dimensions = {
+    InstanceId = aws_instance.web.id
+  }
+
+  tags = local.common_tags
 }
 ```
 
-**modules/security/outputs.tf:**
+**modules/web-application/user_data.sh:**
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd aws-cli
+
+# Start and enable Apache
+systemctl start httpd
+systemctl enable httpd
+
+# Create a dynamic web page
+cat <<EOF > /var/www/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${app_name} - ${environment}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { background-color: #232f3e; color: white; padding: 20px; }
+        .content { padding: 20px; }
+        .info-box { background-color: #f0f0f0; padding: 15px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to ${app_name}!</h1>
+        <h2>Environment: ${environment}</h2>
+    </div>
+    <div class="content">
+        <div class="info-box">
+            <h3>Application Details</h3>
+            <p><strong>Owner:</strong> ${username}</p>
+            <p><strong>Server launched:</strong> $(date)</p>
+            <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
+            <p><strong>S3 Bucket:</strong> ${bucket_name}</p>
+        </div>
+        <div class="info-box">
+            <h3>Module Features Demonstrated</h3>
+            <ul>
+                <li>✅ Variable validation and defaults</li>
+                <li>✅ Local values and consistent naming</li>
+                <li>✅ Data sources for dynamic resource selection</li>
+                <li>✅ IAM roles and policies for secure S3 access</li>
+                <li>✅ CloudWatch monitoring and alarms</li>
+                <li>✅ Template files for dynamic content</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+# Test S3 connectivity and upload a test file
+echo "Testing S3 connectivity..." > /tmp/test-file.txt
+aws s3 cp /tmp/test-file.txt s3://${bucket_name}/test-connection.txt
+```
+
+**modules/web-application/outputs.tf:**
 ```hcl
-output "web_security_group_id" {
-  description = "ID of the web security group"
+# Module outputs
+output "instance_id" {
+  description = "ID of the EC2 instance"
+  value       = aws_instance.web.id
+}
+
+output "instance_public_ip" {
+  description = "Public IP address of the EC2 instance"
+  value       = aws_instance.web.public_ip
+}
+
+output "instance_public_dns" {
+  description = "Public DNS name of the EC2 instance"
+  value       = aws_instance.web.public_dns
+}
+
+output "website_url" {
+  description = "URL to access the website"
+  value       = "http://${aws_instance.web.public_ip}"
+}
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for assets"
+  value       = aws_s3_bucket.app_assets.id
+}
+
+output "security_group_id" {
+  description = "ID of the security group"
   value       = aws_security_group.web.id
 }
 
-output "app_security_group_id" {
-  description = "ID of the app security group"
-  value       = aws_security_group.app.id
-}
-
-output "db_security_group_id" {
-  description = "ID of the database security group"
-  value       = aws_security_group.db.id
+output "iam_role_arn" {
+  description = "ARN of the IAM role"
+  value       = aws_iam_role.web_server.arn
 }
 ```
 
 ---
 
-## Exercise 4.2: Using Modules
-**Duration:** 15 minutes
+## 🏗️ **Exercise 4.2: Use Your Module Multiple Times (15 minutes)**
 
-### Step 1: Create Root Configuration
-Create `variables.tf` first:
+### Step 1: Create main configuration
+Create your main Terraform files:
 
+**variables.tf:**
 ```hcl
 variable "username" {
-  description = "Unique username for resource naming and isolation"
+  description = "Your unique username"
   type        = string
-  validation {
-    condition     = length(var.username) > 0 && length(var.username) <= 20
-    error_message = "Username must be between 1 and 20 characters."
-  }
-  validation {
-    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9-]*$", var.username))
-    error_message = "Username must start with a letter and contain only letters, numbers, and hyphens."
-  }
 }
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
-```
-
-Create `terraform.tfvars` (replace "user1" with your unique username):
-
-```hcl
-# IMPORTANT: Replace "user1" with your unique username
-username = "user1"
-instance_type = "t2.micro"
 ```
 
 **main.tf:**
@@ -461,367 +409,137 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
   }
-  
-  # Note: Backend will be configured during terraform init
-  # State file will be isolated per user
 }
 
 provider "aws" {
   region = "us-east-2"
 }
 
-# Local values for common configuration with username
-locals {
-  project_name = "modular-app"
-  environment  = "dev"
-  
-  common_tags = {
-    Project     = local.project_name
-    Environment = local.environment
-    ManagedBy   = "Terraform"
-    Owner       = "DevTeam"
-    Username    = var.username
-  }
+# Use the module to create a development application
+module "dev_blog" {
+  source = "./modules/web-application"
+
+  username         = var.username
+  app_name         = "my-blog"
+  environment      = "dev"
+  instance_type    = "t3.micro"
+  enable_monitoring = true
 }
 
-# Networking Module
-module "networking" {
-  source = "./modules/networking"
-  
-  username     = var.username
-  project_name = local.project_name
-  environment  = local.environment
-  
-  vpc_cidr               = "10.0.0.0/16"
-  availability_zones     = ["us-east-2a", "us-east-2b"]
-  public_subnet_cidrs    = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnet_cidrs   = ["10.0.10.0/24", "10.0.20.0/24"]
-  
-  tags = local.common_tags
-}
+# Use the same module to create a different application
+module "staging_portfolio" {
+  source = "./modules/web-application"
 
-# Security Module
-module "security" {
-  source = "./modules/security"
-  
-  username     = var.username
-  project_name = local.project_name
-  environment  = local.environment
-  vpc_id       = module.networking.vpc_id
-  
-  tags = local.common_tags
+  username         = var.username
+  app_name         = "portfolio"
+  environment      = "staging"
+  instance_type    = "t3.small"
+  enable_monitoring = false
 }
 ```
-
 
 **outputs.tf:**
 ```hcl
-output "vpc_info" {
-  description = "VPC information"
+# Output information from both module instances
+output "dev_blog_info" {
+  description = "Information about the dev blog application"
   value = {
-    vpc_id            = module.networking.vpc_id
-    vpc_cidr          = module.networking.vpc_cidr_block
-    public_subnets    = module.networking.public_subnet_ids
-    private_subnets   = module.networking.private_subnet_ids
+    website_url     = module.dev_blog.website_url
+    instance_id     = module.dev_blog.instance_id
+    s3_bucket       = module.dev_blog.s3_bucket_name
   }
 }
 
-output "security_groups" {
-  description = "Security group IDs"
+output "staging_portfolio_info" {
+  description = "Information about the staging portfolio application"
   value = {
-    web_sg = module.security.web_security_group_id
-    app_sg = module.security.app_security_group_id
-    db_sg  = module.security.db_security_group_id
-  }
-}
-```
-
-### Step 2: Test Module Composition
-```bash
-# Initialize with user-specific state file
-terraform init -backend-config="path=terraform-${TF_VAR_username}.tfstate"
-terraform plan
-terraform apply
-
-# View outputs
-terraform output
-terraform output -json vpc_info
-```
-
----
-
-## Exercise 4.3: Compute Module and Complete Stack
-**Duration:** 10 minutes
-
-### Step 1: Create Compute Module
-**modules/compute/variables.tf:**
-```hcl
-variable "username" {
-  description = "Unique username for resource naming and isolation"
-  type        = string
-}
-
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "ID of the VPC"
-  type        = string
-}
-
-variable "public_subnet_ids" {
-  description = "IDs of public subnets"
-  type        = list(string)
-}
-
-variable "private_subnet_ids" {
-  description = "IDs of private subnets"
-  type        = list(string)
-}
-
-variable "web_security_group_id" {
-  description = "ID of web security group"
-  type        = string
-}
-
-variable "app_security_group_id" {
-  description = "ID of app security group"
-  type        = string
-}
-
-variable "db_security_group_id" {
-  description = "ID of database security group"
-  type        = string
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "tags" {
-  description = "Common tags for resources"
-  type        = map(string)
-  default     = {}
-}
-```
-
-**modules/compute/main.tf:**
-```hcl
-# Get latest Amazon Linux AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    website_url     = module.staging_portfolio.website_url
+    instance_id     = module.staging_portfolio.instance_id
+    s3_bucket       = module.staging_portfolio.s3_bucket_name
   }
 }
 
-# Web servers in public subnets
-resource "aws_instance" "web" {
-  count = length(var.public_subnet_ids)
-  
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
-  subnet_id              = var.public_subnet_ids[count.index]
-  vpc_security_group_ids = [var.web_security_group_id]
-  
-  user_data = <<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<h1>Web Server ${count.index + 1}</h1>" > /var/www/html/index.html
-    echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
-  EOF
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-web-${count.index + 1}"
-    Type = "web-server"
-    Username = var.username
-  })
-}
-
-# Application servers in private subnets
-resource "aws_instance" "app" {
-  count = length(var.private_subnet_ids)
-  
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
-  subnet_id              = var.private_subnet_ids[count.index]
-  vpc_security_group_ids = [var.app_security_group_id]
-  
-  tags = merge(var.tags, {
-    Name = "${var.username}-${var.project_name}-${var.environment}-app-${count.index + 1}"
-    Type = "app-server"
-    Username = var.username
-  })
-}
-```
-
-**modules/compute/outputs.tf:**
-```hcl
-output "web_server_ids" {
-  description = "IDs of web servers"
-  value       = aws_instance.web[*].id
-}
-
-output "web_server_public_ips" {
-  description = "Public IPs of web servers"
-  value       = aws_instance.web[*].public_ip
-}
-
-output "app_server_ids" {
-  description = "IDs of app servers"
-  value       = aws_instance.app[*].id
-}
-
-output "app_server_private_ips" {
-  description = "Private IPs of app servers"
-  value       = aws_instance.app[*].private_ip
-}
-```
-
-### Step 2: Add Compute Module to Main Configuration
-Update **main.tf** to include the compute module:
-
-```hcl
-# Add this after the security module
-
-# Compute Module
-module "compute" {
-  source = "./modules/compute"
-  
-  username              = var.username
-  project_name           = local.project_name
-  environment           = local.environment
-  vpc_id                = module.networking.vpc_id
-  public_subnet_ids     = module.networking.public_subnet_ids
-  private_subnet_ids    = module.networking.private_subnet_ids
-  web_security_group_id = module.security.web_security_group_id
-  app_security_group_id = module.security.app_security_group_id
-  db_security_group_id  = module.security.db_security_group_id
-  instance_type         = var.instance_type
-  
-  tags = local.common_tags
-}
-```
-
-Update **outputs.tf** to include compute outputs:
-
-```hcl
-# Add to existing outputs
-
-output "compute_info" {
-  description = "Compute resource information"
+output "all_websites" {
+  description = "Quick access to all website URLs"
   value = {
-    web_servers = {
-      ids        = module.compute.web_server_ids
-      public_ips = module.compute.web_server_public_ips
-    }
-    app_servers = {
-      ids         = module.compute.app_server_ids
-      private_ips = module.compute.app_server_private_ips
-    }
+    "Dev Blog"          = module.dev_blog.website_url
+    "Staging Portfolio" = module.staging_portfolio.website_url
   }
 }
 ```
 
-### Step 3: Deploy Complete Stack
+### Step 2: Deploy and Test Your Module
 ```bash
-# Apply the complete stack
-terraform apply
-
-# View all outputs
-terraform output
-
-# Test web servers (use public IP from output)
-curl http://$(terraform output -json compute_info | jq -r '.web_servers.public_ips[0]')
-```
-
----
-
-## Lab Summary and Key Takeaways
-
-### What You've Learned
-
-1. **Module Structure:**
-   - Proper organization with variables, main, and outputs
-   - Consistent naming and tagging patterns
-   - Modular design principles
-
-2. **Module Composition:**
-   - Using modules together to build complex infrastructure
-   - Passing outputs between modules as inputs
-   - Managing dependencies between modules
-
-3. **Module Benefits:**
-   - Code reusability across projects and environments
-   - Simplified testing and validation
-   - Standardized infrastructure patterns
-   - Team collaboration and knowledge sharing
-
-### Best Practices Demonstrated
-
-- Keep modules focused on a single responsibility
-- Use descriptive variable names and documentation
-- Provide comprehensive outputs for module consumers
-- Use consistent tagging strategies
-- Version your modules for stability
-- **Multi-User Environment:**
-  - Pass username variables through all modules
-  - Maintain consistent naming patterns across modules
-  - Include username in all resource tags
-  - Ensure module reusability while maintaining isolation
-
-### Module Testing Tips
-
-```bash
-# Test individual modules
-cd modules/networking
+# Initialize and apply
 terraform init
-terraform plan -var="username=${TF_VAR_username}" -var="project_name=test" -var="environment=test"
+terraform apply
 
-# Use terraform validate for syntax checking
-terraform validate
+# After applying, test both websites
+echo "Dev Blog URL: $(terraform output -raw dev_blog_info | jq -r '.website_url')"
+echo "Portfolio URL: $(terraform output -raw staging_portfolio_info | jq -r '.website_url')"
 ```
 
-### Clean Up
+---
+
+## 🔍 **Exercise 4.3: Module Analysis and Improvement (5 minutes)**
+
+### Step 1: Analyze What You've Built
+Answer these questions about your module:
+
+1. **Reusability**: How does using the same module twice demonstrate reusability?
+2. **Flexibility**: What makes this module flexible for different use cases?
+3. **Best Practices**: What Terraform best practices does this module implement?
+4. **Security**: How does the module implement security best practices?
+
+### Step 2: Test Module Validation
+Try these commands to see variable validation in action:
+
 ```bash
-# Destroy your username-prefixed resources
-terraform destroy
+# This should fail validation - try it!
+terraform apply -var="username=USER-123-INVALID"
 
-# Verify your state file is cleaned up
-ls -la terraform-*.tfstate*
+# This should also fail - try it!
+terraform apply -var="username=user1" -replace="module.dev_blog.aws_instance.web" \
+  -var="dev_blog_environment=invalid"
 ```
 
 ---
 
-## Next Steps
-In Lab 5, you'll learn about:
-- Remote state management
-- Terraform Cloud integration
-- Advanced state operations
-- Team collaboration workflows
+## 🎯 **Lab Summary**
+
+**What You've Accomplished:**
+- ✅ Created a comprehensive, reusable Terraform module with 8+ resources
+- ✅ Implemented variable validation and smart defaults
+- ✅ Used data sources for dynamic resource selection
+- ✅ Integrated IAM roles, S3 storage, and CloudWatch monitoring
+- ✅ Deployed the same module with different configurations
+- ✅ Created outputs for easy access to resource information
+
+**Key Module Design Concepts Learned:**
+- **Input Validation**: Using validation blocks to ensure correct input
+- **Local Values**: Creating consistent naming and tagging patterns
+- **Data Sources**: Making modules flexible across different AWS regions/accounts
+- **Template Files**: Dynamic content generation using templatefile()
+- **Conditional Resources**: Using count to conditionally create resources
+- **Output Design**: Providing useful information for module consumers
+
+**Advanced Features Implemented:**
+- IAM roles and policies for secure service integration
+- CloudWatch monitoring with conditional creation
+- S3 bucket with versioning and encryption
+- Dynamic user data with template interpolation
+- Resource dependencies and proper ordering
 
 ---
 
-## Troubleshooting
+## 🧹 **Cleanup**
+```bash
+terraform destroy
+```
 
-### Common Issues
-1. **Module not found:** Check source paths and module structure
-2. **Variable not defined:** Ensure all required variables are passed to modules
-3. **Circular dependencies:** Review module dependencies and outputs
-4. **Resource conflicts:** Check for name conflicts between modules
+Remember: This module demonstrates production-ready patterns while remaining focused on core learning objectives. Each component serves a specific purpose in teaching module design and Terraform best practices.
