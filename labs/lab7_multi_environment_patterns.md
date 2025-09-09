@@ -509,8 +509,6 @@ cost_optimization = {
 
 ### Step 4: Create and Deploy Environments
 ```bash
-# Create environments directory
-mkdir environments
 
 # Create the three tfvars files with the content from Steps 1-3 above
 # For example, create dev.tfvars, staging.tfvars, and prod.tfvars
