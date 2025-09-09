@@ -440,7 +440,7 @@ output "load_balancer_dns" {
 
 ---
 
-## 🚀 **Exercise 7.2: Environment-Specific Configurations (15 minutes)**
+## 🚀 **Exercise 7.2: Environment-Specific Configurations (10 minutes)**
 
 ### Step 1: Create Development Environment Configuration
 **environments/dev.tfvars:**
@@ -507,55 +507,40 @@ cost_optimization = {
 }
 ```
 
-### Step 4: Deploy Development Environment
+### Step 4: Create and Deploy Environments
 ```bash
 # Create environments directory
 mkdir environments
 
-# Create the tfvars files (copy the content above)
-cat > environments/dev.tfvars << 'EOF'
-# Development Environment Configuration
-environment               = "dev"
-instance_type            = "t3.micro"
-instance_count           = 1
-enable_monitoring        = false
-enable_backups          = false
-enable_high_availability = false
-
-allowed_cidrs = ["0.0.0.0/0"]
-
-cost_optimization = {
-  use_spot_instances = true
-  enable_auto_stop   = true
-  max_price         = 0.01
-}
-EOF
+# Create the three tfvars files with the content from Steps 1-3 above
+# For example, create dev.tfvars, staging.tfvars, and prod.tfvars
 
 # Initialize Terraform
 terraform init
 
 # Deploy development environment
 terraform plan -var-file=environments/dev.tfvars
-terraform apply -var-file=environments/dev.tfvars
+terraform apply -var-file=environments/dev.tfvars -auto-approve
 ```
 
 ---
 
-## 🔄 **Exercise 7.3: Environment Management and Testing (10 minutes)**
+## 🔄 **Exercise 7.3: Environment Management Automation (15 minutes)**
 
 ### Step 1: Test Environment Switching
 ```bash
 # View current development deployment
 terraform output
 
-# Plan staging environment (without applying)
-terraform plan -var-file=environments/staging.tfvars
+# Compare what would change for staging (without applying)
+echo "\n=== Comparing staging environment ==="
+terraform plan -var-file=environments/staging.tfvars | grep -E "will be|must be"
 
-# See the differences between environments
-echo "=== Environment Comparison ==="
-echo "Dev uses: t3.micro with 1 instance"
-echo "Staging uses: t3.small with 2 instances"
-echo "Prod uses: t3.medium with 3 instances and HA"
+# View environment differences
+echo "\n=== Environment Resource Comparison ==="
+echo "Development:  t3.micro, 1 instance,  no HA"
+echo "Staging:      t3.small, 2 instances, no HA"
+echo "Production:   t3.medium, 3 instances, with HA"
 ```
 
 ### Step 2: Create Environment Management Script
@@ -618,8 +603,9 @@ fi
 ```bash
 chmod +x deploy.sh
 
-# Test the deployment script (don't apply)
+# Test the deployment script
 ./deploy.sh dev $TF_VAR_username
+# When prompted, type 'no' to skip the actual deployment
 ```
 
 ---
