@@ -62,13 +62,8 @@ terraform {
     }
   }
   
-  backend "s3" {
-    bucket         = "user1-terraform-state-backend"  # Replace with your bucket name
-    key            = "lab6/registry-modules/terraform.tfstate"
-    region         = "us-east-2"
-    dynamodb_table = "user1-terraform-locks"         # Replace with your table name
-    encrypt        = true
-  }
+  # Using local backend for this lab
+  # Remote state configuration is covered in Lab 5
 }
 
 provider "aws" {
@@ -303,9 +298,6 @@ output "web_servers" {
 
 ### Step 4: Deploy the Infrastructure
 ```bash
-# Update backend with your username
-sed -i "s/user1/$TF_VAR_username/g" main.tf
-
 # Initialize and apply
 terraform init
 terraform plan

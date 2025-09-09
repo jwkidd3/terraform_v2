@@ -141,13 +141,8 @@ terraform {
     }
   }
   
-  backend "s3" {
-    bucket         = "user1-terraform-state-backend"  # Replace with your bucket
-    key            = "lab7/multi-env/terraform.tfstate"
-    region         = "us-east-2"
-    dynamodb_table = "user1-terraform-locks"         # Replace with your table
-    encrypt        = true
-  }
+  # Using local backend for this lab
+  # In production, you would use remote state per environment
 }
 
 provider "aws" {
@@ -535,9 +530,6 @@ cost_optimization = {
   max_price         = 0.01
 }
 EOF
-
-# Update backend configuration
-sed -i "s/user1/$TF_VAR_username/g" main.tf
 
 # Initialize Terraform
 terraform init
