@@ -491,7 +491,7 @@ cat > /var/www/html/index.php << 'HTML'
                     <li>Environment-specific variables</li>
                     <li>Secure state management</li>
                     <li>VCS integration & triggers</li>
-                    <li>Cost estimation & governance</li>
+                    <li>Run triggers & automation</li>
                     <li>Policy as code enforcement</li>
                     <li>Audit trail & compliance</li>
                 </ul>
@@ -641,7 +641,7 @@ output "terraform_cloud_enterprise_features" {
       "Workspace tagging and organization",
       "Secure variable management",
       "Audit trail and compliance logging",
-      "Cost estimation per workspace",
+      "Detailed run logs per workspace",
       "Policy as code enforcement",
       "VCS integration with triggers",
       "Cross-workspace data sharing",
@@ -863,7 +863,7 @@ Implement role-based access control (RBAC) across workspaces:
    - Enable **approval workflows** for production
    - Set **required approvers** (minimum 2 for prod)
    - Configure **run triggers** between environments
-   - Enable **cost estimation** for all workspaces
+   - Configure **run triggers** for workspace automation
 
 ### Step 3: Simulate Team Collaboration
 Even though you're working alone, let's understand how teams would work:

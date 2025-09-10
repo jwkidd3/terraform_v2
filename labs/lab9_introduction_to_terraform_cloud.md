@@ -618,7 +618,7 @@ output "terraform_cloud_details" {
     state_storage        = "terraform_cloud"
     workspace_management = "cloud_based"
     collaboration_enabled = true
-    cost_estimation      = "available"
+    # cost_estimation not available in free tier
     policy_enforcement   = "available"
     remote_operations    = "enabled"
   }
@@ -646,7 +646,7 @@ output "workspace_features" {
     workspace_isolation  = "✅ Isolated execution environment"
     run_history         = "✅ Complete audit trail"
     collaboration       = "✅ Team access and permissions"
-    cost_estimation     = "✅ Pre-apply cost analysis"
+    # cost_estimation     = "Available in paid tiers"
     policy_checks       = "✅ Governance and compliance"
   }
 }
@@ -654,7 +654,7 @@ output "workspace_features" {
 
 ### Step 2: Test Terraform Cloud Features
 1. **State Management**: View state versions in Terraform Cloud UI
-2. **Cost Estimation**: Check cost estimates in run details
+2. **Run Details**: Review plan output and apply status
 3. **Variable Management**: Update variables through the UI
 4. **Run History**: Review previous runs and changes
 5. **Collaboration**: Invite team members (if available)
@@ -704,7 +704,7 @@ Review what you've implemented:
 - ✅ **Secure Variable Management**: Implemented proper credential and variable storage
 - ✅ **Monitoring Integration**: Created CloudWatch dashboard for infrastructure visibility
 - ✅ **Enterprise Workflow**: Established foundation for team collaboration and governance
-- ✅ **Advanced Features**: Explored cost estimation, run history, and workspace management
+- ✅ **Advanced Features**: Explored run history, state management, and workspace features
 
 **Key Terraform Cloud Concepts:**
 - **Remote Execution**: All Terraform operations run in Terraform Cloud, not locally
@@ -716,7 +716,7 @@ Review what you've implemented:
 **Enterprise Features Demonstrated:**
 - Cloud-based execution environment with consistent Terraform versions
 - Automatic state versioning and backup
-- Integrated cost estimation for infrastructure changes
+- Remote plan and apply execution with detailed logs
 - Complete audit trail of all infrastructure modifications
 - Secure credential management with encryption at rest
 - Workspace-based organization for team collaboration
@@ -734,7 +734,7 @@ Review what you've implemented:
 - Centralized state management eliminates state conflicts
 - Automatic backups and version history
 - Integrated security scanning and policy enforcement
-- Cost estimation before infrastructure changes
+- Detailed plan output showing resource changes
 - Complete audit trail for compliance requirements
 
 ---

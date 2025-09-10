@@ -340,15 +340,22 @@ Add these variables in the workspace:
 - Key: `environment`, Value: `development`
 
 ### Step 5: Test the Integration
-```bash
-# Make a small change
-echo "# Triggered from GitHub" >> README.md
-git add README.md
-git commit -m "Test GitHub trigger"
-git push origin main
+1. **In Terraform Cloud**, go to your workspace
+2. Click **Actions** → **Start new run**
+3. Select **Run type**: Plan only
+4. Add message: "Testing initial configuration"
+5. Click **Start run**
 
-# Go to Terraform Cloud and watch the run trigger automatically!
-```
+The run should:
+- Pull code from your GitHub repository
+- Run terraform plan using the configuration
+- Show the resources that will be created
+
+If successful, you can:
+- Click **Confirm & Apply** to create the infrastructure
+- Or **Discard Run** to cancel without applying
+
+**Note:** After this initial test, any push to the `main` branch will automatically trigger a new run.
 
 ---
 
@@ -375,73 +382,24 @@ Create three workspaces in Terraform Cloud, each tracking different branches:
 - Auto-apply: **No** (require approval)
 - Variable: `environment = production`
 
-### Step 2: Configure Branch Protection (GitHub)
-1. Go to your GitHub repository
-2. Settings → Branches → Add rule
-3. Branch name pattern: `main`
-4. Enable:
-   - Require pull request reviews
-   - Require status checks (Terraform Cloud)
-   - Dismiss stale reviews
-   - Restrict who can push
-
-### Step 3: Create Terraform Cloud Configuration File
-**.terraform-cloud.yml:** (in repository root)
-```yaml
-# Terraform Cloud configuration for GitHub Actions
-workspaces:
-  - name: github-dev
-    directory: "."
-    auto_apply: true
-    branch: development
-    
-  - name: github-staging
-    directory: "."
-    auto_apply: false
-    branch: staging
-    
-  - name: github-prod
-    directory: "."
-    auto_apply: false
-    branch: main
-```
-
-### Step 4: Test Multi-Environment Deployment
+### Step 2: Test Environment Workflow
 ```bash
-# Switch to development branch
-git checkout development
+# Test pushing a change to trigger the workspace
+echo "\n# Testing GitHub Integration" >> README.md
+git add README.md
+git commit -m "Test GitHub integration with Terraform Cloud"
+git push origin main
 
-# Make a change
-cat >> main.tf << 'EOF'
-
-output "deployment_timestamp" {
-  description = "Deployment timestamp"
-  value       = timestamp()
-}
-EOF
-
-# Commit and push to development
-git add main.tf
-git commit -m "Add deployment timestamp"
-git push origin development
-
-# Watch Terraform Cloud trigger for dev environment
-
-# Create PR to staging
-git checkout staging
-git merge development
-git push origin staging
-
-# Create PR to main (production)
-git checkout main
-git pull origin main
-git checkout -b feature/deploy-timestamp
-git merge staging
-git push origin feature/deploy-timestamp
-
-# Go to GitHub and create Pull Request
-# Watch Terraform Cloud run checks on the PR
+# Go to Terraform Cloud and watch the run trigger automatically!
+# The workspace should now run automatically on every push to main
 ```
+
+**What happens:**
+1. Push to `main` branch triggers the `github-triggered-dev` workspace
+2. Terraform Cloud automatically pulls the latest code
+3. Runs `terraform plan` and shows proposed changes
+4. If auto-apply is enabled, it will apply automatically
+5. You can see the run status in both GitHub and Terraform Cloud
 
 ---
 
@@ -482,7 +440,7 @@ Infrastructure as Code managed through Terraform Cloud with GitHub integration.
 - [ ] Code reviewed and approved
 - [ ] Tests passing
 - [ ] Security scan completed
-- [ ] Cost estimation reviewed
+- [ ] Resource plan output reviewed
 
 ## Deployment Steps
 1. Merge to target branch
@@ -557,7 +515,7 @@ You've completed the Terraform course! You now have hands-on experience with:
 - **GitOps workflows** with GitHub integration
 
 ### Next Steps
-- Explore Terraform Cloud's advanced features (Sentinel policies, cost estimation)
+- Explore Terraform Cloud's advanced features (Sentinel policies, private registry)
 - Implement this pattern in your own projects
 - Consider HashiCorp Terraform certification
 - Join the Terraform community and contribute to modules

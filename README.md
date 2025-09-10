@@ -93,7 +93,7 @@ terraform_v2/
 - ✅ Implement policy-as-code governance
 - ✅ Create and distribute private modules
 - ✅ Set up team collaboration workflows
-- ✅ Configure cost estimation and controls
+- ✅ Configure workspace automation and controls
 - ✅ Integrate with CI/CD pipelines
 
 ### **AWS Infrastructure**
