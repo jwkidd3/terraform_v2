@@ -40,7 +40,7 @@
 - **Lab 9**: Terraform Cloud Integration and Remote Execution (45 min)
 - **Lab 10**: Advanced Terraform Cloud Workspaces and Team Management (45 min)
 - **Lab 11**: Advanced Governance with Policies and Private Registry (45 min)
-- **Lab 12**: Capstone Project - Enterprise Infrastructure Integration (45 min)
+- **Lab 12**: GitHub-Triggered Terraform Cloud Deployments (45 min)
 
 ## 📁 Course Materials
 

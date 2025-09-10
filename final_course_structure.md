@@ -155,7 +155,7 @@ This comprehensive Terraform training course features **12 hands-on labs** speci
 | 9 | Terraform Cloud Integration and Remote Execution | 45 min | Advanced | Complete App Stack, VCS | Remote operations, automation |
 | 10 | Advanced Terraform Cloud Workspaces and Team Management | 45 min | Advanced | RBAC, Multi-tier Architecture | Workspace governance |
 | 11 | Advanced Governance with Policies and Private Registry | 45 min | Advanced | Sentinel, Policy Validation | Enterprise governance |
-| 12 | Capstone Project - Enterprise Infrastructure Integration | 45 min | Expert | Portfolio Integration | Complete mastery |
+| 12 | GitHub-Triggered Terraform Cloud Deployments | 45 min | Advanced | GitHub + VCS Integration | GitOps workflow mastery |
 
 ---
 
