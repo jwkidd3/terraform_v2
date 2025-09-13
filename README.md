@@ -9,9 +9,9 @@
 
 ## 🎯 Course Overview
 
-**Duration**: 3 days (9 hours hands-on)  
+**Duration**: 3 days (9.75 hours hands-on)  
 **Format**: 70% Hands-on / 30% Theory  
-**Level**: Fundamentals to Intermediate/Advanced  
+**Level**: Complete Beginner to Advanced Enterprise  
 **Environment**: AWS Cloud9  
 **Specialty**: Terraform Cloud Enterprise Features
 
@@ -24,23 +24,24 @@
 
 ## 📚 Course Structure
 
-### **Day 1: Terraform Fundamentals**
-- **Lab 1**: First Terraform Configuration (45 min)
-- **Lab 2**: Variables and Data Sources (45 min)  
-- **Lab 3**: Resource Dependencies & Lifecycle (45 min)
-- **Lab 4**: Creating and Using Modules (45 min)
+### **Day 1: Terraform Fundamentals** (5 Labs)
+- **Lab 1**: Introduction to Terraform with Docker (45 min) 🆕
+- **Lab 2**: First AWS Terraform Configuration (45 min)
+- **Lab 3**: Variables and Data Sources (45 min)  
+- **Lab 4**: Resource Dependencies & Lifecycle (45 min)
+- **Lab 5**: Creating and Using Modules (45 min)
 
-### **Day 2: Configuration Mastery**
-- **Lab 5**: Remote State Management (45 min)
-- **Lab 6**: Advanced Multi-Module Composition (45 min)
-- **Lab 7**: Advanced Multi-Environment Patterns (45 min)
-- **Lab 8**: Advanced Networking with VPC (45 min)
+### **Day 2: Configuration Mastery** (4 Labs)
+- **Lab 6**: Remote State Management (45 min)
+- **Lab 7**: Advanced Multi-Module Composition (45 min)
+- **Lab 8**: Advanced Multi-Environment Patterns (45 min)
+- **Lab 9**: Advanced Networking with VPC (45 min)
 
-### **Day 3: Terraform Cloud Enterprise Mastery** ⭐
-- **Lab 9**: Terraform Cloud Integration and Remote Execution (45 min)
-- **Lab 10**: Advanced Terraform Cloud Workspaces and Team Management (45 min)
-- **Lab 11**: Advanced Governance with Policies and Private Registry (45 min)
-- **Lab 12**: GitHub-Triggered Terraform Cloud Deployments (45 min)
+### **Day 3: Terraform Cloud Enterprise Mastery** ⭐ (4 Labs)
+- **Lab 10**: Terraform Cloud Integration and Remote Execution (45 min)
+- **Lab 11**: Advanced Terraform Cloud Workspaces and Team Management (45 min)
+- **Lab 12**: Advanced Governance with Policies and Private Registry (45 min)
+- **Lab 13**: GitHub-Triggered Terraform Cloud Deployments (45 min)
 
 ## 📁 Course Materials
 
@@ -48,11 +49,18 @@
 terraform_v2/
 ├── README.md                           # Course introduction
 ├── final_course_structure.md           # Complete course overview
-├── labs/                              # 12 hands-on lab exercises
-│   ├── lab1_first_terraform_configuration.md
-│   ├── lab2_terraform_variables_and_data.md
-│   ├── ...
-│   └── lab12_final_project_integration.md
+├── lab-exercises/                     # 13 hands-on lab exercises (ready-to-use)
+│   ├── lab01/                        # Lab 1: Introduction to Terraform with Docker
+│   │   ├── README.md                 # Complete lab instructions
+│   │   ├── main.tf                   # Terraform configuration
+│   │   └── terraform.tfvars          # Variable values
+│   ├── lab02/                        # Lab 2: First AWS Terraform Configuration
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── terraform.tfvars
+│   └── lab03-lab12/                  # Remaining labs with complete .tf files
 ├── presentations/                     # Theory presentations (Reveal.js)
 │   ├── module1_fundamentals.html
 │   ├── module2_configuration.html
@@ -70,7 +78,7 @@ terraform_v2/
 3. **Theory presentations**: Use files in [`presentations/`](presentations/)
 
 ### For Students
-1. **Begin with**: [Lab 1 - First Terraform Configuration](labs/lab1_first_terraform_configuration.md)
+1. **Begin with**: [Lab 1 - First Terraform Configuration](lab-exercises/lab01/README.md)
 2. **Follow sequence**: Complete labs 1-12 in order
 3. **Prerequisites**: AWS account, Terraform Cloud account, GitHub account
 
@@ -104,9 +112,10 @@ terraform_v2/
 
 ## 📊 Course Metrics
 
-- **540 minutes** of hands-on Terraform experience
-- **12 production-ready** infrastructure deployments
-- **Enterprise-grade** Terraform Cloud expertise
+- **585 minutes** of hands-on Terraform experience (13 labs × 45 min)
+- **13 production-ready** infrastructure deployments
+- **Complete beginner to enterprise expert** progression
+- **Docker + AWS + Terraform Cloud** comprehensive coverage
 - **HashiCorp certification** preparation
 - **Immediate employment** readiness
 
@@ -131,7 +140,7 @@ terraform_v2/
 ## 🚀 Ready to Start?
 
 ### **For Students**
-🎯 **Begin your journey**: [Lab 1 - First Terraform Configuration](labs/lab1_first_terraform_configuration.md)
+🎯 **Begin your journey**: [Lab 1 - First Terraform Configuration](lab-exercises/lab01/README.md)
 
 ### **For Instructors** 
 📖 **Prepare to teach**: [Instructor Guide](docs/instructor_guide.md)
@@ -153,7 +162,7 @@ terraform_v2/
 
 **Transform your Terraform skills from beginner to enterprise expert in just 3 days.**
 
-🌟 **Start learning**: [Lab 1](labs/lab1_first_terraform_configuration.md)  
+🌟 **Start learning**: [Lab 1](lab-exercises/lab01/README.md)  
 📚 **Course details**: [Full Structure](final_course_structure.md)  
 👨‍🏫 **Instructor guide**: [Teaching Materials](docs/instructor_guide.md)
 

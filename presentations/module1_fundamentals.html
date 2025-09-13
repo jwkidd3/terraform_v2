@@ -18,7 +18,7 @@
         
         .reveal {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 300;
             color: #2c3e50;
             overflow: hidden;
@@ -30,18 +30,18 @@
         }
         
         .reveal h1 {
-            font-size: 1.9em;
-            margin-bottom: 0.3em;
+            font-size: 1.7em;
+            margin-bottom: 0.2em;
         }
         
         .reveal h2 {
-            font-size: 1.4em;
-            margin-bottom: 0.3em;
+            font-size: 1.3em;
+            margin-bottom: 0.2em;
         }
         
         .reveal h3 {
-            font-size: 1.1em;
-            margin-bottom: 0.2em;
+            font-size: 1.0em;
+            margin-bottom: 0.1em;
         }
         
         .reveal .slides section {
@@ -49,7 +49,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            padding: 15px;
+            padding: 10px;
             box-sizing: border-box;
             overflow-y: auto;
             overflow-x: hidden;
@@ -127,28 +127,31 @@
         .reveal .highlight {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             border-left: 4px solid var(--warning-color);
-            padding: 8px 12px;
-            margin: 8px 0;
+            padding: 6px 10px;
+            margin: 6px 0;
             border-radius: 4px;
-            font-size: 0.85em;
+            font-size: 0.75em;
+            line-height: 1.3;
         }
         
         .reveal .danger {
             background: linear-gradient(135deg, #f8d7da 0%, #fab1a0 100%);
             border-left: 4px solid var(--danger-color);
-            padding: 8px 12px;
-            margin: 8px 0;
+            padding: 6px 10px;
+            margin: 6px 0;
             border-radius: 4px;
-            font-size: 0.85em;
+            font-size: 0.75em;
+            line-height: 1.3;
         }
         
         .reveal .success {
             background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%);
             border-left: 4px solid var(--success-color);
-            padding: 8px 12px;
-            margin: 8px 0;
+            padding: 6px 10px;
+            margin: 6px 0;
             border-radius: 4px;
-            font-size: 0.85em;
+            font-size: 0.75em;
+            line-height: 1.3;
         }
         
         .reveal .terraform-logo {
@@ -161,13 +164,13 @@
         }
         
         .reveal ul, .reveal ol {
-            font-size: 0.8em;
-            line-height: 1.3;
-            margin-left: 0.3em;
+            font-size: 0.75em;
+            line-height: 1.2;
+            margin: 0.2em 0 0.2em 0.5em;
         }
         
         .reveal li {
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         
         .reveal .fragment {
@@ -216,58 +219,93 @@
         }
 
         /* Enhanced Responsive Design for Better Screen Fit */
+        @media screen and (min-width: 1600px) {
+            .reveal {
+                font-size: 26px;
+            }
+        }
+
         @media screen and (max-width: 1400px) {
             .reveal {
-                font-size: 32px;
+                font-size: 22px;
+            }
+            
+            .reveal table {
+                font-size: 0.6em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.7em;
             }
         }
 
         @media screen and (max-width: 1024px) {
             .reveal {
-                font-size: 28px;
+                font-size: 20px;
             }
             
             .reveal .two-column,
             .reveal .three-column {
                 flex-direction: column;
-                gap: 20px;
+                gap: 15px;
             }
             
             .reveal pre code {
-                font-size: 0.65em;
-                max-height: 400px;
+                font-size: 0.6em;
+                max-height: 350px;
             }
             
             .reveal .slides section {
-                padding: 15px;
+                padding: 8px;
+            }
+            
+            .reveal table {
+                font-size: 0.55em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.65em;
             }
         }
 
         @media screen and (max-width: 768px) {
             .reveal {
-                font-size: 24px;
+                font-size: 18px;
             }
             
             .reveal h1 {
-                font-size: 2em;
+                font-size: 1.8em;
             }
             
             .reveal h2 {
-                font-size: 1.6em;
+                font-size: 1.4em;
             }
             
             .reveal h3 {
-                font-size: 1.3em;
+                font-size: 1.1em;
             }
             
             .reveal pre code {
-                font-size: 0.6em;
+                font-size: 0.55em;
                 max-height: 300px;
-                padding: 15px;
+                padding: 10px;
             }
             
             .reveal .slides section {
-                padding: 10px;
+                padding: 6px;
+            }
+            
+            .reveal table {
+                font-size: 0.5em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.6em;
+            }
+            
+            .reveal .highlight, .reveal .danger, .reveal .success {
+                padding: 4px 8px;
+                font-size: 0.7em;
             }
         }
 
@@ -283,10 +321,18 @@
         }
         
         .reveal table {
-            font-size: 0.8em;
+            font-size: 0.65em;
             overflow-x: auto;
             display: block;
             white-space: nowrap;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .reveal table th, .reveal table td {
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            font-size: inherit;
         }
         
         /* Webkit scrollbar styling */
@@ -316,39 +362,82 @@
             justify-content: center;
             height: 100%;
             overflow: auto;
+            padding: 10px;
         }
         
         .reveal .lab-callout h1 {
-            font-size: 1.5em;
-            margin-bottom: 0.2em;
+            font-size: 1.3em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout h2 {
-            font-size: 1.2em;
-            margin-bottom: 0.2em;
+            font-size: 1.0em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout h3 {
-            font-size: 1em;
-            margin-bottom: 0.2em;
+            font-size: 0.9em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout ul {
-            font-size: 0.85em;
-            line-height: 1.3;
+            font-size: 0.75em;
+            line-height: 1.2;
+            margin: 0.2em 0;
+        }
+        
+        .reveal .lab-callout li {
+            margin: 0.1em 0;
         }
         
         .reveal .lab-callout > div {
-            padding: 10px;
+            padding: 8px;
             max-width: 95%;
         }
         
         .reveal .lab-callout div[style*="background: rgba(255,255,255,0.1)"] {
-            padding: 20px !important;
+            padding: 12px !important;
         }
         
         .reveal .lab-callout div[style*="background: rgba(255,193,7,0.2)"] {
-            padding: 15px !important;
+            padding: 10px !important;
+        }
+        
+        .reveal .lab-callout p {
+            margin: 0.2em 0;
+            font-size: 0.9em;
+        }
+        
+        /* Enhanced responsive design for lab callouts */
+        @media screen and (max-width: 1024px) {
+            .reveal .lab-callout h1 {
+                font-size: 1.2em;
+            }
+            
+            .reveal .lab-callout h2 {
+                font-size: 0.95em;
+            }
+            
+            .reveal .lab-callout ul {
+                font-size: 0.7em;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .reveal .lab-callout h1 {
+                font-size: 1.1em;
+            }
+            
+            .reveal .lab-callout h2 {
+                font-size: 0.9em;
+            }
+            
+            .reveal .lab-callout ul {
+                font-size: 0.65em;
+            }
         }
     </style>
 </head>
@@ -363,7 +452,181 @@
                 <p class="subtitle">Day 1 Theory Session • Comprehensive Overview</p>
                 <p><strong>Learning Path:</strong> From Zero to Infrastructure Automation Expert</p>
                 <div class="highlight">
-                    <p><strong>📚 What We'll Cover:</strong> Infrastructure as Code concepts, Terraform architecture, HCL syntax fundamentals, basic workflow mastery, real-world applications, and enterprise patterns</p>
+                    <p><strong>📚 What We'll Cover:</strong> Infrastructure as Code concepts, Terraform architecture, HCL syntax fundamentals, production workflow mastery, real-world applications, and enterprise patterns</p>
+                </div>
+            </section>
+
+            <!-- Comprehensive Course Overview and Agenda -->
+            <section>
+                <h2><span class="emoji">📋</span> Day 1 Complete Learning Agenda</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <h3><span class="emoji">🎯</span> Theory Sessions (30% - 90 minutes)</h3>
+                        <ul>
+                            <li><strong>Infrastructure as Code Revolution</strong>
+                                <ul><li>Traditional vs Modern approaches</li>
+                                <li>Enterprise adoption patterns</li>
+                                <li>Business impact analysis</li></ul>
+                            </li>
+                            <li><strong>Terraform Architecture Mastery</strong>
+                                <ul><li>Core components deep dive</li>
+                                <li>Provider ecosystem overview</li>
+                                <li>State management fundamentals</li></ul>
+                            </li>
+                            <li><strong>HCL Language Foundations</strong>
+                                <ul><li>Syntax and structure</li>
+                                <li>Advanced language features</li>
+                                <li>Best practices and patterns</li></ul>
+                            </li>
+                            <li><strong>Workflow and Resource Management</strong>
+                                <ul><li>Complete workflow mastery</li>
+                                <li>Dependencies and relationships</li>
+                                <li>Enterprise best practices</li></ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3><span class="emoji">⚡</span> Hands-On Labs (70% - 225 minutes)</h3>
+                        <ul>
+                            <li><strong>Lab 1: Introduction to Terraform with Docker (45 min)</strong>
+                                <ul><li>Local Docker infrastructure setup</li>
+                                <li>Basic Terraform workflow with containers</li>
+                                <li>Foundation concepts without cloud complexity</li></ul>
+                            </li>
+                            <li><strong>Lab 2: First AWS Terraform Configuration (45 min)</strong>
+                                <ul><li>Deploy production-ready AWS infrastructure with 8+ resources</li>
+                                <li>Enterprise security patterns with IAM roles and encrypted storage</li>
+                                <li>Complete workflow with advanced tagging strategies</li></ul>
+                            </li>
+                            <li><strong>Lab 3: Advanced Variables and Data Sources (45 min)</strong>
+                                <ul><li>Build auto-scaling web applications with 12+ AWS resources</li>
+                                <li>Advanced variable validation and complex data types</li>
+                                <li>Enterprise monitoring with CloudWatch and security groups</li></ul>
+                            </li>
+                            <li><strong>Lab 4: Dependencies & Lifecycle (45 min)</strong>
+                                <ul><li>Complex resource relationships</li>
+                                <li>Lifecycle management</li>
+                                <li>Advanced dependency patterns</li></ul>
+                            </li>
+                            <li><strong>Lab 5: Creating Modules (45 min)</strong>
+                                <ul><li>Modular architecture design</li>
+                                <li>Reusable component creation</li>
+                                <li>Module composition patterns</li></ul>
+                            </li>
+                        </ul>
+                        <div class="highlight" style="margin-top: 15px;">
+                            <p><strong>🏆 Day 1 Outcome:</strong> Master Terraform fundamentals from local containers to cloud infrastructure with modular design</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Schedule and Timing -->
+            <section>
+                <h2><span class="emoji">⏰</span> Complete Day 1 Schedule & Timing</h2>
+                <div style="margin-bottom: 20px;">
+                    <h3><span class="emoji">🕘</span> Morning Session (9:00 AM - 12:00 PM)</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8em;">
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">Time</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Activity</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Duration</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Type</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Objectives</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">9:00-9:30</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>IaC & Terraform Overview</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">30 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Theory</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Understand IaC value proposition</td>
+                        </tr>
+                        <tr style="background-color: #e3f2fd;">
+                            <td style="padding: 6px; border: 1px solid #ddd;">9:30-10:15</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Lab 1: Docker Introduction</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">45 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Hands-On</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Local Terraform with containers</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">10:15-10:30</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Break</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">15 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Rest</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Network and refresh</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">10:30-11:00</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>HCL & Architecture Deep Dive</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">30 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Theory</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Master language fundamentals</td>
+                        </tr>
+                        <tr style="background-color: #e3f2fd;">
+                            <td style="padding: 6px; border: 1px solid #ddd;">11:00-11:45</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Lab 2: First AWS Config</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">45 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Hands-On</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Deploy enterprise-grade infrastructure</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">11:45-12:00</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Morning Wrap-up & Q&A</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">15 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Discussion</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Consolidate learning</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <h3><span class="emoji">🕐</span> Afternoon Session (1:00 PM - 4:00 PM)</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8em;">
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">Time</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Activity</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Duration</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Type</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Objectives</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">1:00-1:30</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Workflow & Best Practices</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">30 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Theory</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Enterprise patterns mastery</td>
+                        </tr>
+                        <tr style="background-color: #e3f2fd;">
+                            <td style="padding: 6px; border: 1px solid #ddd;">1:30-2:15</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Lab 3: Variables & Data</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">45 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Hands-On</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Build production-ready web applications</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd;">2:15-2:30</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Break</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">15 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Rest</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Network and refresh</td>
+                        </tr>
+                        <tr style="background-color: #e3f2fd;">
+                            <td style="padding: 6px; border: 1px solid #ddd;">2:30-3:15</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Lab 4: Dependencies</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">45 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Hands-On</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Complex resource relationships</td>
+                        </tr>
+                        <tr style="background-color: #e3f2fd;">
+                            <td style="padding: 6px; border: 1px solid #ddd;">3:15-4:00</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;"><strong>Lab 5: Creating Modules</strong></td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">45 min</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Hands-On</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">Modular architecture mastery</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="highlight" style="margin-top: 15px;">
+                    <p><strong>📊 Day 1 Totals:</strong> 90 minutes theory (30%) + 225 minutes hands-on (70%) = 315 minutes total learning</p>
                 </div>
             </section>
 
@@ -403,52 +666,147 @@
                 </div>
             </section>
 
-            <!-- Infrastructure as Code Deep Dive -->
+            <!-- Infrastructure as Code Revolution -->
             <section>
-                <h2><span class="emoji">🏗️</span> Infrastructure as Code: Traditional vs Modern</h2>
+                <h2><span class="emoji">🔥</span> The Infrastructure Revolution: Why Traditional Approaches Are Failing</h2>
                 <div class="two-column">
                     <div class="column">
-                        <h3>Traditional Infrastructure Challenges</h3>
+                        <h3><span class="emoji">💥</span> Traditional Infrastructure Crisis</h3>
                         <div class="danger">
-                            <p><strong>❌ Manual Configuration Problems:</strong></p>
-                            <ul>
-                                <li><strong>Configuration Drift:</strong> Systems diverge over time</li>
-                                <li><strong>Snowflake Servers:</strong> Each server becomes unique</li>
-                                <li><strong>Human Error:</strong> Manual process inconsistencies</li>
-                                <li><strong>Documentation Lag:</strong> Changes not documented</li>
-                                <li><strong>Scaling Bottlenecks:</strong> Can't replicate quickly</li>
-                                <li><strong>Audit Challenges:</strong> No change tracking</li>
+                            <p><strong>❌ The Manual Configuration Disaster:</strong></p>
+                            <ul style="font-size: 0.85em;">
+                                <li><strong>Configuration Drift:</strong> Systems diverge over time, creating unpredictable behavior</li>
+                                <li><strong>Snowflake Servers:</strong> Each server becomes unique and unreproducible</li>
+                                <li><strong>Human Error Multiplication:</strong> Manual processes compound mistakes</li>
+                                <li><strong>Documentation Decay:</strong> Changes rarely get documented properly</li>
+                                <li><strong>Scaling Impossibility:</strong> Can't replicate environments reliably</li>
+                                <li><strong>Audit Nightmares:</strong> No reliable change tracking or compliance proof</li>
+                                <li><strong>Knowledge Silos:</strong> Critical knowledge trapped in individual minds</li>
+                                <li><strong>Deployment Anxiety:</strong> Every change carries high risk</li>
                             </ul>
                         </div>
                         
-                        <h3>The Business Impact</h3>
-                        <ul>
-                            <li class="fragment"><strong>Increased Downtime:</strong> Slower recovery</li>
-                            <li class="fragment"><strong>Higher Costs:</strong> More personnel needed</li>
-                            <li class="fragment"><strong>Reduced Agility:</strong> Can't adapt quickly</li>
-                            <li class="fragment"><strong>Compliance Risks:</strong> Hard to audit</li>
+                        <h3><span class="emoji">💸</span> Real Business Impact</h3>
+                        <ul style="font-size: 0.85em;">
+                            <li><strong>Downtime Costs:</strong> $5,600 per minute average for enterprise</li>
+                            <li><strong>Labor Inefficiency:</strong> 60-70% of ops time spent on manual tasks</li>
+                            <li><strong>Security Vulnerabilities:</strong> Manual processes miss security updates</li>
+                            <li><strong>Compliance Failures:</strong> Can't prove configuration compliance</li>
+                            <li><strong>Innovation Paralysis:</strong> Fear of change slows business growth</li>
                         </ul>
                     </div>
                     <div class="column">
-                        <h3>IaC Revolutionary Benefits</h3>
+                        <h3><span class="emoji">🚀</span> IaC: The Complete Solution</h3>
                         <div class="success">
-                            <p><strong>✅ Infrastructure as Code Advantages:</strong></p>
-                            <ul>
-                                <li><strong>Version Control:</strong> Track every change</li>
-                                <li><strong>Reproducibility:</strong> Identical environments</li>
-                                <li><strong>Documentation:</strong> Code IS documentation</li>
-                                <li><strong>Testing:</strong> Test before deploy</li>
-                                <li><strong>Collaboration:</strong> Team development</li>
-                                <li><strong>Automation:</strong> Reduce human error</li>
-                                <li><strong>Compliance:</strong> Enforced standards</li>
+                            <p><strong>✅ Infrastructure as Code Revolution:</strong></p>
+                            <ul style="font-size: 0.85em;">
+                                <li><strong>Version Control Everything:</strong> Git workflow for infrastructure changes</li>
+                                <li><strong>Perfect Reproducibility:</strong> Identical environments every time</li>
+                                <li><strong>Self-Documenting:</strong> Code becomes living documentation</li>
+                                <li><strong>Automated Testing:</strong> Test infrastructure before deployment</li>
+                                <li><strong>Team Collaboration:</strong> Code reviews for infrastructure changes</li>
+                                <li><strong>Zero-Touch Automation:</strong> Eliminate human error completely</li>
+                                <li><strong>Built-in Compliance:</strong> Policy enforcement through code</li>
+                                <li><strong>Instant Rollback:</strong> Revert to any previous state instantly</li>
+                                <li><strong>Multi-Environment Consistency:</strong> Dev/staging/prod identical</li>
                             </ul>
                         </div>
                         
-                        <h3>IaC vs Traditional</h3>
-                        <div class="architecture-diagram">
-                            Traditional: Plan → Manual → Document<br/>
-                            IaC: Code → Review → Test → Deploy
+                        <h3><span class="emoji">📊</span> Process Transformation</h3>
+                        <table style="width: 100%; font-size: 0.75em; border-collapse: collapse;">
+                            <tr style="background-color: #ffebee;">
+                                <td style="padding: 5px; border: 1px solid #ccc;"><strong>Traditional:</strong></td>
+                                <td style="padding: 5px; border: 1px solid #ccc;">Plan → Manual → Hope → Document Later</td>
+                            </tr>
+                            <tr style="background-color: #e8f5e8;">
+                                <td style="padding: 5px; border: 1px solid #ccc;"><strong>IaC:</strong></td>
+                                <td style="padding: 5px; border: 1px solid #ccc;">Code → Review → Test → Deploy → Verify</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enterprise IaC Adoption Analysis -->
+            <section>
+                <h2><span class="emoji">📈</span> Enterprise Infrastructure as Code: Market Reality & Success Stories</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <h3><span class="emoji">📊</span> Industry Adoption Statistics (2024)</h3>
+                        <ul style="font-size: 0.8em;">
+                            <li><strong>76% of enterprises</strong> now use IaC for production workloads</li>
+                            <li><strong>89% report</strong> improved deployment reliability</li>
+                            <li><strong>67% reduction</strong> in infrastructure-related incidents</li>
+                            <li><strong>45% faster</strong> time-to-market for new applications</li>
+                            <li><strong>$2.3M average</strong> annual savings per enterprise</li>
+                            <li><strong>92% compliance improvement</strong> in regulated industries</li>
+                        </ul>
+                        
+                        <h3><span class="emoji">🏆</span> Key Success Factors</h3>
+                        <ol style="font-size: 0.8em;">
+                            <li><strong>Executive Sponsorship:</strong> C-level support for transformation</li>
+                            <li><strong>Team Training:</strong> Comprehensive skill development programs</li>
+                            <li><strong>Gradual Migration:</strong> Phased approach to reduce risk</li>
+                            <li><strong>Tool Standardization:</strong> Consistent toolchain across teams</li>
+                            <li><strong>Cultural Change:</strong> Shift from "pets" to "cattle" mindset</li>
+                        </ol>
+
+                        <h3><span class="emoji">🎯</span> Implementation Strategy</h3>
+                        <div style="font-size: 0.75em; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <strong>Phase 1:</strong> Proof of Concept (2-4 weeks)<br/>
+                            <strong>Phase 2:</strong> Dev Environment Migration (4-8 weeks)<br/>
+                            <strong>Phase 3:</strong> Staging Environment (8-12 weeks)<br/>
+                            <strong>Phase 4:</strong> Production Rollout (12-24 weeks)
                         </div>
+                    </div>
+                    <div class="column">
+                        <h3><span class="emoji">🌍</span> Real-World Enterprise Use Cases</h3>
+                        <div class="highlight" style="margin-bottom: 15px;">
+                            <h4><span class="emoji">🏦</span> Financial Services</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li><strong>JP Morgan:</strong> 10,000+ applications on IaC</li>
+                                <li><strong>Goldman Sachs:</strong> 95% infrastructure automated</li>
+                                <li><strong>Benefits:</strong> SOC compliance, disaster recovery, cost optimization</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="highlight" style="margin-bottom: 15px;">
+                            <h4><span class="emoji">🛒</span> E-Commerce & Retail</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li><strong>Amazon:</strong> Millions of resources managed via IaC</li>
+                                <li><strong>Target:</strong> Black Friday scaling automation</li>
+                                <li><strong>Benefits:</strong> Auto-scaling, peak load handling, cost efficiency</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="highlight" style="margin-bottom: 15px;">
+                            <h4><span class="emoji">🎬</span> Media & Entertainment</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li><strong>Netflix:</strong> Global content delivery at scale</li>
+                                <li><strong>Disney+:</strong> Launch day infrastructure management</li>
+                                <li><strong>Benefits:</strong> Global distribution, elastic scaling, cost control</li>
+                            </ul>
+                        </div>
+
+                        <h3><span class="emoji">🏅</span> Technology Leaders Using IaC</h3>
+                        <table style="width: 100%; font-size: 0.7em; border-collapse: collapse;">
+                            <tr style="background-color: #e3f2fd;">
+                                <td style="padding: 4px; border: 1px solid #ccc;"><strong>Netflix</strong></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">100% cloud-native IaC</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #ccc;"><strong>Airbnb</strong></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Kubernetes + Terraform</td>
+                            </tr>
+                            <tr style="background-color: #e3f2fd;">
+                                <td style="padding: 4px; border: 1px solid #ccc;"><strong>Spotify</strong></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Multi-cloud automation</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #ccc;"><strong>Uber</strong></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Global infrastructure</td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -820,19 +1178,19 @@ $ terraform state mv aws_instance.web aws_instance.web_server
             <section class="lab-callout" data-background-color="#623ce4">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">🔬</span> Time for Hands-On Practice!</h1>
-                    <h2><span class="emoji">⚡</span> Lab 1: First Terraform Configuration</h2>
+                    <h2><span class="emoji">🐳</span> Lab 1: Introduction to Terraform with Docker</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Build:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Install and verify Terraform</li>
-                            <li>✅ Create your first S3 bucket resource</li>
+                            <li>✅ Create your first Docker container with Terraform</li>
                             <li>✅ Master the terraform init, plan, apply, destroy workflow</li>
-                            <li>✅ Use variables to make configurations unique</li>
+                            <li>✅ Learn infrastructure concepts without cloud complexity</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Put theory into practice with real AWS infrastructure!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Learn Terraform fundamentals with local Docker infrastructure!</p>
                     </div>
                     <h2 style="margin-top: 30px; font-size: 2em;">🚀 Let's Build Something Amazing!</h2>
                 </div>
@@ -956,22 +1314,22 @@ Configuration → Planned → Creating → Created → Updating → Updated → 
             <!-- Lab 2 Callout -->
             <section class="lab-callout" data-background-color="#28a745">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">📊</span> Next Challenge: Dynamic Configuration!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 2: Variables and Data Sources</h2>
+                    <h1><span class="emoji">☁️</span> Next Challenge: AWS Cloud Infrastructure!</h1>
+                    <h2><span class="emoji">⚙️</span> Lab 2: First AWS Terraform Configuration</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Use different variable types (string, number, boolean)</li>
-                            <li>✅ Find existing AWS resources with data sources</li>
-                            <li>✅ Create an EC2 instance with security group</li>
-                            <li>✅ Generate outputs to display important information</li>
+                            <li>✅ Deploy production-ready AWS infrastructure with 8+ resources</li>
+                            <li>✅ Implement enterprise security with IAM roles and encryption</li>
+                            <li>✅ Apply advanced tagging strategies for cost allocation</li>
+                            <li>✅ Master AWS provider patterns and state management</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Make your infrastructure configurations reusable and dynamic!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Transition from local containers to cloud infrastructure!</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🔧 Build Flexible Infrastructure!</h2>
+                    <h2 style="margin-top: 30px; font-size: 2em;">☁️ Deploy to the Cloud!</h2>
                 </div>
             </section>
 
@@ -1104,22 +1462,22 @@ terraform fmt -recursive
             <!-- Lab 3 Callout -->
             <section class="lab-callout" data-background-color="#fd7e14">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> Advanced Challenge: Complex Dependencies!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 3: Resource Dependencies and Lifecycle</h2>
+                    <h1><span class="emoji">📊</span> Next Challenge: Dynamic Configuration!</h1>
+                    <h2><span class="emoji">⚙️</span> Lab 3: Variables and Data Sources</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Understand how Terraform manages resource dependencies</li>
-                            <li>✅ Use `count` to create multiple similar resources</li>
-                            <li>✅ Use `for_each` to create resources from a map</li>
-                            <li>✅ Apply basic lifecycle rules to prevent accidental changes</li>
+                            <li>✅ Build auto-scaling web applications with 12+ AWS resources</li>
+                            <li>✅ Implement advanced variable validation and complex data types</li>
+                            <li>✅ Deploy enterprise monitoring with CloudWatch integration</li>
+                            <li>✅ Master dynamic configuration patterns for multi-environment use</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build complex multi-resource architectures with proper relationships!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Make your infrastructure configurations reusable and dynamic!</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🏗️ Master Advanced Patterns!</h2>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🔧 Build Flexible Infrastructure!</h2>
                 </div>
             </section>
 
@@ -1310,15 +1668,37 @@ output "instance_ips" {
             <!-- Lab 4 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🏗️</span> Final Challenge: Modular Architecture!</h1>
-                    <h2><span class="emoji">📦</span> Lab 4: Creating and Using Modules</h2>
+                    <h1><span class="emoji">🔗</span> Advanced Challenge: Complex Dependencies!</h1>
+                    <h2><span class="emoji">⚙️</span> Lab 4: Resource Dependencies and Lifecycle</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Build comprehensive web application module with 8+ resources</li>
-                            <li>✅ Implement IAM roles, S3 buckets, EC2 instances, and CloudWatch</li>
-                            <li>✅ Master variable validation, template files, and conditional resources</li>
-                            <li>✅ Deploy multiple applications using the same reusable module</li>
+                            <li>✅ Understand how Terraform manages resource dependencies</li>
+                            <li>✅ Use `count` to create multiple similar resources</li>
+                            <li>✅ Use `for_each` to create resources from a map</li>
+                            <li>✅ Apply enterprise lifecycle rules to prevent accidental changes</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.2em; margin: 0;"><strong>⏱️ Duration: 45 minutes</strong></p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build complex multi-resource architectures with proper relationships!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🏗️ Master Advanced Patterns!</h2>
+                </div>
+            </section>
+
+            <!-- Lab 5 Callout -->
+            <section class="lab-callout" data-background-color="#6f42c1">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🏗️</span> Final Challenge: Modular Architecture!</h1>
+                    <h2><span class="emoji">📦</span> Lab 5: Creating and Using Modules</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Build comprehensive web application module with 15+ resources</li>
+                            <li>✅ Implement enterprise IAM policies, encrypted storage, and monitoring</li>
+                            <li>✅ Master advanced module patterns with validation and conditionals</li>
+                            <li>✅ Deploy production-grade, reusable infrastructure components</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1336,29 +1716,40 @@ output "instance_ips" {
                     <div class="column">
                         <h3>Day 1 Lab Roadmap</h3>
                         <div class="success">
-                            <p><strong>🔬 Lab 1: First Terraform Configuration</strong></p>
+                            <p><strong>🔬 Lab 1: Introduction to Terraform with Docker</strong></p>
                             <ul>
                                 <li>Install and verify Terraform</li>
-                                <li>Create basic S3 bucket resource</li>
+                                <li>Create Docker container with Terraform</li>
                                 <li>Master init, plan, apply, destroy workflow</li>
-                                <li>Use variables for unique naming</li>
+                                <li>Learn infrastructure concepts locally</li>
                                 <li>Basic Terraform file structure</li>
                             </ul>
                         </div>
 
                         <div class="highlight">
-                            <p><strong>🔬 Lab 2: Variables and Data Sources</strong></p>
+                            <p><strong>🔬 Lab 2: First AWS Terraform Configuration</strong></p>
                             <ul>
-                                <li>Different variable types (string, number, boolean)</li>
-                                <li>Query existing AWS resources with data sources</li>
-                                <li>Create EC2 instance with security group</li>
-                                <li>Generate useful outputs</li>
-                                <li>Simple web server deployment</li>
+                                <li>Deploy production-ready infrastructure with 8+ resources</li>
+                                <li>Implement enterprise security with IAM and encryption</li>
+                                <li>Apply advanced tagging and cost allocation strategies</li>
+                                <li>Master AWS provider patterns and state management</li>
+                                <li>Enterprise AWS resource orchestration</li>
                             </ul>
                         </div>
 
                         <div class="success">
-                            <p><strong>🔬 Lab 3: Resource Dependencies</strong></p>
+                            <p><strong>🔬 Lab 3: Advanced Variables and Data Sources</strong></p>
+                            <ul>
+                                <li>Advanced variable types with validation and complex objects</li>
+                                <li>Dynamic resource discovery with sophisticated data sources</li>
+                                <li>Deploy auto-scaling web applications with 12+ resources</li>
+                                <li>Enterprise monitoring and alerting integration</li>
+                                <li>Production-ready multi-tier architecture deployment</li>
+                            </ul>
+                        </div>
+
+                        <div class="highlight">
+                            <p><strong>🔬 Lab 4: Resource Dependencies</strong></p>
                             <ul>
                                 <li>How Terraform manages resource dependencies</li>
                                 <li>Create multiple resources with count</li>
@@ -1368,14 +1759,14 @@ output "instance_ips" {
                             </ul>
                         </div>
 
-                        <div class="highlight">
-                            <p><strong>🔬 Lab 4: Creating Modules</strong></p>
+                        <div class="success">
+                            <p><strong>🔬 Lab 5: Creating Production Modules</strong></p>
                             <ul>
-                                <li>Simple S3 website module creation</li>
-                                <li>Module structure (variables.tf, main.tf, outputs.tf)</li>
-                                <li>Using the same module multiple times</li>
-                                <li>Module inputs and outputs</li>
-                                <li>Code reusability benefits</li>
+                                <li>Enterprise web application module with 15+ resources</li>
+                                <li>Advanced module architecture with validation and conditionals</li>
+                                <li>Deploy multiple production environments with single module</li>
+                                <li>Complex module inputs/outputs with sensitive data handling</li>
+                                <li>Production-grade code reusability and standardization</li>
                             </ul>
                         </div>
                     </div>
@@ -1397,7 +1788,7 @@ output "instance_ips" {
                             <ul>
                                 <li>AWS Account with administrative access</li>
                                 <li>AWS Cloud9 environment configured</li>
-                                <li>Basic command line familiarity</li>
+                                <li>Command line familiarity</li>
                                 <li>Text editor comfort (VS Code, vim, etc.)</li>
                                 <li>Git basics understanding</li>
                             </ul>
@@ -1455,10 +1846,10 @@ Day 3: Terraform Cloud Enterprise
                             <p><strong>🎯 Lab 1 Preparation:</strong></p>
                             <ol>
                                 <li>Verify AWS Cloud9 environment</li>
-                                <li>Check AWS credentials and permissions</li>
+                                <li>Install Docker if not already available</li>
                                 <li>Open terminal and prepare workspace</li>
                                 <li>Review lab instructions briefly</li>
-                                <li>Get ready for hands-on deployment!</li>
+                                <li>Get ready for local container deployment!</li>
                             </ol>
                         </div>
                         
@@ -1483,13 +1874,13 @@ Day 3: Terraform Cloud Enterprise
     <script>
         Reveal.initialize({
             // Display configuration optimized for all screen sizes
-            width: 1920,
-            height: 1080,
-            margin: 0.02,
+            width: 1600,
+            height: 900,
+            margin: 0.05,
             
             // Scaling configuration to prevent content cutoff
-            minScale: 0.3,
-            maxScale: 1.5,
+            minScale: 0.2,
+            maxScale: 1.0,
             
             // Navigation and controls
             hash: true,

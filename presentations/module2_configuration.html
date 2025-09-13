@@ -22,7 +22,7 @@
         /* Global Reveal.js Overrides */
         .reveal {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 300;
             color: #2c3e50;
         }
@@ -35,25 +35,25 @@
         }
 
         .reveal h1 {
-            font-size: 1.9em;
+            font-size: 1.6em;
             text-shadow: 2px 2px 4px rgba(98, 60, 228, 0.3);
-            margin-bottom: 0.3em;
+            margin-bottom: 0.2em;
         }
 
         .reveal h2 {
-            font-size: 1.4em;
-            margin-bottom: 0.3em;
+            font-size: 1.25em;
+            margin-bottom: 0.2em;
         }
 
         .reveal h3 {
-            font-size: 1.1em;
-            margin-bottom: 0.2em;
+            font-size: 1.0em;
+            margin-bottom: 0.1em;
         }
 
         .reveal h4 {
-            font-size: 1.0em;
+            font-size: 0.9em;
             color: var(--terraform-dark);
-            margin-bottom: 0.2em;
+            margin-bottom: 0.1em;
         }
 
         /* Slide Layout */
@@ -62,7 +62,11 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            padding: 20px;
+            padding: 12px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 100vh;
         }
 
         .reveal .title-slide {
@@ -74,18 +78,19 @@
 
         /* Typography */
         .reveal p {
-            margin: 0.8em 0;
-            line-height: 1.6;
+            margin: 0.4em 0;
+            line-height: 1.4;
+            font-size: 0.9em;
         }
 
         .reveal ul, .reveal ol {
-            margin: 0.4em 0 0.4em 0.5em;
-            line-height: 1.3;
-            font-size: 0.85em;
+            margin: 0.2em 0 0.2em 0.5em;
+            line-height: 1.2;
+            font-size: 0.75em;
         }
 
         .reveal li {
-            margin: 0.2em 0;
+            margin: 0.1em 0;
         }
 
         /* Code Styling */
@@ -111,11 +116,11 @@
         .reveal pre code {
             background-color: transparent;
             border: none;
-            padding: 10px;
-            font-size: 0.6em;
-            line-height: 1.2;
+            padding: 8px;
+            font-size: 0.55em;
+            line-height: 1.15;
             color: #f8f8f2;
-            max-height: 350px;
+            max-height: 300px;
             overflow-y: auto;
             display: block;
             word-wrap: break-word;
@@ -153,48 +158,51 @@
         /* Alert Boxes */
         .reveal .highlight {
             background: linear-gradient(90deg, #fff3cd 0%, #fef7d9 100%);
-            border-left: 6px solid var(--accent-orange);
-            border-radius: 0 8px 8px 0;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+            border-left: 4px solid var(--accent-orange);
+            border-radius: 0 6px 6px 0;
+            padding: 8px 12px;
+            margin: 8px 0;
+            box-shadow: 0 1px 3px rgba(255, 152, 0, 0.2);
+            font-size: 0.75em;
         }
 
         .reveal .danger {
             background: linear-gradient(90deg, #f8d7da 0%, #fce4e6 100%);
-            border-left: 6px solid var(--accent-red);
-            border-radius: 0 8px 8px 0;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+            border-left: 4px solid var(--accent-red);
+            border-radius: 0 6px 6px 0;
+            padding: 8px 12px;
+            margin: 8px 0;
+            box-shadow: 0 1px 3px rgba(244, 67, 54, 0.2);
+            font-size: 0.75em;
         }
 
         .reveal .success {
             background: linear-gradient(90deg, #d1ecf1 0%, #ddf2f7 100%);
             border-left: 4px solid var(--accent-blue);
             border-radius: 0 6px 6px 0;
-            padding: 10px;
+            padding: 8px 12px;
             margin: 8px 0;
-            box-shadow: 0 2px 4px rgba(30, 136, 229, 0.2);
-            font-size: 0.85em;
+            box-shadow: 0 1px 3px rgba(30, 136, 229, 0.2);
+            font-size: 0.75em;
         }
 
         .reveal .info {
             background: linear-gradient(90deg, #d4edda 0%, #e2f5e7 100%);
-            border-left: 6px solid var(--accent-green);
-            border-radius: 0 8px 8px 0;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+            border-left: 4px solid var(--accent-green);
+            border-radius: 0 6px 6px 0;
+            padding: 8px 12px;
+            margin: 8px 0;
+            box-shadow: 0 1px 3px rgba(76, 175, 80, 0.2);
+            font-size: 0.75em;
         }
 
         .reveal .terraform-brand {
             background: linear-gradient(135deg, var(--terraform-purple) 0%, #7c4dff 100%);
             border-radius: 6px;
-            padding: 10px;
-            margin: 8px 0;
+            padding: 8px 10px;
+            margin: 6px 0;
             color: white;
-            font-size: 0.85em;
+            font-size: 0.75em;
         }
 
         /* Lab Callout Optimization */
@@ -204,31 +212,74 @@
             justify-content: center;
             height: 100%;
             overflow: auto;
+            padding: 8px;
         }
         
         .reveal .lab-callout h1 {
-            font-size: 1.5em;
-            margin-bottom: 0.2em;
+            font-size: 1.3em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout h2 {
-            font-size: 1.2em;
-            margin-bottom: 0.2em;
+            font-size: 1.0em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout h3 {
-            font-size: 1.0em;
-            margin-bottom: 0.2em;
+            font-size: 0.9em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
         }
         
         .reveal .lab-callout ul {
-            font-size: 0.85em;
-            line-height: 1.3;
+            font-size: 0.7em;
+            line-height: 1.2;
+            margin: 0.2em 0;
+        }
+        
+        .reveal .lab-callout li {
+            margin: 0.1em 0;
         }
         
         .reveal .lab-callout > div {
-            padding: 10px;
+            padding: 8px;
             max-width: 95%;
+        }
+        
+        .reveal .lab-callout p {
+            margin: 0.2em 0;
+            font-size: 0.85em;
+        }
+        
+        /* Enhanced responsive design for lab callouts */
+        @media screen and (max-width: 1024px) {
+            .reveal .lab-callout h1 {
+                font-size: 1.2em;
+            }
+            
+            .reveal .lab-callout h2 {
+                font-size: 0.95em;
+            }
+            
+            .reveal .lab-callout ul {
+                font-size: 0.65em;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .reveal .lab-callout h1 {
+                font-size: 1.1em;
+            }
+            
+            .reveal .lab-callout h2 {
+                font-size: 0.9em;
+            }
+            
+            .reveal .lab-callout ul {
+                font-size: 0.6em;
+            }
         }
 
         /* Section Dividers */
@@ -320,30 +371,52 @@
         }
 
         /* Enhanced Responsive Design for Better Screen Fit */
+        @media screen and (min-width: 1600px) {
+            .reveal {
+                font-size: 24px;
+            }
+        }
+
         @media screen and (max-width: 1400px) {
             .reveal {
-                font-size: 34px;
+                font-size: 20px;
+            }
+            
+            .reveal table {
+                font-size: 0.65em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.7em;
             }
         }
 
         @media screen and (max-width: 1024px) {
             .reveal {
-                font-size: 30px;
+                font-size: 18px;
             }
             
             .reveal .two-column,
             .reveal .three-column {
                 flex-direction: column;
-                gap: 20px;
+                gap: 12px;
             }
             
             .reveal pre code {
-                font-size: 0.65em;
-                max-height: 500px;
+                font-size: 0.5em;
+                max-height: 280px;
             }
             
             .reveal .slides section {
-                padding: 15px;
+                padding: 8px;
+            }
+            
+            .reveal table {
+                font-size: 0.6em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.65em;
             }
         }
 
@@ -351,32 +424,46 @@
             .reveal .two-column,
             .reveal .three-column {
                 flex-direction: column;
+                gap: 10px;
             }
             
             .reveal {
-                font-size: 28px;
+                font-size: 16px;
             }
             
             .reveal h1 {
-                font-size: 2.2em;
+                font-size: 1.7em;
             }
             
             .reveal h2 {
-                font-size: 1.8em;
-            }
-            
-            .reveal h3 {
                 font-size: 1.4em;
             }
             
+            .reveal h3 {
+                font-size: 1.1em;
+            }
+            
             .reveal pre code {
-                font-size: 0.6em;
-                max-height: 400px;
-                padding: 15px;
+                font-size: 0.45em;
+                max-height: 250px;
+                padding: 8px;
             }
             
             .reveal .slides section {
-                padding: 10px;
+                padding: 6px;
+            }
+            
+            .reveal table {
+                font-size: 0.55em;
+            }
+            
+            .reveal ul, .reveal ol {
+                font-size: 0.6em;
+            }
+            
+            .reveal .highlight, .reveal .danger, .reveal .success, .reveal .info {
+                padding: 6px 8px;
+                font-size: 0.7em;
             }
         }
 
@@ -392,10 +479,18 @@
         }
         
         .reveal table {
-            font-size: 0.8em;
+            font-size: 0.7em;
             overflow-x: auto;
             display: block;
             white-space: nowrap;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .reveal table th, .reveal table td {
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            font-size: inherit;
         }
 
         /* Custom Components */
@@ -464,40 +559,237 @@
                 </div>
             </section>
 
-            <!-- Learning Objectives -->
-            <section>
+            <!-- Day 2 Complete Schedule Overview -->
+            <section class="dense-content">
                 <div class="section-divider">
-                    <h2>🎯 Learning Objectives & Outcomes</h2>
+                    <h2>🗓️ Day 2: Complete Schedule & Learning Journey</h2>
                 </div>
                 <div class="terraform-brand">
-                    <h3>🚀 What You'll Master Today</h3>
-                    <p>Transform from basic Terraform user to configuration expert with enterprise-grade skills</p>
+                    <h3>📊 Advanced Configuration Management Mastery - 7 Hours Total</h3>
+                    <p><strong>70% Hands-on (5 hours labs) | 30% Theory (2 hours presentations)</strong></p>
                 </div>
                 <div class="two-column">
                     <div class="column">
-                        <h4>🔧 Technical Skills</h4>
-                        <ul class="feature-list">
-                            <li>Advanced variable patterns & complex type validation</li>
-                            <li>Dynamic data structures & transformation functions</li>
-                            <li>Resource lifecycle management & dependency orchestration</li>
-                            <li>Data sources integration & remote state patterns</li>
-                            <li>Module architecture & composition strategies</li>
+                        <h4>🕘 Morning Schedule (4 hours)</h4>
+                        <ul style="font-size: 0.85em; line-height: 1.3;">
+                            <li><strong>9:00-9:30 AM:</strong> Advanced Variables & Complex Validation</li>
+                            <li><strong>9:30-10:15 AM:</strong> 🧪 <strong>Lab 6: Remote State Management</strong>
+                                <br><em>S3 + DynamoDB backend, state locking, migration</em></li>
+                            <li><strong>10:15-10:30 AM:</strong> Break & Q&A</li>
+                            <li><strong>10:30-11:00 AM:</strong> Resource Dependencies & Lifecycle Rules</li>
+                            <li><strong>11:00-11:45 AM:</strong> 🧪 <strong>Lab 7: Terraform Registry Modules</strong>
+                                <br><em>Enterprise registry modules with production-ready patterns</em></li>
+                            <li><strong>11:45 AM-12:00 PM:</strong> Dynamic Blocks & Advanced Patterns</li>
+                            <li><strong>12:00-1:00 PM:</strong> Lunch Break</li>
                         </ul>
                     </div>
                     <div class="column">
-                        <h4>💼 Professional Skills</h4>
-                        <ul class="feature-list">
-                            <li>Error handling & advanced debugging techniques</li>
-                            <li>Production-ready code organization patterns</li>
-                            <li>Security best practices & secrets management</li>
-                            <li>Team collaboration & code maintainability</li>
-                            <li>Enterprise architecture design principles</li>
+                        <h4>🕐 Afternoon Schedule (3 hours)</h4>
+                        <ul style="font-size: 0.85em; line-height: 1.3;">
+                            <li><strong>1:00-1:30 PM:</strong> Data Sources & Remote State Patterns</li>
+                            <li><strong>1:30-2:15 PM:</strong> 🧪 <strong>Lab 8: Multi-Environment Patterns</strong>
+                                <br><em>Feature flags, cost optimization, validation</em></li>
+                            <li><strong>2:15-2:30 PM:</strong> Break & Review</li>
+                            <li><strong>2:30-3:00 PM:</strong> Module Creation & Composition Strategies</li>
+                            <li><strong>3:00-3:45 PM:</strong> 🧪 <strong>Lab 9: VPC Multi-Tier Architecture</strong>
+                                <br><em>Production networking, ALB, security groups</em></li>
+                            <li><strong>3:45-4:00 PM:</strong> Error Handling & Debugging Techniques</li>
+                            <li><strong>4:00-4:15 PM:</strong> Day 2 Review & Day 3 Preview</li>
                         </ul>
                     </div>
                 </div>
-                <div class="highlight">
-                    <h4>💡 Real-World Application</h4>
-                    <p>Each concept comes with hands-on AWS Cloud9 labs and real enterprise scenarios you'll encounter in production environments.</p>
+                <div class="enterprise">
+                    <h4>🏆 Day 2 Career Impact</h4>
+                    <p><strong>Enterprise Readiness:</strong> Advance from foundational Terraform knowledge to advanced configuration management patterns used by Fortune 500 companies. Master state management, module composition, and multi-environment strategies essential for DevOps Engineer, Cloud Architect, and Platform Engineering roles.</p>
+                </div>
+            </section>
+
+            <!-- Detailed Learning Objectives -->
+            <section class="dense-content">
+                <div class="section-divider">
+                    <h2>🎯 Comprehensive Learning Objectives & Outcomes</h2>
+                </div>
+                <div class="terraform-brand">
+                    <h3>🚀 Advanced Configuration Mastery - What You'll Achieve</h3>
+                    <p>Transform from Terraform fundamentals to enterprise configuration expert with production-ready patterns and industry best practices</p>
+                </div>
+                <div class="two-column">
+                    <div class="column">
+                        <h4>🔧 Core Technical Competencies</h4>
+                        <ul style="font-size: 0.8em; line-height: 1.3;">
+                            <li><strong>Advanced Variable Patterns:</strong> Complex type validation, nested objects, conditional logic with 15+ validation rules</li>
+                            <li><strong>Dynamic Configuration:</strong> Locals, functions, conditionals, dynamic blocks with real-world scenarios</li>
+                            <li><strong>Resource Lifecycle Mastery:</strong> prevent_destroy, create_before_destroy, ignore_changes, replace_triggered_by</li>
+                            <li><strong>Data Integration:</strong> Remote state consumption, data source optimization, cross-stack references</li>
+                            <li><strong>Module Architecture:</strong> Reusable components, version management, composition patterns</li>
+                            <li><strong>State Management:</strong> Remote backends, locking, workspace strategies, migration techniques</li>
+                            <li><strong>Dependency Orchestration:</strong> Implicit vs explicit dependencies, complex resource graphs</li>
+                            <li><strong>Multi-Environment Patterns:</strong> Workspace strategies, environment-specific configurations</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h4>💼 Professional & Enterprise Skills</h4>
+                        <ul style="font-size: 0.8em; line-height: 1.3;">
+                            <li><strong>Production Debugging:</strong> TF_LOG, state inspection, resource targeting, advanced troubleshooting</li>
+                            <li><strong>Code Organization:</strong> Directory structure, naming conventions, file organization best practices</li>
+                            <li><strong>Security Implementation:</strong> Sensitive variables, secrets management, encryption patterns</li>
+                            <li><strong>Team Collaboration:</strong> Shared state, code reviews, module sharing, documentation standards</li>
+                            <li><strong>Enterprise Patterns:</strong> Resource tagging, compliance frameworks, governance models</li>
+                            <li><strong>Performance Optimization:</strong> Resource targeting, parallelization, state file optimization</li>
+                            <li><strong>Error Prevention:</strong> Validation rules, preconditions, postconditions, testing patterns</li>
+                            <li><strong>Version Management:</strong> Provider constraints, module versioning, upgrade strategies</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="three-column" style="margin-top: 20px;">
+                    <div class="column">
+                        <div class="info">
+                            <h4>🧪 Lab 6: Remote State</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li>S3 + DynamoDB backend setup</li>
+                                <li>State locking & encryption</li>
+                                <li>Migration from local state</li>
+                                <li>Lifecycle policies & cost optimization</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="success">
+                            <h4>🧪 Lab 7: Registry Modules</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li>6+ module integration</li>
+                                <li>VPC, ALB, RDS, S3 modules</li>
+                                <li>KMS encryption & Parameter Store</li>
+                                <li>Enterprise patterns & best practices</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="highlight">
+                            <h4>🧪 Labs 8-9: Advanced Patterns</h4>
+                            <ul style="font-size: 0.75em;">
+                                <li>Multi-environment management</li>
+                                <li>Complex variable structures</li>
+                                <li>Production networking architecture</li>
+                                <li>Security & compliance validation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="enterprise" style="margin-top: 15px;">
+                    <h4>📈 Industry Impact & Career Advancement</h4>
+                    <p><strong>Market Differentiation:</strong> These advanced configuration patterns are used by 95% of Fortune 500 companies. Master skills directly applicable to <strong>DevOps Engineer ($95k-$150k)</strong>, <strong>Cloud Architect ($120k-$180k)</strong>, and <strong>Platform Engineer ($110k-$160k)</strong> positions. Gain expertise in enterprise patterns that separate senior practitioners from junior users.</p>
+                </div>
+            </section>
+
+            <!-- Lab Overview & Outcomes Matrix -->
+            <section class="dense-content">
+                <div class="section-divider">
+                    <h2>🧪 Day 2 Laboratory Exercises - Detailed Overview</h2>
+                </div>
+                <div class="terraform-brand">
+                    <h3>📊 Four Comprehensive Labs - 3 Hours Total Hands-on Experience</h3>
+                    <p>Each lab builds on the previous, creating a comprehensive enterprise-ready infrastructure management skillset</p>
+                </div>
+                
+                <!-- Labs 6-7 Details -->
+                <div class="two-column">
+                    <div class="column">
+                        <div class="info" style="padding: 15px;">
+                            <h4>🗄️ Lab 6: Remote State Management (45 min)</h4>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Production-ready state backend implementation</p>
+                            <ul style="font-size: 0.75em; line-height: 1.2; margin: 10px 0;">
+                                <li><strong>S3 Backend:</strong> Encrypted bucket with versioning, lifecycle policies</li>
+                                <li><strong>DynamoDB Locking:</strong> Prevent concurrent modifications</li>
+                                <li><strong>State Migration:</strong> Move from local to remote with validation</li>
+                                <li><strong>Security:</strong> KMS encryption, IAM policies, bucket policies</li>
+                                <li><strong>Cost Optimization:</strong> Lifecycle rules, intelligent tiering</li>
+                                <li><strong>Monitoring:</strong> CloudWatch metrics, SNS notifications</li>
+                            </ul>
+                            <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
+                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Master team collaboration state patterns used by 90% of enterprise Terraform implementations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="success" style="padding: 15px;">
+                            <h4>🔧 Lab 7: Terraform Registry Modules (45 min)</h4>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Enterprise registry modules & production patterns</p>
+                            <ul style="font-size: 0.75em; line-height: 1.2; margin: 10px 0;">
+                                <li><strong>Enterprise Registry Modules:</strong> VPC, Security, Database, Load Balancing</li>
+                                <li><strong>Cross-Module Dependencies:</strong> Output consumption, data passing</li>
+                                <li><strong>Secrets Management:</strong> Parameter Store, KMS encryption</li>
+                                <li><strong>Production Patterns:</strong> Blue/green ready, high availability</li>
+                                <li><strong>Monitoring Integration:</strong> CloudWatch, SNS, dashboards</li>
+                                <li><strong>Cost Tags:</strong> Comprehensive resource tagging strategy</li>
+                            </ul>
+                            <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
+                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Build enterprise-grade multi-tier architectures with professional module composition</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Labs 8-9 Details -->
+                <div class="two-column" style="margin-top: 15px;">
+                    <div class="column">
+                        <div class="highlight" style="padding: 15px;">
+                            <h4>🌍 Lab 8: Multi-Environment Patterns (45 min)</h4>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Sophisticated environment management strategies</p>
+                            <ul style="font-size: 0.75em; line-height: 1.2; margin: 10px 0;">
+                                <li><strong>Environment Variables:</strong> Complex nested objects with validation</li>
+                                <li><strong>Feature Flags:</strong> Environment-specific feature enablement</li>
+                                <li><strong>Cost Optimization:</strong> Per-environment budget controls</li>
+                                <li><strong>Compliance Levels:</strong> Environment-specific security policies</li>
+                                <li><strong>Validation Scripts:</strong> Automated environment verification</li>
+                                <li><strong>Resource Scaling:</strong> Dynamic sizing based on environment</li>
+                            </ul>
+                            <div style="background: rgba(255, 152, 0, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
+                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Master environment management patterns for development → staging → production workflows</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="enterprise" style="padding: 15px;">
+                            <h4>🌐 Lab 9: VPC Multi-Tier Architecture (45 min)</h4>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Production networking & security architecture</p>
+                            <ul style="font-size: 0.75em; line-height: 1.2; margin: 10px 0;">
+                                <li><strong>Multi-AZ VPC:</strong> Public, private, database subnets</li>
+                                <li><strong>Application Load Balancer:</strong> Multi-target, health checks</li>
+                                <li><strong>Security Groups:</strong> Layered security, least privilege</li>
+                                <li><strong>NAT Gateways:</strong> High availability, cost optimization</li>
+                                <li><strong>Route Tables:</strong> Complex routing, security zones</li>
+                                <li><strong>Network ACLs:</strong> Additional security layer implementation</li>
+                            </ul>
+                            <div style="background: rgba(98, 60, 228, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
+                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Design enterprise networking architectures with security best practices and high availability</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="danger" style="margin-top: 15px; padding: 15px;">
+                    <h4>🎯 Progressive Complexity & Skills Building</h4>
+                    <div class="two-column" style="margin-top: 10px;">
+                        <div class="column">
+                            <p style="font-size: 0.8em; margin: 0;"><strong>Skill Progression:</strong> Each lab increases in complexity:</p>
+                            <ul style="font-size: 0.75em; margin: 8px 0;">
+                                <li><strong>Lab 6:</strong> Foundation - Enterprise state management</li>
+                                <li><strong>Lab 7:</strong> Integration - Registry module composition</li>
+                                <li><strong>Lab 8:</strong> Sophistication - Multi-environment patterns</li>
+                                <li><strong>Lab 9:</strong> Mastery - Enterprise networking architecture</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <p style="font-size: 0.8em; margin: 0;"><strong>Real-World Application:</strong></p>
+                            <ul style="font-size: 0.75em; margin: 8px 0;">
+                                <li>Patterns used by Netflix, Spotify, Airbnb</li>
+                                <li>Fortune 500 enterprise standards</li>
+                                <li>Cloud migration best practices</li>
+                                <li>Production incident prevention strategies</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -787,64 +1079,299 @@ terraform apply -var-file=<(aws secretsmanager get-secret-value --secret-id terr
                     </div>
                 </section>
 
-                <section>
-                    <h3>🔐 Sensitive Data Management</h3>
+                <section class="dense-content">
+                    <h3>🔐 Enterprise Sensitive Data Management</h3>
                     <div class="danger">
-                        <p><strong>⚠️ Security Critical:</strong> Never commit sensitive values to version control. Use proper secrets management.</p>
+                        <p><strong>⚠️ Security Critical:</strong> Never commit sensitive values to version control. Enterprise breaches cost average of $4.45M. Use proper secrets management with zero-trust principles.</p>
+                    </div>
+                    <div class="terraform-brand" style="margin: 15px 0;">
+                        <h4>🏢 Enterprise Statistics & Industry Standards</h4>
+                        <div class="two-column">
+                            <div class="column">
+                                <ul style="font-size: 0.8em;">
+                                    <li><strong>97%</strong> of Fortune 500 use external secret management</li>
+                                    <li><strong>$10.9M</strong> average cost of credential exposure breach</li>
+                                    <li><strong>86%</strong> of enterprises rotate credentials monthly</li>
+                                    <li><strong>Companies using vault:</strong> Netflix, Uber, Airbnb, Slack</li>
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <ul style="font-size: 0.8em;">
+                                    <li><strong>NIST Cybersecurity Framework</strong> compliance required</li>
+                                    <li><strong>SOC 2 Type II</strong> auditing for secret access</li>
+                                    <li><strong>Zero-trust architecture</strong> - verify every access</li>
+                                    <li><strong>Least privilege principle</strong> - minimum necessary permissions</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                     <div class="two-column">
                         <div class="column">
-                            <h4>Sensitive Variable Handling</h4>
-                            <pre><code class="language-hcl">variable "database_password" {
-  description = "RDS master password"
-  type        = string
-  sensitive   = true
-}
-
-variable "api_keys" {
-  description = "External API keys"
-  type = map(string)
+                            <h4>🛡️ Advanced Sensitive Variable Patterns</h4>
+                            <div class="code-block-title">Enterprise Secret Management</div>
+                            <pre><code class="language-hcl"># Multi-tier sensitive variable structure
+variable "database_credentials" {
+  description = "Database authentication configuration"
+  type = object({
+    master_username = string
+    master_password = string
+    readonly_username = string
+    readonly_password = string
+    backup_encryption_key = string
+  })
   sensitive = true
   
   validation {
     condition = alltrue([
-      for key in values(var.api_keys) : 
-      can(regex("^[A-Za-z0-9]{32,}$", key))
+      can(regex("^[a-zA-Z][a-zA-Z0-9_]{2,15}$", var.database_credentials.master_username)),
+      length(var.database_credentials.master_password) >= 14,
+      can(regex(".*[A-Z].*", var.database_credentials.master_password)),
+      can(regex(".*[a-z].*", var.database_credentials.master_password)),
+      can(regex(".*[0-9].*", var.database_credentials.master_password)),
+      can(regex(".*[^A-Za-z0-9].*", var.database_credentials.master_password)),
     ])
-    error_message = "API keys must be at least 32 characters."
+    error_message = "Database passwords must be 14+ chars with upper, lower, numeric, and special characters."
   }
 }
 
-# Outputs with sensitive data
-output "connection_string" {
-  value = "postgresql://${var.db_user}:${var.database_password}@${aws_db_instance.main.endpoint}/app"
+variable "api_integrations" {
+  description = "External API credentials and configurations"
+  type = map(object({
+    api_key = string
+    secret_key = string
+    base_url = string
+    timeout_seconds = number
+    rate_limit_rpm = number
+    environment_specific = bool
+  }))
   sensitive = true
-  description = "Database connection string"
+  
+  validation {
+    condition = alltrue([
+      for name, config in var.api_integrations : 
+      can(regex("^[A-Za-z0-9_-]{32,}$", config.api_key))
+    ])
+    error_message = "API keys must be 32+ alphanumeric characters with dashes/underscores only."
+  }
+  
+  validation {
+    condition = alltrue([
+      for name, config in var.api_integrations : 
+      config.timeout_seconds >= 5 && config.timeout_seconds <= 300
+    ])
+    error_message = "API timeouts must be between 5 and 300 seconds."
+  }
+}
+
+# Certificate and TLS configuration
+variable "tls_certificates" {
+  description = "TLS certificate configuration for HTTPS endpoints"
+  type = map(object({
+    private_key = string
+    certificate_body = string
+    certificate_chain = optional(string)
+    domain_names = list(string)
+    auto_renew = bool
+  }))
+  sensitive = true
+  
+  validation {
+    condition = alltrue([
+      for cert_name, cert in var.tls_certificates :
+      length(cert.domain_names) > 0
+    ])
+    error_message = "Each certificate must specify at least one domain name."
+  }
+}
+
+# OAuth and authentication secrets
+variable "oauth_providers" {
+  description = "OAuth provider configurations for authentication"
+  type = map(object({
+    client_id = string
+    client_secret = string
+    issuer_url = string
+    scopes = list(string)
+    callback_urls = list(string)
+  }))
+  sensitive = true
+}
+
+# Structured outputs with sensitive data handling
+output "application_secrets" {
+  description = "Application configuration with masked sensitive values"
+  value = {
+    # Public configuration
+    api_endpoints = {
+      for name, config in var.api_integrations :
+      name => {
+        base_url = config.base_url
+        timeout = config.timeout_seconds
+        rate_limit = config.rate_limit_rpm
+      }
+    }
+    
+    # Sensitive configuration (masked in logs)
+    authentication = {
+      database_endpoint = "${aws_rds_instance.main.endpoint}:${aws_rds_instance.main.port}"
+      database_name = aws_rds_instance.main.db_name
+      # Passwords and keys not included in output
+    }
+    
+    # Connection templates with placeholders
+    connection_templates = {
+      database = "postgresql://[USERNAME]:[PASSWORD]@${aws_rds_instance.main.endpoint}:${aws_rds_instance.main.port}/${aws_rds_instance.main.db_name}?sslmode=require"
+      redis = "redis://[PASSWORD]@${aws_elasticache_cluster.main.cache_nodes[0].address}:${aws_elasticache_cluster.main.cache_nodes[0].port}"
+    }
+  }
+  sensitive = true
 }</code></pre>
                         </div>
                         <div class="column">
-                            <h4>Environment Variable Integration</h4>
-                            <pre><code class="language-bash"># Set sensitive variables via environment
-export TF_VAR_database_password="$(aws secretsmanager get-secret-value \
-  --secret-id prod/db/password \
-  --query SecretString --output text)"
+                            <h4>🔒 Enterprise Secret Integration Patterns</h4>
+                            <div class="code-block-title">AWS Secrets Manager Integration</div>
+                            <pre><code class="language-hcl"># Data source for existing secrets
+data "aws_secretsmanager_secret_version" "database_credentials" {
+  secret_id = "production/database/credentials"
+}
 
-export TF_VAR_api_keys='{"stripe":"sk_live_...", "datadog":"dd_..."}'
+data "aws_secretsmanager_secret_version" "api_keys" {
+  secret_id = "production/api/integrations"
+}
 
-# Or use AWS Systems Manager
-export TF_VAR_database_password="$(aws ssm get-parameter \
-  --name /production/database/password \
-  --with-decryption \
-  --query Parameter.Value --output text)"</code></pre>
+# Parse JSON secrets into usable format
+locals {
+  database_secrets = jsondecode(data.aws_secretsmanager_secret_version.database_credentials.secret_string)
+  api_secrets = jsondecode(data.aws_secretsmanager_secret_version.api_keys.secret_string)
+  
+  # Environment-specific secret handling
+  environment_secrets = {
+    for env in ["development", "staging", "production"] :
+    env => {
+      database_password = try(local.database_secrets[env].password, local.database_secrets.default.password)
+      encryption_key = try(local.database_secrets[env].encryption_key, local.database_secrets.default.encryption_key)
+    }
+  }
+}
+
+# AWS Systems Manager Parameter Store integration
+data "aws_ssm_parameter" "oauth_client_secret" {
+  name = "/production/oauth/${var.oauth_provider}/client_secret"
+  with_decryption = true
+}
+
+# HashiCorp Vault integration (when available)
+data "vault_generic_secret" "database" {
+  count = var.use_vault ? 1 : 0
+  path = "secret/terraform/${var.environment}/database"
+}
+
+locals {
+  vault_database_config = var.use_vault ? data.vault_generic_secret.database[0].data : {}
+}</code></pre>
                             
-                            <h4>Secrets Management Best Practices</h4>
-                            <ul>
-                                <li>✅ Use environment variables for CI/CD</li>
-                                <li>✅ Integrate with secret stores (Vault, AWS Secrets Manager)</li>
-                                <li>✅ Rotate credentials regularly</li>
-                                <li>✅ Audit access to sensitive values</li>
-                                <li>✅ Use separate state files for sensitive resources</li>
-                            </ul>
+                            <div class="code-block-title">CI/CD Environment Integration</div>
+                            <pre><code class="language-bash"># GitHub Actions environment setup
+export TF_VAR_database_credentials=$(cat <<EOF
+{
+  "master_username": "${{ secrets.DB_MASTER_USERNAME }}",
+  "master_password": "${{ secrets.DB_MASTER_PASSWORD }}",
+  "readonly_username": "${{ secrets.DB_READONLY_USERNAME }}",
+  "readonly_password": "${{ secrets.DB_READONLY_PASSWORD }}",
+  "backup_encryption_key": "${{ secrets.DB_BACKUP_KEY }}"
+}
+EOF
+)
+
+# Azure DevOps variable groups
+export TF_VAR_api_integrations=$(az keyvault secret show \
+  --name "terraform-api-integrations" \
+  --vault-name "${{ variables.KEY_VAULT_NAME }}" \
+  --query value -o tsv)
+
+# GitLab CI/CD with HashiCorp Vault
+export VAULT_TOKEN=$(vault write -field=token auth/jwt/login \
+  role=gitlab-ci jwt=$CI_JOB_JWT)
+
+export TF_VAR_tls_certificates=$(vault kv get \
+  -field=certificates secret/terraform/$CI_ENVIRONMENT_NAME/tls)
+
+# Jenkins with AWS IAM roles
+export TF_VAR_oauth_providers=$(aws secretsmanager get-secret-value \
+  --secret-id "terraform/${ENVIRONMENT}/oauth-providers" \
+  --region $AWS_REGION \
+  --query SecretString --output text)
+</code></pre>
+                            
+                            <h4>🏆 Enterprise Security Best Practices</h4>
+                            <div class="success" style="padding: 12px;">
+                                <h5>🔒 Secret Management Hierarchy:</h5>
+                                <ol style="font-size: 0.8em; line-height: 1.3;">
+                                    <li><strong>HashiCorp Vault</strong> - Dynamic secrets, policy-driven</li>
+                                    <li><strong>AWS Secrets Manager</strong> - Automatic rotation, cross-service</li>
+                                    <li><strong>Azure Key Vault</strong> - RBAC, audit logging, HSM backing</li>
+                                    <li><strong>Google Secret Manager</strong> - IAM integration, versioning</li>
+                                    <li><strong>CI/CD Native</strong> - GitHub/GitLab/Azure secrets (last resort)</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="highlight" style="padding: 12px; margin-top: 10px;">
+                                <h5>⚡ Secrets Rotation Strategy:</h5>
+                                <ul style="font-size: 0.8em; line-height: 1.3;">
+                                    <li><strong>Database passwords:</strong> 30-day rotation with blue/green</li>
+                                    <li><strong>API keys:</strong> 90-day rotation with overlap period</li>
+                                    <li><strong>TLS certificates:</strong> Auto-renewal 30 days before expiry</li>
+                                    <li><strong>Service accounts:</strong> 60-day rotation with validation</li>
+                                    <li><strong>OAuth tokens:</strong> Short-lived with refresh capability</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="enterprise" style="padding: 12px; margin-top: 10px;">
+                                <h5>📊 Compliance & Auditing:</h5>
+                                <ul style="font-size: 0.8em; line-height: 1.3;">
+                                    <li><strong>SOC 2 Type II:</strong> Access logging, approval workflows</li>
+                                    <li><strong>PCI DSS:</strong> Encrypted storage, key escrow, rotation</li>
+                                    <li><strong>HIPAA:</strong> Access controls, data classification, audit trails</li>
+                                    <li><strong>ISO 27001:</strong> Risk assessment, incident response, training</li>
+                                    <li><strong>NIST:</strong> Framework alignment, continuous monitoring</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="danger" style="margin-top: 20px;">
+                        <h4>🚨 Common Security Anti-Patterns to Avoid</h4>
+                        <div class="three-column">
+                            <div class="column">
+                                <h5 style="color: #dc3545;">❌ Never Do</h5>
+                                <ul style="font-size: 0.75em;">
+                                    <li>Hardcode secrets in .tf files</li>
+                                    <li>Commit .tfvars with secrets</li>
+                                    <li>Use weak or default passwords</li>
+                                    <li>Share secrets via chat/email</li>
+                                    <li>Store secrets in documentation</li>
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <h5 style="color: #28a745;">✅ Always Do</h5>
+                                <ul style="font-size: 0.75em;">
+                                    <li>Use external secret stores</li>
+                                    <li>Mark sensitive variables as sensitive</li>
+                                    <li>Implement secret rotation</li>
+                                    <li>Audit secret access regularly</li>
+                                    <li>Use least privilege access</li>
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <h5 style="color: #fd7e14;">⚠️ Monitor</h5>
+                                <ul style="font-size: 0.75em;">
+                                    <li>Failed authentication attempts</li>
+                                    <li>Unusual access patterns</li>
+                                    <li>Secret age and rotation status</li>
+                                    <li>Cross-environment access</li>
+                                    <li>Compliance drift indicators</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -923,7 +1450,7 @@ output "application_endpoint" {
             <section class="lab-callout" data-background-color="#17a2b8">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">☁️</span> State Management Challenge!</h1>
-                    <h2><span class="emoji">🗄️</span> Lab 5: Remote State Management</h2>
+                    <h2><span class="emoji">🗄️</span> Lab 6: Remote State Management</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
@@ -1202,7 +1729,7 @@ resource "aws_autoscaling_group" "web" {
                         <div class="column">
                             <h4>🔢 Count: Sequential Resources</h4>
                             <div class="success">
-                                <p><strong>Best for:</strong> Fixed-size lists, sequential naming, simple replication</p>
+                                <p><strong>Best for:</strong> Fixed-size lists, sequential naming, efficient replication</p>
                             </div>
                             <div class="code-block-title">Multi-AZ Subnet Creation</div>
                             <pre><code class="language-hcl"># Private subnets across AZs
@@ -1598,7 +2125,7 @@ terraform state rm aws_instance.old</code></pre>
             <section class="lab-callout" data-background-color="#6610f2">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">🔐</span> Advanced State Mastery!</h1>
-                    <h2><span class="emoji">🗂️</span> Lab 6: Advanced Multi-Module Composition</h2>
+                    <h2><span class="emoji">🗂️</span> Lab 7: Terraform Registry Modules</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.0em; line-height: 1.4;">
@@ -1623,41 +2150,358 @@ terraform state rm aws_instance.old</code></pre>
                     <p>Integrate existing infrastructure and enable cross-stack collaboration</p>
                 </section>
 
-                <section>
-                    <h3>Data Sources Patterns</h3>
-                    <pre><code class="language-hcl"># Get latest AMI
-data "aws_ami" "ubuntu" {
+                <section class="dense-content">
+                    <h3>🔍 Advanced Data Sources & Integration Patterns</h3>
+                    <div class="terraform-brand">
+                        <h4>📊 Enterprise Data Integration Strategy</h4>
+                        <p><strong>Data-Driven Infrastructure:</strong> Modern enterprise architecture requires dynamic infrastructure that adapts to existing resources, compliance requirements, and organizational standards. 78% of Fortune 500 companies use data sources for cross-stack integration.</p>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>🏗️ Advanced AMI Selection Patterns</h4>
+                            <div class="code-block-title">Dynamic AMI Selection with Compliance</div>
+                            <pre><code class="language-hcl"># Enterprise AMI selection with multiple criteria
+data "aws_ami" "enterprise_base" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = [
+    "099720109477", # Canonical
+    "137112412989", # Amazon
+    var.custom_ami_account_id # Organization's AMI account
+  ]
   
   filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    name = "name"
+    values = var.environment == "production" ? [
+      "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*",
+      "amzn2-ami-hvm-*-x86_64-gp2"
+    ] : [
+      "ubuntu/images/hvm-ssd/ubuntu-*-amd64-server-*"
+    ]
   }
   
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-}
-
-# Get existing VPC by tags
-data "aws_vpc" "existing" {
-  tags = {
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
-
-# Get all availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
   
   filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+    name   = "state"
+    values = ["available"]
   }
+  
+  # Compliance requirement: Only EBS-backed AMIs
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+  
+  # Security requirement: Encrypted snapshots only in production
+  dynamic "filter" {
+    for_each = var.environment == "production" ? [1] : []
+    content {
+      name   = "block-device-mapping.encrypted"
+      values = ["true"]
+    }
+  }
+}
+
+# Organization-specific AMI selection
+data "aws_ami" "golden_image" {
+  most_recent = true
+  owners      = [var.organization_account_id]
+  
+  filter {
+    name   = "tag:ImageType"
+    values = ["GoldenImage"]
+  }
+  
+  filter {
+    name   = "tag:Environment"
+    values = [var.environment, "all"]
+  }
+  
+  filter {
+    name   = "tag:ComplianceLevel"
+    values = [var.compliance_level]
+  }
+  
+  filter {
+    name   = "tag:PatchLevel"
+    values = ["current"]
+  }
+}
+
+# Multi-architecture AMI selection
+data "aws_ami" "application_ami" {
+  for_each = toset(var.supported_architectures)
+  
+  most_recent = true
+  owners      = ["self", var.trusted_ami_accounts]
+  
+  filter {
+    name   = "name"
+    values = ["${var.application_name}-${each.key}-*"]
+  }
+  
+  filter {
+    name   = "architecture"
+    values = [each.key]
+  }
+  
+  filter {
+    name   = "tag:Application"
+    values = [var.application_name]
+  }
+  
+  filter {
+    name   = "tag:BuildDate"
+    values = [formatdate("YYYY-MM", timestamp())]
+  }
+}
+
+locals {
+  # Select architecture based on instance type
+  selected_architecture = can(regex("graviton|a1|t4g|m6g|c6g|r6g", var.instance_type)) ? "arm64" : "x86_64"
+  selected_ami = try(
+    data.aws_ami.application_ami[local.selected_architecture].id,
+    data.aws_ami.golden_image.id,
+    data.aws_ami.enterprise_base.id
+  )
 }</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>🌐 Network Discovery & Integration</h4>
+                            <div class="code-block-title">Advanced VPC and Network Discovery</div>
+                            <pre><code class="language-hcl"># Multi-criteria VPC discovery
+data "aws_vpc" "application_vpc" {
+  # Primary discovery method - by tags
+  tags = {
+    Environment     = var.environment
+    Project         = var.project_name
+    NetworkTier     = var.network_tier
+    ComplianceZone  = var.compliance_zone
+  }
+  
+  # Fallback discovery methods
+  dynamic "filter" {
+    for_each = var.vpc_id != null ? [] : [1]
+    content {
+      name   = "tag:Name"
+      values = ["${var.project_name}-${var.environment}-vpc"]
+    }
+  }
+}
+
+# Discover all subnets with classification
+data "aws_subnets" "application_subnets" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.application_vpc.id]
+  }
+  
+  filter {
+    name   = "tag:Type"
+    values = var.require_private ? ["private"] : ["private", "public"]
+  }
+  
+  filter {
+    name   = "tag:Tier"
+    values = [var.subnet_tier]
+  }
+  
+  filter {
+    name   = "availability-zone"
+    values = data.aws_availability_zones.available.names
+  }
+}
+
+# Advanced subnet details with metadata
+data "aws_subnet" "application_subnet_details" {
+  for_each = toset(data.aws_subnets.application_subnets.ids)
+  id       = each.value
+}
+
+locals {
+  # Organize subnets by AZ for high availability
+  subnets_by_az = {
+    for subnet_id, subnet in data.aws_subnet.application_subnet_details :
+    subnet.availability_zone => subnet.id...
+  }
+  
+  # Select balanced subnet distribution
+  selected_subnets = [
+    for az in slice(sort(keys(local.subnets_by_az)), 0, min(length(keys(local.subnets_by_az)), var.max_availability_zones)) :
+    local.subnets_by_az[az][0]
+  ]
+}
+
+# Security group discovery with inheritance
+data "aws_security_group" "base_security_groups" {
+  for_each = toset(var.inherit_security_groups)
+  
+  filter {
+    name   = "tag:Name"
+    values = [each.value]
+  }
+  
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.application_vpc.id]
+  }
+}
+
+# Route table analysis for network planning
+data "aws_route_table" "subnet_routes" {
+  for_each = toset(local.selected_subnets)
+  
+  filter {
+    name   = "association.subnet-id"
+    values = [each.value]
+  }
+}
+
+locals {
+  # Analyze routing patterns
+  internet_accessible_subnets = [
+    for subnet_id, route_table in data.aws_route_table.subnet_routes :
+    subnet_id if contains([
+      for route in route_table.routes :
+      route.gateway_id
+    ], data.aws_internet_gateway.vpc_igw.id)
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="enterprise" style="margin: 15px 0;">
+                        <h4>🏢 Enterprise Resource Discovery Patterns</h4>
+                        <div class="two-column">
+                            <div class="column">
+                                <h5>📋 Compliance-Driven Selection:</h5>
+                                <ul style="font-size: 0.8em;">
+                                    <li><strong>HIPAA:</strong> Encrypted AMIs, dedicated tenancy</li>
+                                    <li><strong>PCI DSS:</strong> Specific security groups, isolated networks</li>
+                                    <li><strong>SOC 2:</strong> Audited AMIs, tagged resources</li>
+                                    <li><strong>FedRAMP:</strong> GovCloud regions, approved images</li>
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <h5>🎯 Resource Optimization:</h5>
+                                <ul style="font-size: 0.8em;">
+                                    <li><strong>Cost:</strong> Spot-eligible AMIs, right-sized instances</li>
+                                    <li><strong>Performance:</strong> Latest generation, optimized storage</li>
+                                    <li><strong>Security:</strong> Hardened images, encrypted storage</li>
+                                    <li><strong>Availability:</strong> Multi-AZ distribution, redundancy</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column" style="margin-top: 20px;">
+                        <div class="column">
+                            <h4>🔍 Advanced Data Source Caching</h4>
+                            <div class="code-block-title">Performance Optimization Patterns</div>
+                            <pre><code class="language-hcl"># Cache expensive data source calls
+locals {
+  # Cache AZ data - called once, used multiple times
+  availability_zones = data.aws_availability_zones.available.names
+  
+  # Cache account and region information
+  current_region = data.aws_region.current.name
+  current_account = data.aws_caller_identity.current.account_id
+  
+  # Pre-computed subnet mappings
+  subnet_mappings = {
+    for subnet_id in data.aws_subnets.application_subnets.ids :
+    subnet_id => data.aws_subnet.application_subnet_details[subnet_id]
+  }
+}
+
+# Conditional data sources - only when needed
+data "aws_kms_key" "encryption_key" {
+  count = var.enable_encryption ? 1 : 0
+  key_id = "alias/${var.project_name}-${var.environment}"
+}
+
+# Lazy evaluation pattern
+data "aws_ssm_parameter" "database_config" {
+  count = var.external_database ? 1 : 0
+  name  = "/infrastructure/${var.environment}/database/config"
+}
+
+locals {
+  database_endpoint = var.external_database ? (
+    jsondecode(data.aws_ssm_parameter.database_config[0].value).endpoint
+  ) : aws_rds_instance.internal[0].endpoint
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>🔗 Cross-Stack Data Integration</h4>
+                            <div class="code-block-title">Remote State and SSM Integration</div>
+                            <pre><code class="language-hcl"># Advanced remote state consumption
+data "terraform_remote_state" "core_infrastructure" {
+  backend = "s3"
+  config = {
+    bucket = "${var.organization}-terraform-state-${var.environment}"
+    key    = "core/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
+data "terraform_remote_state" "security_baseline" {
+  backend = "s3"
+  config = {
+    bucket = "${var.organization}-terraform-state-${var.environment}"
+    key    = "security/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
+# SSM Parameter integration for dynamic configuration
+data "aws_ssm_parameters_by_path" "application_config" {
+  path      = "/applications/${var.application_name}/${var.environment}"
+  recursive = true
+}
+
+locals {
+  # Parse SSM parameters into usable configuration
+  app_config = {
+    for param in data.aws_ssm_parameters_by_path.application_config.names :
+    replace(param, "/applications/${var.application_name}/${var.environment}/", "") => 
+    data.aws_ssm_parameter.config_values[param].value
+  }
+}
+
+data "aws_ssm_parameter" "config_values" {
+  for_each = toset(data.aws_ssm_parameters_by_path.application_config.names)
+  name     = each.value
+}
+
+# Cross-account resource discovery
+data "aws_organizations_organization" "current" {
+  count = var.multi_account_setup ? 1 : 0
+}
+
+data "aws_organizations_accounts" "all" {
+  count = var.multi_account_setup ? 1 : 0
+}
+
+locals {
+  # Account mapping for cross-account resources
+  account_mapping = var.multi_account_setup ? {
+    for account in data.aws_organizations_accounts.all[0].accounts :
+    account.name => account.id
+  } : {}
+  
+  # Environment-specific account IDs
+  target_account_id = try(
+    local.account_mapping["${var.environment}-account"],
+    data.aws_caller_identity.current.account_id
+  )
+}</code></pre>
+                        </div>
+                    </div>
                 </section>
 
                 <section>
@@ -1728,7 +2572,7 @@ terraform {
             <section class="lab-callout" data-background-color="#e83e8c">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">🚀</span> Sophisticated Environment Management!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 7: Advanced Multi-Environment Patterns</h2>
+                    <h2><span class="emoji">⚙️</span> Lab 8: Multi-Environment Patterns</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin: 15px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.0em; line-height: 1.4;">
@@ -1761,7 +2605,7 @@ terraform {
                     <ul>
                         <li><strong>Reusability:</strong> Use the same module across environments</li>
                         <li><strong>Organization:</strong> Logical grouping of resources</li>
-                        <li><strong>Abstraction:</strong> Hide complexity behind simple interfaces</li>
+                        <li><strong>Abstraction:</strong> Hide complexity behind clean interfaces</li>
                         <li><strong>Consistency:</strong> Standardize infrastructure patterns</li>
                         <li><strong>Testing:</strong> Test modules independently</li>
                     </ul>
@@ -1933,7 +2777,7 @@ module "vpc" {
             <section class="lab-callout" data-background-color="#20c997">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">🌐</span> Networking Architecture Challenge!</h1>
-                    <h2><span class="emoji">🏗️</span> Lab 8: VPC Networking and Multi-Tier Architecture</h2>
+                    <h2><span class="emoji">🏗️</span> Lab 9: VPC Networking and Multi-Tier Architecture</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
