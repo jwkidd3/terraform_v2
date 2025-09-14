@@ -3,7 +3,7 @@
 
 # Variables from Terraform template
 BUCKET_NAME="${bucket_name}"
-STUDENT_ID="${student_id}"
+USERNAME="${username}"
 ENVIRONMENT="${environment}"
 PROJECT_NAME="${project_name}"
 AWS_REGION="${aws_region}"
@@ -69,7 +69,7 @@ cat > /var/www/html/index.html << EOF
         <div class="grid">
             <div class="info-card">
                 <h3>📊 Infrastructure Details</h3>
-                <p><strong>Student ID:</strong> $STUDENT_ID</p>
+                <p><strong>Username:</strong> $USERNAME</p>
                 <p><strong>Environment:</strong> $ENVIRONMENT</p>
                 <p><strong>Project:</strong> $PROJECT_NAME</p>
                 <p><strong>Region:</strong> $AWS_REGION</p>
@@ -121,7 +121,7 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
                     {
                         "file_path": "/var/log/httpd/access_log",
                         "log_group_name": "/aws/ec2/terraform-lab2/httpd/access",
-                        "log_stream_name": "$STUDENT_ID-{instance_id}"
+                        "log_stream_name": "$USERNAME-{instance_id}"
                     }
                 ]
             }

@@ -123,8 +123,7 @@ resource "aws_launch_template" "web" {
     ebs {
       volume_size           = local.current_config.volume_size
       volume_type           = "gp3"
-      encrypted             = var.security_config.enable_encryption
-      kms_key_id           = var.security_config.enable_encryption ? data.aws_kms_key.ebs.arn : null
+      encrypted             = false
       delete_on_termination = true
     }
   }
@@ -164,25 +163,7 @@ resource "aws_s3_bucket" "logs" {
   })
 }
 
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "logs" {
-  bucket = aws_s3_bucket.logs.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
-# S3 bucket encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
-  count  = var.security_config.enable_encryption ? 1 : 0
-  bucket = aws_s3_bucket.logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
 
 # S3 bucket public access block
 resource "aws_s3_bucket_public_access_block" "logs" {
@@ -304,8 +285,7 @@ resource "aws_db_instance" "main" {
   allocated_storage     = var.database_config.allocated_storage
   max_allocated_storage = var.database_config.allocated_storage * 2
   storage_type          = "gp2"
-  storage_encrypted     = var.security_config.enable_encryption
-  kms_key_id           = var.security_config.enable_encryption ? data.aws_kms_key.ebs.arn : null
+  storage_encrypted     = false
 
   db_name  = "appdb"
   username = var.database_config.username

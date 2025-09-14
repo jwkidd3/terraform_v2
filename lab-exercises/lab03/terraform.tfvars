@@ -1,7 +1,7 @@
 # terraform.tfvars - Production-Ready Variable Values
 
 # Basic configuration
-student_name = "john-doe"  # Replace with your name
+username = "user1"  # Replace with your assigned username
 environment  = "dev"
 
 # Application configuration

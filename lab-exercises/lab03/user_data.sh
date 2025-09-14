@@ -6,7 +6,7 @@ APP_NAME="${app_name}"
 APP_VERSION="${app_version}"
 APP_PORT="${app_port}"
 ENVIRONMENT="${environment}"
-STUDENT="${student}"
+USERNAME="${username}"
 
 # Update system
 yum update -y
@@ -54,7 +54,7 @@ cat << EOF > /var/www/html/index.html
         <div class="info">
             <strong>Version:</strong> $APP_VERSION<br>
             <strong>Environment:</strong> $ENVIRONMENT<br>
-            <strong>Student:</strong> $STUDENT<br>
+            <strong>Username:</strong> $USERNAME<br>
             <strong>Port:</strong> $APP_PORT<br>
             <strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)<br>
             <strong>Instance Type:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-type)<br>

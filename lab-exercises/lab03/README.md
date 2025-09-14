@@ -27,7 +27,7 @@ cd ~/terraform-training/lab03-advanced-variables
 
 # Set environment variables
 export AWS_DEFAULT_REGION=us-east-2
-export TF_VAR_student_name="your-name-here"  # Replace with your name
+export TF_VAR_username="user1"  # Replace with your assigned username
 
 # Verify AWS CLI access
 aws sts get-caller-identity
@@ -43,16 +43,16 @@ Create the `variables.tf` file with advanced variable patterns:
 # variables.tf - Advanced Variable Definitions
 
 # Basic validated variables
-variable "student_name" {
-  description = "Student name for resource naming and tagging"
+variable "username" {
+  description = "Your unique username (for shared environment)"
   type        = string
   validation {
-    condition     = length(var.student_name) > 2 && length(var.student_name) <= 20
-    error_message = "Student name must be between 3 and 20 characters."
+    condition     = length(var.username) > 2 && length(var.username) <= 20
+    error_message = "Username must be between 3 and 20 characters."
   }
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.student_name))
-    error_message = "Student name must contain only lowercase letters, numbers, and hyphens."
+    condition     = can(regex("^[a-z0-9-]+$", var.username))
+    error_message = "Username must contain only lowercase letters, numbers, and hyphens."
   }
 }
 
@@ -224,7 +224,7 @@ Create the `terraform.tfvars` file with comprehensive configuration:
 # terraform.tfvars - Production-Ready Variable Values
 
 # Basic configuration
-student_name = "john-doe"  # Replace with your name
+username = "user1"  # Replace with your assigned username
 environment  = "dev"
 
 # Application configuration
@@ -391,12 +391,12 @@ locals {
   azs = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
   
   # Common naming prefix
-  name_prefix = "${var.student_name}-${var.environment}"
+  name_prefix = "${var.username}-${var.environment}"
   
   # Enhanced tagging strategy
   common_tags = merge(var.tags, {
     Environment   = var.environment
-    Student       = var.student_name
+    Student       = var.username
     Application   = var.application_config.name
     Version       = var.application_config.version
     ManagedBy     = "Terraform"
@@ -445,7 +445,7 @@ locals {
     app_version = var.application_config.version
     app_port    = var.application_config.port
     environment = var.environment
-    student     = var.student_name
+    username    = var.username
   }))
   
   # Calculate costs and resource limits
@@ -1048,7 +1048,7 @@ Create the `outputs.tf` file:
 output "environment_info" {
   description = "Environment and deployment information"
   value = {
-    student_name    = var.student_name
+    username        = var.username
     environment     = var.environment
     aws_region      = data.aws_region.current.name
     aws_account_id  = data.aws_caller_identity.current.account_id

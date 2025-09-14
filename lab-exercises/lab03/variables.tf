@@ -1,16 +1,16 @@
 # variables.tf - Advanced Variable Definitions
 
 # Basic validated variables
-variable "student_name" {
-  description = "Student name for resource naming and tagging"
+variable "username" {
+  description = "Your unique username (for shared environment)"
   type        = string
   validation {
-    condition     = length(var.student_name) > 2 && length(var.student_name) <= 20
-    error_message = "Student name must be between 3 and 20 characters."
+    condition     = length(var.username) > 2 && length(var.username) <= 20
+    error_message = "Username must be between 3 and 20 characters."
   }
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.student_name))
-    error_message = "Student name must contain only lowercase letters, numbers, and hyphens."
+    condition     = can(regex("^[a-z0-9-]+$", var.username))
+    error_message = "Username must contain only lowercase letters, numbers, and hyphens."
   }
 }
 

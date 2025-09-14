@@ -22,7 +22,8 @@ variable "username" {
 
 # Create some resources to manage in state
 resource "aws_s3_bucket" "app_storage" {
-  bucket = "${var.username}-app-storage-lab5"
+  bucket        = "${var.username}-app-storage-lab5"
+  force_destroy = true
 
   tags = {
     Name        = "${var.username} Application Storage"
@@ -32,13 +33,6 @@ resource "aws_s3_bucket" "app_storage" {
   }
 }
 
-resource "aws_s3_bucket_versioning" "app_storage" {
-  bucket = aws_s3_bucket.app_storage.id
-  
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
 # Create multiple objects to make state more complex
 resource "aws_s3_object" "config_files" {

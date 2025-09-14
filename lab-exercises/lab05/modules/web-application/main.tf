@@ -28,7 +28,8 @@ data "aws_availability_zones" "available" {
 
 # S3 bucket for application assets
 resource "aws_s3_bucket" "app_assets" {
-  bucket = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
+  bucket        = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-assets"
@@ -43,24 +44,7 @@ resource "random_string" "bucket_suffix" {
   upper   = false
 }
 
-# S3 bucket server-side encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "app_assets" {
-  bucket = aws_s3_bucket.app_assets.id
 
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "app_assets" {
-  bucket = aws_s3_bucket.app_assets.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
 # Security group for web server
 resource "aws_security_group" "web" {

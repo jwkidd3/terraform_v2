@@ -29,11 +29,11 @@ By the end of this lab, you will be able to:
 ### Environment Configuration
 ```bash
 # Set your unique identifier
-export TF_VAR_student_id="student$(date +%s | tail -c 4)"
+export TF_VAR_username="user1"  # Replace with your assigned username
 export TF_VAR_environment="development"
 export AWS_DEFAULT_REGION="us-east-2"
 
-echo "Student ID: $TF_VAR_student_id"
+echo "Username: $TF_VAR_username"
 echo "Environment: $TF_VAR_environment" 
 echo "AWS Region: $AWS_DEFAULT_REGION"
 ```
@@ -82,7 +82,7 @@ provider "aws" {
     tags = {
       Environment   = var.environment
       Project       = var.project_name
-      Owner         = var.student_id
+      Owner         = var.username
       ManagedBy     = "Terraform"
       CostCenter    = "Training"
       CreatedDate   = formatdate("YYYY-MM-DD", timestamp())
@@ -99,13 +99,13 @@ provider "random" {
 ```hcl
 # variables.tf - Input variable definitions
 
-variable "student_id" {
-  description = "Unique identifier for the student"
+variable "username" {
+  description = "Your unique username (for shared environment)"
   type        = string
-  
+
   validation {
-    condition     = length(var.student_id) >= 3 && length(var.student_id) <= 20
-    error_message = "Student ID must be between 3 and 20 characters."
+    condition     = length(var.username) >= 3 && length(var.username) <= 20
+    error_message = "Username must be between 3 and 20 characters."
   }
 }
 
@@ -231,13 +231,13 @@ data "aws_subnet" "selected" {
 
 locals {
   # Common naming convention
-  name_prefix = "${var.project_name}-${var.environment}-${var.student_id}"
+  name_prefix = "${var.username}-${var.project_name}-${var.environment}"
   
   # Common tags for all resources
   common_tags = {
     Environment    = var.environment
     Project        = var.project_name
-    Student        = var.student_id
+    Student        = var.username
     ManagedBy      = "Terraform"
     DeploymentDate = formatdate("YYYY-MM-DD-hhmm", timestamp())
   }
@@ -288,7 +288,7 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
   
   keepers = {
-    student_id = var.student_id
+    username = var.username
     project    = var.project_name
   }
 }
@@ -441,7 +441,7 @@ resource "aws_instance" "web_server" {
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     bucket_name   = aws_s3_bucket.app_storage.bucket
-    student_id    = var.student_id
+    username      = var.username
     environment   = var.environment
     project_name  = var.project_name
     aws_region    = data.aws_region.current.name
@@ -466,7 +466,7 @@ resource "aws_instance" "web_server" {
 
 # Variables from Terraform template
 BUCKET_NAME="${bucket_name}"
-STUDENT_ID="${student_id}"
+USERNAME="${username}"
 ENVIRONMENT="${environment}"
 PROJECT_NAME="${project_name}"
 AWS_REGION="${aws_region}"
@@ -681,7 +681,7 @@ output "next_steps" {
 # terraform.tfvars - Variable value assignments
 
 # Replace with your actual values
-student_id      = "student001"
+username        = "user1"
 environment     = "development"
 project_name    = "terraform-training"
 aws_region      = "us-east-2"

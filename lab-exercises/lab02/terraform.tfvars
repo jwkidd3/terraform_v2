@@ -1,7 +1,7 @@
 # terraform.tfvars - Variable value assignments
 
 # Replace with your actual values
-student_id      = "student001"
+username        = "user1"
 environment     = "development"
 project_name    = "terraform-training"
 aws_region      = "us-east-2"

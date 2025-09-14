@@ -64,10 +64,6 @@ data "aws_security_group" "default" {
 # Get current AWS partition (useful for ARN construction)
 data "aws_partition" "current" {}
 
-# Find existing KMS key for encryption
-data "aws_kms_key" "ebs" {
-  key_id = "alias/aws/ebs"
-}
 
 # Get Route 53 hosted zone (if exists)
 data "aws_route53_zone" "main" {

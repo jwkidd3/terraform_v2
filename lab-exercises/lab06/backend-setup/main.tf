@@ -34,7 +34,8 @@ locals {
 
 # S3 bucket for Terraform state with enhanced security
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "${var.username}-terraform-state-backend"
+  bucket        = "${var.username}-terraform-state-backend"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Name = "${var.username} Terraform State Backend"
@@ -42,27 +43,7 @@ resource "aws_s3_bucket" "terraform_state" {
   })
 }
 
-# Enable versioning for state file history
-resource "aws_s3_bucket_versioning" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-  
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
-# Server-side encryption for state security
-resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-    
-    bucket_key_enabled = true
-  }
-}
 
 # Block public access completely
 resource "aws_s3_bucket_public_access_block" "terraform_state" {

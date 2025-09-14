@@ -5,15 +5,16 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
   
   keepers = {
-    student_id = var.student_id
-    project    = var.project_name
+    username = var.username
+    project  = var.project_name
   }
 }
 
 # S3 bucket for application storage
 resource "aws_s3_bucket" "app_storage" {
-  bucket = local.bucket_name
-  
+  bucket        = local.bucket_name
+  force_destroy = true
+
   tags = merge(local.common_tags, {
     Name        = "${local.name_prefix}-storage"
     Purpose     = "Application Storage"
@@ -21,23 +22,7 @@ resource "aws_s3_bucket" "app_storage" {
   })
 }
 
-resource "aws_s3_bucket_versioning" "app_storage_versioning" {
-  bucket = aws_s3_bucket.app_storage.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage_encryption" {
-  bucket = aws_s3_bucket.app_storage.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-    bucket_key_enabled = true
-  }
-}
 
 resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
   bucket = aws_s3_bucket.app_storage.id
@@ -158,7 +143,7 @@ resource "aws_instance" "web_server" {
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     bucket_name   = aws_s3_bucket.app_storage.bucket
-    student_id    = var.student_id
+    username      = var.username
     environment   = var.environment
     project_name  = var.project_name
     aws_region    = data.aws_region.current.name

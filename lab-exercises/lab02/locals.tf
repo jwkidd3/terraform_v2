@@ -2,13 +2,13 @@
 
 locals {
   # Common naming convention
-  name_prefix = "${var.project_name}-${var.environment}-${var.student_id}"
+  name_prefix = "${var.username}-${var.project_name}-${var.environment}"
   
   # Common tags for all resources
   common_tags = {
     Environment    = var.environment
     Project        = var.project_name
-    Student        = var.student_id
+    Student        = var.username
     ManagedBy      = "Terraform"
     DeploymentDate = formatdate("YYYY-MM-DD-hhmm", timestamp())
   }

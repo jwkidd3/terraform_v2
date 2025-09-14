@@ -8,12 +8,12 @@ locals {
   azs = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
   
   # Common naming prefix
-  name_prefix = "${var.student_name}-${var.environment}"
+  name_prefix = "${var.username}-${var.environment}"
   
   # Enhanced tagging strategy
   common_tags = merge(var.tags, {
     Environment   = var.environment
-    Student       = var.student_name
+    Student       = var.username
     Application   = var.application_config.name
     Version       = var.application_config.version
     ManagedBy     = "Terraform"
@@ -62,7 +62,7 @@ locals {
     app_version = var.application_config.version
     app_port    = var.application_config.port
     environment = var.environment
-    student     = var.student_name
+    username    = var.username
   }))
   
   # Calculate costs and resource limits

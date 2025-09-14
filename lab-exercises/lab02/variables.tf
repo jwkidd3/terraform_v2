@@ -1,12 +1,12 @@
 # variables.tf - Input variable definitions
 
-variable "student_id" {
-  description = "Unique identifier for the student"
+variable "username" {
+  description = "Your unique username (for shared environment)"
   type        = string
-  
+
   validation {
-    condition     = length(var.student_id) >= 3 && length(var.student_id) <= 20
-    error_message = "Student ID must be between 3 and 20 characters."
+    condition     = length(var.username) >= 3 && length(var.username) <= 20
+    error_message = "Username must be between 3 and 20 characters."
   }
 }
 

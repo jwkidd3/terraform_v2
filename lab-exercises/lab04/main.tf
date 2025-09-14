@@ -22,22 +22,15 @@ variable "username" {
 
 # Step 1: Create an S3 bucket first
 resource "aws_s3_bucket" "app_data" {
-  bucket = "${var.username}-app-data-bucket"
-  
+  bucket        = "${var.username}-app-data-bucket"
+  force_destroy = true
+
   tags = {
     Name = "${var.username} App Data"
     Owner = var.username
   }
 }
 
-# Step 2: Create bucket versioning (depends on bucket)
-resource "aws_s3_bucket_versioning" "app_data" {
-  bucket = aws_s3_bucket.app_data.id  # This creates a dependency!
-  
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
 
 # Step 3: Upload a file (depends on bucket and versioning)
 resource "aws_s3_object" "config" {
@@ -49,8 +42,7 @@ resource "aws_s3_object" "config" {
     created  = timestamp()
   })
   
-  # This file will only be created AFTER the bucket and versioning exist
-  depends_on = [aws_s3_bucket_versioning.app_data]
+  # This file will only be created AFTER the bucket exists
   
   tags = {
     Owner = var.username
