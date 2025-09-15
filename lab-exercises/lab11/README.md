@@ -38,6 +38,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab11
 cd terraform-lab11
 ```

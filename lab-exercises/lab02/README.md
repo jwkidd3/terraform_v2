@@ -52,6 +52,7 @@ aws iam list-attached-user-policies --user-name $(aws sts get-caller-identity --
 
 ### Step 1: Create Project Structure
 ```bash
+cd ~/environment
 mkdir -p terraform-lab2/{configs,modules,environments}
 cd terraform-lab2
 ```
@@ -237,7 +238,7 @@ locals {
   common_tags = {
     Environment    = var.environment
     Project        = var.project_name
-    Student        = var.username
+    Owner          = var.username
     ManagedBy      = "Terraform"
     DeploymentDate = formatdate("YYYY-MM-DD-hhmm", timestamp())
   }
@@ -311,16 +312,7 @@ resource "aws_s3_bucket_versioning" "app_storage_versioning" {
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage_encryption" {
-  bucket = aws_s3_bucket.app_storage.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-    bucket_key_enabled = true
-  }
-}
+# S3 bucket encryption disabled for simplicity in shared training environment
 
 resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
   bucket = aws_s3_bucket.app_storage.id
@@ -432,7 +424,7 @@ resource "aws_instance" "web_server" {
   root_block_device {
     volume_type = "gp3"
     volume_size = 20
-    encrypted   = true
+    encrypted   = false
     
     tags = merge(local.common_tags, {
       Name = "${local.name_prefix}-root-volume"
@@ -532,7 +524,7 @@ cat > /var/www/html/index.html << EOF
         <div class="grid">
             <div class="info-card">
                 <h3>📊 Infrastructure Details</h3>
-                <p><strong>Student ID:</strong> $STUDENT_ID</p>
+                <p><strong>Owner:</strong> $TF_VAR_username</p>
                 <p><strong>Environment:</strong> $ENVIRONMENT</p>
                 <p><strong>Project:</strong> $PROJECT_NAME</p>
                 <p><strong>Region:</strong> $AWS_REGION</p>
@@ -556,7 +548,7 @@ cat > /var/www/html/index.html << EOF
                 <li><span class="success">✓</span> Implemented security best practices</li>
                 <li><span class="success">✓</span> Used enterprise tagging strategies</li>
                 <li><span class="success">✓</span> Applied proper IAM permissions</li>
-                <li><span class="success">✓</span> Configured encrypted storage</li>
+                <li><span class="success">✓</span> Configured storage</li>
             </ul>
         </div>
         
@@ -584,7 +576,7 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
                     {
                         "file_path": "/var/log/httpd/access_log",
                         "log_group_name": "/aws/ec2/terraform-lab2/httpd/access",
-                        "log_stream_name": "$STUDENT_ID-{instance_id}"
+                        "log_stream_name": "$TF_VAR_username-{instance_id}"
                     }
                 ]
             }
@@ -750,7 +742,7 @@ aws ec2 describe-instances --instance-ids $EC2_ID --query 'Reservations[0].Insta
 
 ### What You Built:
 ✅ **Production-ready AWS infrastructure** with 8+ resources  
-✅ **Security best practices** with encrypted storage and proper IAM  
+✅ **Security best practices** with proper IAM and access controls  
 ✅ **Enterprise tagging strategy** for cost management and compliance  
 ✅ **Dynamic data source integration** for environment-agnostic code  
 ✅ **Comprehensive monitoring and logging** setup  
@@ -761,7 +753,7 @@ aws ec2 describe-instances --instance-ids $EC2_ID --query 'Reservations[0].Insta
 - **Data Sources**: Querying existing AWS infrastructure
 - **Local Values**: Computing derived values and configurations
 - **Resource Dependencies**: Explicit and implicit relationship management
-- **Security**: IAM roles, security groups, encryption at rest
+- **Security**: IAM roles, security groups, access controls
 - **Best Practices**: Naming conventions, tagging, and monitoring
 
 ### Production Skills Gained:

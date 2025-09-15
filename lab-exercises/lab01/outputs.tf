@@ -12,7 +12,7 @@ output "container_port" {
 
 output "container_status" {
   description = "Status of the Docker container"
-  value       = docker_container.web.status
+  value       = docker_container.web.restart
 }
 
 output "web_url" {

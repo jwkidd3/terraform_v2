@@ -36,6 +36,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab4
 cd terraform-lab4
 ```
@@ -66,8 +67,9 @@ variable "username" {
 
 # Step 1: Create an S3 bucket first
 resource "aws_s3_bucket" "app_data" {
-  bucket = "${var.username}-app-data-bucket"
-  
+  bucket        = "${var.username}-app-data-bucket"
+  force_destroy = true
+
   tags = {
     Name = "${var.username} App Data"
     Owner = var.username
@@ -79,7 +81,7 @@ resource "aws_s3_bucket_versioning" "app_data" {
   bucket = aws_s3_bucket.app_data.id  # This creates a dependency!
   
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
 }
 

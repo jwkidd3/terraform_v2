@@ -45,6 +45,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 2: Create Lab Directory and Configuration
 ```bash
+cd ~/environment
 mkdir terraform-lab10
 cd terraform-lab10
 ```
@@ -382,20 +383,12 @@ resource "random_string" "bucket_suffix" {
   upper   = false
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "app_artifacts" {
-  bucket = aws_s3_bucket.app_artifacts.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
+# S3 bucket encryption disabled for simplicity in shared training environment
 
 resource "aws_s3_bucket_versioning" "app_artifacts" {
   bucket = aws_s3_bucket.app_artifacts.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
 }
 ```
@@ -718,7 +711,7 @@ Review what you've implemented:
 - Automatic state versioning and backup
 - Remote plan and apply execution with detailed logs
 - Complete audit trail of all infrastructure modifications
-- Secure credential management with encryption at rest
+- Secure credential management
 - Workspace-based organization for team collaboration
 
 **Production-Ready Patterns:**
@@ -726,7 +719,7 @@ Review what you've implemented:
 - Auto Scaling Groups with proper health checks
 - Application Load Balancer for traffic distribution
 - CloudWatch monitoring and dashboards
-- S3 versioning and encryption
+- S3 configuration for shared environment
 - Comprehensive resource tagging strategy
 
 **Benefits Over Local Execution:**

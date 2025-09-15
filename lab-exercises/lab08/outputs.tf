@@ -23,9 +23,7 @@ output "vpc_info" {
 
 output "application_endpoint" {
   description = "Application endpoint URL"
-  value = var.enable_high_availability ? 
-    "http://${aws_lb.app[0].dns_name}" : 
-    "Check EC2 instances for public IPs"
+  value = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : "Check EC2 instances for public IPs"
 }
 
 output "security_groups" {

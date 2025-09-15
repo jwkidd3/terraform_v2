@@ -19,7 +19,7 @@ By the end of this lab, you will be able to:
 ## 📋 **Prerequisites**
 - Completion of Labs 2-6
 - Understanding of module basics from Lab 5
-- Remote state setup from Lab 6
+- State management concepts from Lab 6
 - Basic VPC networking knowledge
 
 ---
@@ -39,6 +39,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab7
 cd terraform-lab7
 ```

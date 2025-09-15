@@ -22,7 +22,7 @@ provider "aws" {
     tags = {
       Environment   = var.environment
       Project       = var.project_name
-      Owner         = var.student_id
+      Owner         = var.username
       ManagedBy     = "Terraform"
       CostCenter    = "Training"
       CreatedDate   = formatdate("YYYY-MM-DD", timestamp())

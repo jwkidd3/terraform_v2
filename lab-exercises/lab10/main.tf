@@ -15,10 +15,7 @@ provider "aws" {
   region = "us-east-2"
 }
 
-variable "username" {
-  description = "Your unique username"
-  type        = string
-}
+# Username variable defined in variables.tf
 
 # Introduction to Terraform Cloud lab
 # Full implementation available in README.md

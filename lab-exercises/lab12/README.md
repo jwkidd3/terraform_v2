@@ -66,6 +66,7 @@ Look for indicators of good modules:
 
 ### Step 1: Create Module Directory Structure
 ```bash
+cd ~/environment
 mkdir terraform-lab12
 cd terraform-lab12
 

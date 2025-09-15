@@ -38,6 +38,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab9
 cd terraform-lab9
 ```
@@ -57,13 +58,7 @@ terraform {
     }
   }
   
-  backend "s3" {
-    bucket         = "user1-terraform-state-backend"  # Replace with your bucket name
-    key            = "lab8/networking/terraform.tfstate"
-    region         = "us-east-2"
-    dynamodb_table = "user1-terraform-locks"         # Replace with your table name
-    encrypt        = true
-  }
+  # Using local backend for this lab
 }
 
 provider "aws" {

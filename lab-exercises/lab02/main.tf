@@ -134,7 +134,7 @@ resource "aws_instance" "web_server" {
   root_block_device {
     volume_type = "gp3"
     volume_size = 20
-    encrypted   = true
+    encrypted   = false
     
     tags = merge(local.common_tags, {
       Name = "${local.name_prefix}-root-volume"

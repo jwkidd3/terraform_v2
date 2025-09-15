@@ -217,17 +217,10 @@ module "s3_logs" {
 
   # Versioning
   versioning = {
-    enabled = true
+    enabled = false
   }
 
-  # Server-side encryption
-  server_side_encryption_configuration = {
-    rule = {
-      apply_server_side_encryption_by_default = {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
+  # Encryption disabled for simplicity in shared training environment
 
   tags = merge(local.common_tags, {
     Type = "ApplicationLogs"

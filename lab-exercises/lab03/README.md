@@ -22,8 +22,9 @@ By the end of this lab, you will be able to:
 ### Step 1: Environment Preparation
 ```bash
 # Create and navigate to lab directory
-mkdir -p ~/terraform-training/lab03-advanced-variables
-cd ~/terraform-training/lab03-advanced-variables
+cd ~/environment
+mkdir -p terraform-training/lab03-advanced-variables
+cd terraform-training/lab03-advanced-variables
 
 # Set environment variables
 export AWS_DEFAULT_REGION=us-east-2
@@ -174,7 +175,7 @@ variable "security_config" {
     backup_enabled       = bool
   })
   default = {
-    enable_encryption    = true
+    enable_encryption    = false
     enable_logging      = true
     allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
     ssl_certificate_arn = ""
@@ -396,7 +397,7 @@ locals {
   # Enhanced tagging strategy
   common_tags = merge(var.tags, {
     Environment   = var.environment
-    Student       = var.username
+    Owner         = var.username
     Application   = var.application_config.name
     Version       = var.application_config.version
     ManagedBy     = "Terraform"
@@ -682,17 +683,7 @@ resource "aws_s3_bucket_versioning" "logs" {
   }
 }
 
-# S3 bucket encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
-  count  = var.security_config.enable_encryption ? 1 : 0
-  bucket = aws_s3_bucket.logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
+# S3 bucket encryption disabled for simplicity in shared training environment
 
 # S3 bucket public access block
 resource "aws_s3_bucket_public_access_block" "logs" {
@@ -859,7 +850,7 @@ APP_NAME="${app_name}"
 APP_VERSION="${app_version}"
 APP_PORT="${app_port}"
 ENVIRONMENT="${environment}"
-STUDENT="${student}"
+USERNAME="${username}"
 
 # Update system
 yum update -y
@@ -907,7 +898,7 @@ cat << EOF > /var/www/html/index.html
         <div class="info">
             <strong>Version:</strong> $APP_VERSION<br>
             <strong>Environment:</strong> $ENVIRONMENT<br>
-            <strong>Student:</strong> $STUDENT<br>
+            <strong>Owner:</strong> $USERNAME<br>
             <strong>Port:</strong> $APP_PORT<br>
             <strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)<br>
             <strong>Instance Type:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-type)<br>
@@ -1273,7 +1264,7 @@ terraform plan
 - [ ] Load balancer is accessible from internet
 - [ ] Auto Scaling Group has correct instance count
 - [ ] RDS database is properly secured in private subnets
-- [ ] S3 bucket has encryption enabled
+- [ ] S3 bucket is configured for shared environment
 - [ ] All resources are properly tagged
 - [ ] CloudWatch monitoring is configured
 - [ ] Health checks are passing

@@ -67,6 +67,7 @@ docker ps
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab1
 cd terraform-lab1
 ```

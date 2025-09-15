@@ -8,7 +8,7 @@ locals {
   common_tags = {
     Environment    = var.environment
     Project        = var.project_name
-    Student        = var.username
+    Owner          = var.username
     ManagedBy      = "Terraform"
     DeploymentDate = formatdate("YYYY-MM-DD-hhmm", timestamp())
   }

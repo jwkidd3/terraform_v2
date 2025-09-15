@@ -132,7 +132,7 @@ variable "security_config" {
     backup_enabled       = bool
   })
   default = {
-    enable_encryption    = true
+    enable_encryption    = false
     enable_logging      = true
     allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
     ssl_certificate_arn = ""

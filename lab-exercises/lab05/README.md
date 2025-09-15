@@ -36,6 +36,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab5
 cd terraform-lab5
 
@@ -140,22 +141,13 @@ resource "random_string" "bucket_suffix" {
   upper   = false
 }
 
-# S3 bucket server-side encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "app_assets" {
-  bucket = aws_s3_bucket.app_assets.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
+# S3 bucket encryption disabled for simplicity in shared training environment
 
 # S3 bucket versioning
 resource "aws_s3_bucket_versioning" "app_assets" {
   bucket = aws_s3_bucket.app_assets.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
 }
 
@@ -531,7 +523,7 @@ terraform apply -var="username=user1" -replace="module.dev_blog.aws_instance.web
 **Advanced Features Implemented:**
 - IAM roles and policies for secure service integration
 - CloudWatch monitoring with conditional creation
-- S3 bucket with versioning and encryption
+- S3 bucket configured for shared training environment
 - Dynamic user data with template interpolation
 - Resource dependencies and proper ordering
 

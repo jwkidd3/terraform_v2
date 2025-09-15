@@ -4,7 +4,7 @@
 output "environment_info" {
   description = "Environment and deployment information"
   value = {
-    student_name    = var.student_name
+    username        = var.username
     environment     = var.environment
     aws_region      = data.aws_region.current.name
     aws_account_id  = data.aws_caller_identity.current.account_id

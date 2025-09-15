@@ -19,7 +19,7 @@ By the end of this lab, you will be able to:
 ## 📋 **Prerequisites**
 - Completion of Labs 2-7
 - Understanding of variables and modules
-- Remote state setup from Lab 6
+- State management concepts from Lab 6
 - Registry modules knowledge from Lab 7
 
 ---
@@ -39,6 +39,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Step 1: Create Lab Directory
 ```bash
+cd ~/environment
 mkdir terraform-lab8
 cd terraform-lab8
 ```

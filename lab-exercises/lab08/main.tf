@@ -25,9 +25,7 @@ locals {
   name_prefix = "${var.username}-${var.environment}"
   
   # Environment-specific settings
-  availability_zones = var.enable_high_availability ? 
-    slice(data.aws_availability_zones.available.names, 0, 2) : 
-    slice(data.aws_availability_zones.available.names, 0, 1)
+  availability_zones = var.enable_high_availability ? slice(data.aws_availability_zones.available.names, 0, 2) : slice(data.aws_availability_zones.available.names, 0, 1)
     
   backup_retention = var.environment == "prod" ? 30 : (var.environment == "staging" ? 7 : 1)
   

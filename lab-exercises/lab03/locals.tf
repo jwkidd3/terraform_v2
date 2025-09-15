@@ -13,7 +13,7 @@ locals {
   # Enhanced tagging strategy
   common_tags = merge(var.tags, {
     Environment   = var.environment
-    Student       = var.username
+    Owner         = var.username
     Application   = var.application_config.name
     Version       = var.application_config.version
     ManagedBy     = "Terraform"
