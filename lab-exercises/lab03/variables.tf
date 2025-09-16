@@ -28,9 +28,9 @@ variable "environment" {
 variable "application_config" {
   description = "Application configuration settings"
   type = object({
-    name         = string
-    version      = string
-    port         = number
+    name    = string
+    version = string
+    port    = number
     health_check = object({
       path     = string
       interval = number
@@ -83,14 +83,14 @@ variable "instance_types" {
 variable "database_config" {
   description = "Database configuration with sensitive data"
   type = object({
-    engine         = string
-    engine_version = string
-    instance_class = string
+    engine            = string
+    engine_version    = string
+    instance_class    = string
     allocated_storage = number
-    username       = string
-    password       = string
-    backup_retention = number
-    multi_az       = bool
+    username          = string
+    password          = string
+    backup_retention  = number
+    multi_az          = bool
   })
   sensitive = true
   validation {
@@ -125,14 +125,14 @@ variable "tags" {
 variable "security_config" {
   description = "Security settings for the infrastructure"
   type = object({
-    enable_encryption     = bool
-    enable_logging       = bool
-    allowed_cidr_blocks  = list(string)
-    ssl_certificate_arn  = string
-    backup_enabled       = bool
+    enable_encryption   = bool
+    enable_logging      = bool
+    allowed_cidr_blocks = list(string)
+    ssl_certificate_arn = string
+    backup_enabled      = bool
   })
   default = {
-    enable_encryption    = false
+    enable_encryption   = false
     enable_logging      = true
     allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
     ssl_certificate_arn = ""
@@ -151,10 +151,10 @@ variable "security_config" {
 variable "cost_allocation" {
   description = "Cost allocation and billing configuration"
   type = object({
-    project_code   = string
-    cost_center    = string
-    billing_team   = string
-    budget_alert   = number
+    project_code = string
+    cost_center  = string
+    billing_team = string
+    budget_alert = number
   })
   validation {
     condition     = can(regex("^[A-Z]{3}-[0-9]{4}$", var.cost_allocation.project_code))

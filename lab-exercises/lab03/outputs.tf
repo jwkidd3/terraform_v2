@@ -20,10 +20,10 @@ output "networking" {
     vpc_cidr           = data.aws_vpc.default.cidr_block
     availability_zones = local.azs
     subnet_ids         = data.aws_subnets.default.ids
-    subnet_details     = { for k, v in data.aws_subnet.default : k => {
-        id                = v.id
-        cidr_block       = v.cidr_block
-        availability_zone = v.availability_zone
+    subnet_details = { for k, v in data.aws_subnet.default : k => {
+      id                = v.id
+      cidr_block        = v.cidr_block
+      availability_zone = v.availability_zone
       }
     }
   }
@@ -55,7 +55,7 @@ output "load_balancer" {
     dns_name    = aws_lb.main.dns_name
     zone_id     = aws_lb.main.zone_id
     arn         = aws_lb.main.arn
-    hosted_zone = aws_lb.main.canonical_hosted_zone_id
+    hosted_zone = aws_lb.main.zone_id
   }
 }
 
@@ -75,15 +75,15 @@ output "auto_scaling" {
 output "database" {
   description = "RDS database configuration"
   value = {
-    endpoint              = aws_db_instance.main.endpoint
-    port                 = aws_db_instance.main.port
-    database_name        = aws_db_instance.main.db_name
-    username             = aws_db_instance.main.username
-    engine               = aws_db_instance.main.engine
-    engine_version       = aws_db_instance.main.engine_version
-    instance_class       = aws_db_instance.main.instance_class
-    allocated_storage    = aws_db_instance.main.allocated_storage
-    backup_retention     = aws_db_instance.main.backup_retention_period
+    endpoint          = aws_db_instance.main.endpoint
+    port              = aws_db_instance.main.port
+    database_name     = aws_db_instance.main.db_name
+    username          = aws_db_instance.main.username
+    engine            = aws_db_instance.main.engine
+    engine_version    = aws_db_instance.main.engine_version
+    instance_class    = aws_db_instance.main.instance_class
+    allocated_storage = aws_db_instance.main.allocated_storage
+    backup_retention  = aws_db_instance.main.backup_retention_period
   }
   sensitive = true
 }
@@ -101,7 +101,7 @@ output "application_urls" {
 # Resource Naming
 output "resource_names" {
   description = "Generated resource names for reference"
-  value = local.resource_names
+  value       = local.resource_names
 }
 
 # Cost Estimation
@@ -112,7 +112,7 @@ output "cost_estimation" {
     storage_cost   = local.estimated_monthly_cost.storage
     database_cost  = local.estimated_monthly_cost.database
     total_estimate = local.estimated_monthly_cost.instances + local.estimated_monthly_cost.storage + local.estimated_monthly_cost.database
-    note          = "Costs are estimates and may vary based on usage patterns"
+    note           = "Costs are estimates and may vary based on usage patterns"
   }
 }
 
@@ -120,7 +120,7 @@ output "cost_estimation" {
 output "tagging_strategy" {
   description = "Applied tagging strategy"
   value = {
-    common_tags    = local.common_tags
+    common_tags     = local.common_tags
     cost_allocation = var.cost_allocation
     compliance_tags = {
       project_code = var.cost_allocation.project_code

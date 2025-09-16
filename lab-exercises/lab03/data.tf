@@ -4,17 +4,17 @@
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
-  
+
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  
+
   filter {
     name   = "state"
     values = ["available"]
@@ -67,14 +67,14 @@ data "aws_partition" "current" {}
 
 # Get Route 53 hosted zone (if exists)
 data "aws_route53_zone" "main" {
-  count = var.security_config.ssl_certificate_arn != "" ? 1 : 0
-  name  = "example.com"
+  count        = var.security_config.ssl_certificate_arn != "" ? 1 : 0
+  name         = "example.com"
   private_zone = false
 }
 
 # Find SSL certificate (if specified)
 data "aws_acm_certificate" "main" {
-  count  = var.security_config.ssl_certificate_arn != "" ? 1 : 0
-  arn    = var.security_config.ssl_certificate_arn
+  count    = var.security_config.ssl_certificate_arn != "" ? 1 : 0
+  domain   = "example.com" # Replace with actual domain
   statuses = ["ISSUED"]
 }

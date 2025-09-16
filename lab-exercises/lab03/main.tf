@@ -63,7 +63,7 @@ resource "aws_security_group" "web" {
       description = ingress.value.description
     }
   }
-  
+
   # Allow traffic from ALB
   ingress {
     from_port       = var.application_config.port
@@ -115,7 +115,7 @@ resource "aws_launch_template" "web" {
   key_name      = var.key_pair_name != "" ? var.key_pair_name : null
 
   vpc_security_group_ids = [aws_security_group.web.id]
-  
+
   user_data = local.user_data
 
   block_device_mappings {
@@ -133,8 +133,8 @@ resource "aws_launch_template" "web" {
   }
 
   metadata_options {
-    http_endpoint = "enabled"
-    http_tokens   = "required"
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
 
@@ -232,10 +232,10 @@ resource "aws_lb_listener" "web" {
 
 # Auto Scaling Group
 resource "aws_autoscaling_group" "web" {
-  name                = local.resource_names.auto_scaling
-  vpc_zone_identifier = data.aws_subnets.default.ids
-  target_group_arns   = [aws_lb_target_group.web.arn]
-  health_check_type   = "ELB"
+  name                      = local.resource_names.auto_scaling
+  vpc_zone_identifier       = data.aws_subnets.default.ids
+  target_group_arns         = [aws_lb_target_group.web.arn]
+  health_check_type         = "ELB"
   health_check_grace_period = 300
 
   min_size         = var.application_config.scaling.min_size
@@ -281,7 +281,7 @@ resource "aws_db_instance" "main" {
   engine         = var.database_config.engine
   engine_version = var.database_config.engine_version
   instance_class = var.database_config.instance_class
-  
+
   allocated_storage     = var.database_config.allocated_storage
   max_allocated_storage = var.database_config.allocated_storage * 2
   storage_type          = "gp2"
@@ -295,18 +295,18 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
 
   backup_retention_period = var.database_config.backup_retention
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "Mon:04:00-Mon:05:00"
-  
-  multi_az               = var.database_config.multi_az
-  publicly_accessible    = false
-  
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "Mon:04:00-Mon:05:00"
+
+  multi_az            = var.database_config.multi_az
+  publicly_accessible = false
+
   skip_final_snapshot = true
   deletion_protection = false
 
   performance_insights_enabled = local.current_config.monitoring
-  monitoring_interval         = local.current_config.monitoring ? 60 : 0
-  
+  monitoring_interval          = local.current_config.monitoring ? 60 : 0
+
   enabled_cloudwatch_logs_exports = var.security_config.enable_logging ? ["error", "general", "slow"] : []
 
   tags = merge(local.common_tags, {

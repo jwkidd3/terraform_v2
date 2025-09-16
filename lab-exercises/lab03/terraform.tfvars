@@ -1,8 +1,8 @@
 # terraform.tfvars - Production-Ready Variable Values
 
 # Basic configuration
-username = "user1"  # Replace with your assigned username
-environment  = "dev"
+username    = "user1" # Replace with your assigned username
+environment = "dev"
 
 # Application configuration
 application_config = {
@@ -35,7 +35,7 @@ database_config = {
 
 # Security configuration
 security_config = {
-  enable_encryption    = true
+  enable_encryption   = true
   enable_logging      = true
   allowed_cidr_blocks = ["10.0.0.0/16", "172.16.0.0/12"]
   ssl_certificate_arn = ""
