@@ -88,8 +88,8 @@
         .reveal pre code {
             padding: 15px;
             font-size: 0.7em;
-            line-height: 1.3;
-            max-height: 450px;
+            line-height: 1.2;
+            max-height: 400px;
             overflow-y: auto;
             overflow-x: auto;
             word-wrap: normal;
@@ -127,31 +127,31 @@
         .reveal .highlight {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             border-left: 4px solid var(--warning-color);
-            padding: 6px 10px;
-            margin: 6px 0;
+            padding: 4px 8px;
+            margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.75em;
-            line-height: 1.3;
+            font-size: 0.7em;
+            line-height: 1.2;
         }
         
         .reveal .danger {
             background: linear-gradient(135deg, #f8d7da 0%, #fab1a0 100%);
             border-left: 4px solid var(--danger-color);
-            padding: 6px 10px;
-            margin: 6px 0;
+            padding: 4px 8px;
+            margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.75em;
-            line-height: 1.3;
+            font-size: 0.7em;
+            line-height: 1.2;
         }
         
         .reveal .success {
             background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%);
             border-left: 4px solid var(--success-color);
-            padding: 6px 10px;
-            margin: 6px 0;
+            padding: 4px 8px;
+            margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.75em;
-            line-height: 1.3;
+            font-size: 0.7em;
+            line-height: 1.2;
         }
         
         .reveal .terraform-logo {
@@ -164,7 +164,7 @@
         }
         
         .reveal ul, .reveal ol {
-            font-size: 0.75em;
+            font-size: 0.7em;
             line-height: 1.2;
             margin: 0.2em 0 0.2em 0.5em;
         }
@@ -384,7 +384,7 @@
         }
         
         .reveal .lab-callout ul {
-            font-size: 0.75em;
+            font-size: 0.7em;
             line-height: 1.2;
             margin: 0.2em 0;
         }
@@ -611,7 +611,7 @@
                         </div>
                         
                         <h3><span class="emoji">📊</span> Process Transformation</h3>
-                        <table style="width: 100%; font-size: 0.75em; border-collapse: collapse;">
+                        <table style="width: 100%; font-size: 0.7em; border-collapse: collapse;">
                             <tr style="background-color: #ffebee;">
                                 <td style="padding: 5px; border: 1px solid #ccc;"><strong>Traditional:</strong></td>
                                 <td style="padding: 5px; border: 1px solid #ccc;">Plan → Manual → Hope → Document Later</td>
@@ -650,7 +650,7 @@
                         </ol>
 
                         <h3><span class="emoji">🎯</span> Implementation Strategy</h3>
-                        <div style="font-size: 0.75em; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <div style="font-size: 0.7em; background: #f8f9fa; padding: 10px; border-radius: 5px;">
                             <strong>Phase 1:</strong> Proof of Concept (2-4 weeks)<br/>
                             <strong>Phase 2:</strong> Dev Environment Migration (4-8 weeks)<br/>
                             <strong>Phase 3:</strong> Staging Environment (8-12 weeks)<br/>
@@ -661,7 +661,7 @@
                         <h3><span class="emoji">🌍</span> Real-World Enterprise Use Cases</h3>
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🏦</span> Financial Services</h4>
-                            <ul style="font-size: 0.75em;">
+                            <ul style="font-size: 0.7em;">
                                 <li><strong>JP Morgan:</strong> 10,000+ applications on IaC</li>
                                 <li><strong>Goldman Sachs:</strong> 95% infrastructure automated</li>
                                 <li><strong>Benefits:</strong> SOC compliance, disaster recovery, cost optimization</li>
@@ -670,7 +670,7 @@
                         
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🛒</span> E-Commerce & Retail</h4>
-                            <ul style="font-size: 0.75em;">
+                            <ul style="font-size: 0.7em;">
                                 <li><strong>Amazon:</strong> Millions of resources managed via IaC</li>
                                 <li><strong>Target:</strong> Black Friday scaling automation</li>
                                 <li><strong>Benefits:</strong> Auto-scaling, peak load handling, cost efficiency</li>
@@ -679,7 +679,7 @@
                         
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🎬</span> Media & Entertainment</h4>
-                            <ul style="font-size: 0.75em;">
+                            <ul style="font-size: 0.7em;">
                                 <li><strong>Netflix:</strong> Global content delivery at scale</li>
                                 <li><strong>Disney+:</strong> Launch day infrastructure management</li>
                                 <li><strong>Benefits:</strong> Global distribution, elastic scaling, cost control</li>
@@ -1581,6 +1581,55 @@ output "instance_ips" {
                 </div>
             </section>
 
+            <!-- Module Theory Section -->
+            <section>
+                <h2><span class="emoji">📦</span> Introduction to Terraform Modules</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <h3>What are Modules?</h3>
+                        <ul>
+                            <li><strong>Reusable Components:</strong> Group related resources together</li>
+                            <li><strong>DRY Principle:</strong> Write once, use everywhere</li>
+                            <li><strong>Standardization:</strong> Consistent patterns across teams</li>
+                        </ul>
+
+                        <div class="info">
+                            <h4>Basic Module Structure</h4>
+                            <pre><code class="hljs bash">
+modules/web-server/
+├── main.tf      # Resources
+├── variables.tf # Inputs
+├── outputs.tf   # Returns
+                            </code></pre>
+                        </div>
+                    </div>
+
+                    <div class="column">
+                        <h3>Why Use Modules?</h3>
+                        <div class="success">
+                            <ul>
+                                <li><strong>Reusability:</strong> Same module, different environments</li>
+                                <li><strong>Maintainability:</strong> Update once, deploy everywhere</li>
+                                <li><strong>Testing:</strong> Test modules independently</li>
+                                <li><strong>Collaboration:</strong> Share across teams</li>
+                            </ul>
+                        </div>
+
+                        <div class="highlight">
+                            <h4>Module Usage Example</h4>
+                            <pre><code class="hljs terraform">
+module "web_server" {
+  source = "./modules/web-server"
+
+  instance_type = "t3.micro"
+  environment   = "production"
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Lab 5 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
@@ -1772,8 +1821,8 @@ Day 3: Terraform Cloud Enterprise
             margin: 0.03,
 
             // Scaling configuration for better visibility (increased zoom)
-            minScale: 0.5,
-            maxScale: 1.5,
+            minScale: 0.8,
+            maxScale: 2.0,
             
             // Navigation and controls
             hash: true,
