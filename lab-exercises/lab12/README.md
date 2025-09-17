@@ -1,26 +1,26 @@
-# Lab 12: Terraform Registry and Module Sharing
-**Duration:** 45 minutes  
-**Difficulty:** Intermediate  
-**Day:** 3  
-**Environment:** AWS Cloud9 + Terraform Cloud
+# Lab 12: VCS-Driven Terraform Cloud with GitHub Integration
+**Duration:** 45 minutes
+**Difficulty:** Advanced
+**Day:** 3
+**Environment:** GitHub + Terraform Cloud + AWS
 
 ---
 
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Explore the public Terraform Registry
-- Create and structure your own Terraform modules
-- Understand module versioning and publishing
-- Use modules from the Terraform Registry in your configurations
-- Share modules through version control
+- Connect a GitHub repository to Terraform Cloud for VCS-driven workflows
+- Configure Terraform Cloud to automatically pull and build from GitHub
+- Set up webhook-triggered runs when code is pushed to GitHub
+- Understand VCS-driven workspace configuration and best practices
+- Implement a pull-based deployment model with Terraform Cloud
 
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Lab 10 (Terraform Cloud Workspaces)
-- Understanding of Terraform modules from Lab 4
-- GitHub account for module sharing
-- Basic knowledge of module structure
+- Completion of Labs 10-11 (Terraform Cloud fundamentals)
+- GitHub account with repository creation permissions
+- Terraform Cloud account and organization
+- Basic understanding of version control with Git
 
 ---
 
@@ -35,421 +35,333 @@ echo "Your username: $TF_VAR_username"
 
 ---
 
-## 📚 **Exercise 11.1: Exploring the Terraform Registry (15 minutes)**
+## 🔗 **Exercise 12.1: Prepare Infrastructure Code in GitHub (10 minutes)**
 
-### Step 1: Browse the Public Registry
-1. Go to the **Terraform Registry**: https://registry.terraform.io
-2. Search for popular modules:
-   - **VPC**: terraform-aws-modules/vpc/aws
-   - **Security Group**: terraform-aws-modules/security-group/aws
-   - **S3 Bucket**: terraform-aws-modules/s3-bucket/aws
+### Step 1: Create GitHub Repository
+1. Go to GitHub: https://github.com
+2. Click **New Repository**
+3. Repository name: `terraform-vcs-lab12-{username}` (replace with your username)
+4. Description: "VCS-Driven Terraform Cloud Lab 12 - Infrastructure pulled and built from GitHub"
+5. Set to **Public** (required for Terraform Cloud free tier)
+6. Initialize with README: **checked**
+7. Click **Create repository**
 
-### Step 2: Understand Module Documentation
-Pick the **VPC module** and explore:
-1. **Usage examples** - How to use the module
-2. **Inputs** - What variables it accepts
-3. **Outputs** - What values it returns
-4. **Resources** - What AWS resources it creates
-5. **Versions** - Available module versions
-
-### Step 3: Review Module Quality
-Look for indicators of good modules:
-- ✅ Clear documentation
-- ✅ Usage examples
-- ✅ Regular updates
-- ✅ Good version history
-- ✅ Community adoption (download count)
-
----
-
-## 🔧 **Exercise 11.2: Create Your Own Module (20 minutes)**
-
-### Step 1: Create Module Directory Structure
+### Step 2: Clone and Populate Repository
 ```bash
 cd ~/environment
-mkdir terraform-lab12
-cd terraform-lab12
-
-# Create a simple web server module
-mkdir modules
-mkdir modules/web-server
-cd modules/web-server
+git clone https://github.com/YOUR_USERNAME/terraform-vcs-lab12-{username}.git
+cd terraform-vcs-lab12-{username}
 ```
 
-### Step 2: Create Module Files
-**modules/web-server/main.tf:**
-```hcl
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-# Data source for AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-# Security group for web server
-resource "aws_security_group" "web" {
-  name_prefix = "${var.name}-web-"
-  description = "Security group for web server"
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "All outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(var.tags, {
-    Name = "${var.name}-web-sg"
-  })
-}
-
-# Web server instances
-resource "aws_instance" "web" {
-  count = var.instance_count
-
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type         = var.instance_type
-  vpc_security_group_ids = [aws_security_group.web.id]
-
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    server_name = "${var.name}-${count.index + 1}"
-  }))
-
-  tags = merge(var.tags, {
-    Name = "${var.name}-web-${count.index + 1}"
-  })
-}
-```
-
-**modules/web-server/variables.tf:**
-```hcl
-variable "name" {
-  description = "Name prefix for resources"
-  type        = string
-}
-
-variable "instance_count" {
-  description = "Number of instances to create"
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.instance_count >= 1 && var.instance_count <= 5
-    error_message = "Instance count must be between 1 and 5."
-  }
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t3.micro"
-
-  validation {
-    condition = contains([
-      "t3.micro", "t3.small", "t3.medium"
-    ], var.instance_type)
-    error_message = "Instance type must be t3.micro, t3.small, or t3.medium."
-  }
-}
-
-variable "tags" {
-  description = "Tags to apply to resources"
-  type        = map(string)
-  default     = {}
-}
-```
-
-**modules/web-server/outputs.tf:**
-```hcl
-output "instance_ids" {
-  description = "IDs of the EC2 instances"
-  value       = aws_instance.web[*].id
-}
-
-output "public_ips" {
-  description = "Public IP addresses of the instances"
-  value       = aws_instance.web[*].public_ip
-}
-
-output "security_group_id" {
-  description = "ID of the security group"
-  value       = aws_security_group.web.id
-}
-
-output "instance_details" {
-  description = "Complete instance information"
-  value = {
-    for i, instance in aws_instance.web :
-    "web-${i + 1}" => {
-      id        = instance.id
-      public_ip = instance.public_ip
-      az        = instance.availability_zone
-    }
-  }
-}
-```
-
-**modules/web-server/user_data.sh:**
-```bash
-#!/bin/bash
-yum update -y
-yum install -y httpd
-systemctl start httpd
-systemctl enable httpd
-
-cat > /var/www/html/index.html <<EOF
-<html>
-<head><title>${server_name}</title></head>
-<body>
-    <h1>Welcome to ${server_name}!</h1>
-    <p>This server was created using a custom Terraform module.</p>
-    <p>Server: ${server_name}</p>
-    <p>Created: $(date)</p>
-</body>
-</html>
-EOF
-```
-
-**modules/web-server/README.md:**
-```markdown
-# Web Server Module
-
-This module creates simple web servers with Apache HTTP server.
-
-## Usage
-
-```hcl
-module "web_servers" {
-  source = "./modules/web-server"
-
-  name           = "my-app"
-  instance_count = 2
-  instance_type  = "t3.micro"
-
-  tags = {
-    Environment = "development"
-    Project     = "learning"
-  }
-}
-```
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| name | Name prefix for resources | string | n/a | yes |
-| instance_count | Number of instances | number | 1 | no |
-| instance_type | EC2 instance type | string | "t3.micro" | no |
-| tags | Resource tags | map(string) | {} | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| instance_ids | EC2 instance IDs |
-| public_ips | Public IP addresses |
-| security_group_id | Security group ID |
-| instance_details | Complete instance info |
-```
-
-### Step 3: Use Your Module
-Go back to the root directory and create a configuration that uses your module:
+### Step 3: Add Terraform Configuration Files
+Copy the lab files from the lab12 directory to your repository:
 
 ```bash
-cd ../../  # Back to terraform-lab12 root
+# Copy main infrastructure files
+cp ~/environment/lab-exercises/lab12/main.tf .
+cp ~/environment/lab-exercises/lab12/variables.tf .
+cp ~/environment/lab-exercises/lab12/outputs.tf .
+cp ~/environment/lab-exercises/lab12/user_data.sh .
+cp ~/environment/lab-exercises/lab12/terraform.tfvars .
+
+# Update your username in terraform.tfvars
+echo 'username = "YOUR_USERNAME"' > terraform.tfvars
+echo 'environment = "vcs-driven"' >> terraform.tfvars
+echo 'app_version = "v1.0.0"' >> terraform.tfvars
 ```
 
-**main.tf:**
+### Step 4: Prepare Repository for Terraform Cloud
+Remove the placeholder values and prepare for VCS-driven workflow:
+
+**Edit main.tf** - Update the cloud block:
 ```hcl
-terraform {
-  required_version = ">= 1.5"
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+  cloud {
+    organization = "YOUR_TFC_ORG_NAME"  # You'll update this in the next exercise
+
+    workspaces {
+      name = "vcs-lab12-YOUR_USERNAME"  # You'll update this in the next exercise
     }
   }
-}
-
-provider "aws" {
-  region = "us-east-2"
-}
-
-# Use your custom module
-module "web_servers" {
-  source = "./modules/web-server"
-
-  name           = "lab11-demo"
-  instance_count = 2
-  instance_type  = "t3.micro"
-
-  tags = {
-    Environment = "learning"
-    Lab         = "11"
-    Module      = "custom-web-server"
-  }
-}
-
-# Also use a registry module for comparison
-module "s3_bucket" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 3.0"
-
-  bucket = "lab11-demo-bucket-${random_string.suffix.result}"
-
-  tags = {
-    Environment = "learning"
-    Lab         = "11"
-    Module      = "registry-s3"
-  }
-}
-
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
 ```
 
-**outputs.tf:**
-```hcl
-output "web_server_details" {
-  description = "Web server information"
-  value       = module.web_servers.instance_details
-}
+### Step 5: Commit Initial Code
+```bash
+git add .
+git commit -m "Initial Terraform configuration for VCS-driven workflow
 
-output "web_server_ips" {
-  description = "Web server public IPs"
-  value       = module.web_servers.public_ips
-}
+- Add 3-tier web application infrastructure
+- Configure for Terraform Cloud VCS integration
+- Prepare for automated GitHub pulls and builds"
 
-output "s3_bucket_name" {
-  description = "S3 bucket name"
-  value       = module.s3_bucket.s3_bucket_id
-}
+git push origin main
 ```
 
 ---
 
-## 🚀 **Exercise 11.3: Test and Share Your Module (10 minutes)**
+## ☁️ **Exercise 12.2: Connect GitHub Repository to Terraform Cloud (15 minutes)**
 
-### Step 1: Test Your Module
-```bash
-# Initialize and apply
-terraform init
-terraform plan
-terraform apply
+### Step 1: Create VCS-Driven Workspace
+1. Go to Terraform Cloud: https://app.terraform.io
+2. In your organization, click **New Workspace**
+3. Choose **Version control workflow** (this is key!)
+4. Connect to **GitHub**
+5. If first time: Click **Authorize** to allow Terraform Cloud to access GitHub
+6. Select your `terraform-vcs-lab12-{username}` repository from the list
+7. Workspace name: `vcs-lab12-{username}`
+8. Description: "VCS-driven workspace demonstrating GitHub integration"
+9. Click **Create workspace**
 
-# Check outputs
-terraform output
-```
+### Step 2: Understand VCS Integration
+Notice what Terraform Cloud automatically configured:
+- **Repository Connection**: Direct link to your GitHub repo
+- **Webhook**: Automatic webhook created in GitHub (check Settings → Webhooks)
+- **Pull Access**: Terraform Cloud can pull code from your repository
+- **Build Triggers**: Runs will trigger on Git pushes automatically
 
-### Step 2: Test Your Web Servers
-```bash
-# Get the public IPs
-WEB_IPS=$(terraform output -json web_server_ips | jq -r '.[]')
+### Step 3: Configure Workspace for VCS Operations
+1. Go to **Settings** → **General**
+2. **Execution Mode**: Remote (runs in Terraform Cloud)
+3. **Apply Method**: Manual apply (requires approval)
+4. **Terraform Working Directory**: Leave blank (uses repo root)
+5. **VCS Triggers**:
+   - **Automatic speculative plans**: Enabled
+   - **Auto apply**: Disabled (for safety)
+6. **VCS Branch**: `main` (pulls from main branch)
 
-# Test each web server
-for ip in $WEB_IPS; do
-  echo "Testing http://$ip"
-  curl -s "http://$ip" | grep -o '<title>.*</title>'
-done
-```
+### Step 4: Configure Environment Variables
+Add these **Environment Variables** (for AWS access):
+- `AWS_ACCESS_KEY_ID` (mark as sensitive)
+- `AWS_SECRET_ACCESS_KEY` (mark as sensitive)
+- `AWS_DEFAULT_REGION` = `us-east-2`
 
-### Step 3: Prepare for Sharing (Optional)
-If you want to share your module:
+### Step 5: Update Repository Configuration
+Now that you have your workspace name, update your repository:
 
-```bash
-# Create a GitHub repository
-git init
-git add .
-git commit -m "Initial web server module"
-
-# Tag a version
-git tag v1.0.0
-git push origin main
-git push origin v1.0.0
-```
-
-**To use a shared module:**
+1. Go back to your local repository
+2. Edit `main.tf` and update the cloud block:
 ```hcl
-module "web_servers" {
-  source = "git::https://github.com/YOUR_USERNAME/terraform-web-server-module.git?ref=v1.0.0"
-  
-  # module inputs...
+  cloud {
+    organization = "YOUR_ACTUAL_ORG_NAME"  # Use your real org name
+
+    workspaces {
+      name = "vcs-lab12-YOUR_USERNAME"  # Use your real workspace name
+    }
+  }
+```
+
+3. Commit and push the change:
+```bash
+git add main.tf
+git commit -m "Update Terraform Cloud configuration with actual workspace details"
+git push origin main
+```
+
+---
+
+## 🚀 **Exercise 12.3: Test VCS-Driven Builds and Deployments (15 minutes)**
+
+### Step 1: Watch Initial Automatic Build
+1. After pushing your configuration update in the previous step, go to your Terraform Cloud workspace
+2. You should see a **new run triggered automatically** by the Git push
+3. Click on the run to observe:
+   - **Source**: Shows it was triggered by GitHub webhook
+   - **Plan Phase**: Terraform Cloud pulled your code and ran `terraform plan`
+   - **Configuration**: Code was fetched directly from your GitHub repository
+
+### Step 2: Approve and Deploy
+1. Review the **Plan** output showing your infrastructure
+2. Click **Confirm & Apply** to deploy
+3. Watch the **Apply** phase where Terraform Cloud builds your infrastructure
+4. Note that this is running remotely using code pulled from GitHub
+
+### Step 3: Verify VCS-Driven Deployment
+Check your deployment:
+1. Go to **States** → **Latest** → **Outputs** in Terraform Cloud
+2. Find the ALB DNS name
+3. Visit `http://[ALB-DNS-NAME]` to see your application
+4. The web page should show it was deployed via VCS-driven workflow
+
+### Step 4: Demonstrate Code-to-Infrastructure Pipeline
+Make a change to test the VCS integration:
+
+**Edit terraform.tfvars:**
+```hcl
+username = "YOUR_USERNAME"  # Your actual username
+environment = "vcs-driven"
+app_version = "v1.1.0"  # Bump version
+desired_instances = 3    # Scale up
+```
+
+**Commit and push:**
+```bash
+git add terraform.tfvars
+git commit -m "Scale infrastructure and update app version via VCS
+
+- Increase desired_instances from 2 to 3 (auto scaling)
+- Update app_version to v1.1.0
+- Demonstrate VCS-triggered infrastructure changes"
+
+git push origin main
+```
+
+### Step 5: Watch Automatic VCS-Triggered Build
+1. **Immediately** go to your Terraform Cloud workspace
+2. Within seconds, you should see a **new run appear automatically**
+3. This demonstrates the webhook integration:
+   - GitHub detected your push
+   - Webhook notified Terraform Cloud
+   - Terraform Cloud pulled the latest code
+   - New plan/apply cycle initiated automatically
+4. Review the plan showing your scaling changes
+5. Approve the apply to see VCS-driven infrastructure changes
+
+---
+
+## 🔄 **Exercise 12.4: Advanced VCS Features and Branch Workflows (5 minutes)**
+
+### Step 1: Explore VCS Settings
+1. Go to **Settings** → **Version Control** in your workspace
+2. Review the VCS configuration:
+   - **Repository**: Shows your connected GitHub repo
+   - **Branch**: Currently building from `main`
+   - **Webhook URL**: The endpoint GitHub calls
+   - **Include submodules**: For complex repository structures
+
+### Step 2: Test Branch-Based Planning
+Create a feature branch to see speculative plans:
+```bash
+# Create feature branch (won't trigger deployments)
+git checkout -b feature/add-monitoring
+
+# Add a monitoring resource to main.tf
+```
+
+**Add to the end of main.tf:**
+```hcl
+# CloudWatch Alarm for monitoring VCS-driven deployments
+resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+  alarm_name          = "${local.name_prefix}-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "Monitors CPU for VCS-deployed instances"
+  alarm_actions       = []
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web.name
+  }
+
+  tags = local.common_tags
 }
 ```
+
+```bash
+git add main.tf
+git commit -m "Add monitoring for VCS-driven infrastructure
+
+- CloudWatch alarm for high CPU utilization
+- Demonstrates branch-based planning workflow
+- No deployment until merged to main"
+
+git push origin feature/add-monitoring
+```
+
+### Step 3: Observe Speculative Planning
+1. Go to your Terraform Cloud workspace
+2. You should see a **speculative plan** was created
+3. This shows what would happen if the branch were merged
+4. **Key Point**: No actual infrastructure changes because it's not the main branch
+
+### Step 4: Understand VCS-Driven vs CLI-Driven
+Compare the two approaches:
+
+**VCS-Driven (what you just learned):**
+- ✅ Code stored in GitHub
+- ✅ Terraform Cloud pulls and builds automatically
+- ✅ Webhook triggers on Git push
+- ✅ Team collaboration through Git workflows
+- ✅ Infrastructure versioned with application code
+
+**CLI-Driven (Labs 10-11):**
+- Code on local machine
+- Manual terraform commands
+- Direct API calls to Terraform Cloud
+- Good for testing and development
 
 ---
 
 ## 🎯 **Lab Summary**
 
 ### What You Accomplished
-✅ **Registry Exploration** - Browsed and understood public modules  
-✅ **Module Creation** - Built a complete, reusable web server module  
-✅ **Module Documentation** - Created proper README and variable descriptions  
-✅ **Module Testing** - Deployed and tested your custom module  
-✅ **Registry Comparison** - Used both custom and registry modules together  
+✅ **VCS-Driven Workflow** - Connected GitHub repository to Terraform Cloud
+✅ **Automatic Code Pulling** - Terraform Cloud pulls and builds from GitHub automatically
+✅ **Webhook Integration** - GitHub webhooks trigger Terraform Cloud runs
+✅ **Production Infrastructure** - 3-tier web application deployed via VCS workflow
+✅ **Branch-Based Planning** - Speculative plans for feature branches
+✅ **Team Collaboration** - Infrastructure code shared through Git repository
 
-### Key Concepts Learned
-- **Module Structure**: Proper file organization and conventions
-- **Module Interface**: Variables, outputs, and documentation
-- **Module Reusability**: Creating flexible, configurable components
-- **Registry Benefits**: Using proven, community-maintained modules
-- **Version Control**: Tagging and sharing modules
+### Key VCS-Driven Concepts Learned
+- **Repository Integration**: Terraform Cloud connects directly to GitHub
+- **Automatic Builds**: Git pushes trigger infrastructure builds automatically
+- **Code Pulling**: Terraform Cloud fetches code from repository for each run
+- **Webhook Automation**: GitHub notifies Terraform Cloud of code changes
+- **Branch Workflows**: Main branch deploys, feature branches create plans only
 
-### Module Best Practices
-- **Clear Documentation**: README with usage examples
-- **Variable Validation**: Input validation and constraints
-- **Sensible Defaults**: Good default values for optional inputs
-- **Comprehensive Outputs**: Useful return values
-- **Proper Naming**: Descriptive resource and variable names
+### VCS-Driven Benefits Demonstrated
+- **Centralized Code**: All infrastructure code stored in version control
+- **Automatic Triggers**: No manual intervention needed for deployments
+- **Team Collaboration**: Multiple developers can work on infrastructure
+- **Change Tracking**: Git history provides complete audit trail
+- **Branch Protection**: Test changes in branches before merging
+
+### Technical Integration Points
+- GitHub repository containing Terraform configuration
+- Terraform Cloud workspace connected to specific repository
+- Webhook automatically created in GitHub settings
+- Automatic code pulling and building on every push
+- Speculative planning for non-main branches
 
 ---
 
 ## 🧹 **Cleanup**
 ```bash
-terraform destroy
+# Destroy infrastructure via Terraform Cloud UI
+# 1. Go to your workspace in Terraform Cloud
+# 2. Click "Actions" → "Start new run"
+# 3. Choose "Destroy" as the plan type
+# 4. Confirm the destroy
+
+# Clean up local repository (optional)
+cd ~/environment
+rm -rf terraform-vcs-lab12-{username}
+
+# Note: Keep GitHub repository to showcase VCS-driven workflow
 ```
 
 ---
 
-## 🎓 **Next Steps**
-In **Lab 12**, we'll implement **GitHub-triggered Terraform Cloud deployments** to complete your DevOps workflow.
+## 🎓 **Course Conclusion**
+Congratulations! You've completed all 12 labs and now have expertise in:
 
-**Key topics coming up:**
-- VCS-driven workflows
-- GitHub integration
-- Automated deployments
-- GitOps patterns
+**✅ Terraform Fundamentals** (Labs 1-5)
+**✅ Advanced Configuration** (Labs 6-9)
+**✅ Terraform Cloud Integration** (Labs 10-11)
+**✅ VCS-Driven Infrastructure** (Lab 12)
+
+**Key Skills Mastered:**
+- Infrastructure as Code with Terraform
+- Multi-tier AWS architecture design
+- Remote state management with Terraform Cloud
+- VCS-driven workflows with GitHub integration
+- Production-ready infrastructure automation
+
+**Portfolio-Ready Projects:**
+- GitHub repository with production infrastructure code
+- VCS-driven Terraform Cloud workspace
+- Complete infrastructure automation pipeline
+
+You're now equipped to implement Infrastructure as Code in any organization using industry-standard VCS-driven workflows!

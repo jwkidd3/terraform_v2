@@ -1,22 +1,45 @@
-output "terraform_registry_and_modules" {
-  description = "Terraform Registry and Module Sharing information"
+output "application_url" {
+  description = "URL to access the deployed application"
+  value       = "http://${aws_lb.main.dns_name}"
+}
+
+output "vpc_info" {
+  description = "VPC configuration details"
   value = {
-    message              = "Lab 12: Terraform Registry and Module Sharing - Create and use custom modules"
-    registry_exploration = "Browse public Terraform Registry for modules"
-    custom_module_created = "Create your own web-server module"
-    module_structure     = "Understand module organization and best practices"
-    module_sharing       = "Share modules through version control"
+    vpc_id             = aws_vpc.main.id
+    vpc_cidr           = aws_vpc.main.cidr_block
+    public_subnet_ids  = aws_subnet.public[*].id
+    private_subnet_ids = aws_subnet.private[*].id
   }
 }
 
-output "lab_completion_status" {
-  description = "Lab 12 completion checklist"
+output "load_balancer_dns" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.main.dns_name
+}
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for static assets"
+  value       = aws_s3_bucket.static_assets.id
+}
+
+output "auto_scaling_group" {
+  description = "Auto Scaling Group information"
   value = {
-    registry_browsed          = "Explore public Terraform Registry modules"
-    custom_module_built       = "Create custom web-server module structure"
-    module_variables_defined  = "Define module inputs and validation"
-    module_outputs_created    = "Create module outputs for reusability"
-    module_tested            = "Test module with different configurations"
-    module_documentation     = "Document module usage and examples"
+    name         = aws_autoscaling_group.web.name
+    min_size     = aws_autoscaling_group.web.min_size
+    max_size     = aws_autoscaling_group.web.max_size
+    desired_size = aws_autoscaling_group.web.desired_capacity
+  }
+}
+
+output "deployment_info" {
+  description = "Deployment information for GitOps workflow"
+  value = {
+    environment    = var.environment
+    app_version    = var.app_version
+    deployed_by    = "TerraformCloud-GitHub"
+    git_repo       = "terraform-lab12"
+    workspace_type = "VCS-driven"
   }
 }
