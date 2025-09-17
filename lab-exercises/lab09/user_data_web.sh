@@ -1,10 +1,38 @@
 #!/bin/bash
+exec > >(tee /var/log/user-data.log) 2>&1  # Log all output
+
+echo "Starting user data script at $(date)"
+
+# Update system
+echo "Updating system packages..."
 yum update -y
-yum install -y httpd php mysql
+
+# Install Apache HTTP Server and PHP
+echo "Installing Apache and PHP..."
+yum install -y httpd php
+
+echo "Apache installation completed"
+
+# Create web directory if it doesn't exist
+mkdir -p /var/www/html
 
 # Start and enable Apache
+echo "Starting Apache..."
 systemctl start httpd
 systemctl enable httpd
+
+# Wait for service to be ready
+sleep 3
+
+# Verify Apache is running
+if systemctl is-active --quiet httpd; then
+    echo "Apache started successfully"
+else
+    echo "Apache failed to start with systemctl, trying manual start..."
+    # Try to start manually
+    /usr/sbin/httpd -D FOREGROUND &
+    sleep 3
+fi
 
 # Create dynamic web page
 cat <<EOF > /var/www/html/index.php
@@ -62,11 +90,37 @@ cat <<EOF > /var/www/html/index.php
 EOF
 
 # Set proper permissions
-chown apache:apache /var/www/html/index.php
+chown apache:apache /var/www/html/index.php 2>/dev/null || chown www-data:www-data /var/www/html/index.php 2>/dev/null || true
 chmod 644 /var/www/html/index.php
 
 # Restart Apache to ensure everything is loaded
-systemctl restart httpd
+echo "Restarting Apache to load new configuration..."
+if systemctl restart httpd; then
+    echo "Apache restarted successfully"
+else
+    echo "systemctl restart failed, trying manual restart..."
+    pkill -f httpd 2>/dev/null || true
+    sleep 2
+    /usr/sbin/httpd -D FOREGROUND &
+    sleep 2
+fi
 
 # Create health check endpoint
 echo "OK" > /var/www/html/health.html
+chown apache:apache /var/www/html/health.html 2>/dev/null || chown www-data:www-data /var/www/html/health.html 2>/dev/null || true
+
+# Final status check
+echo "Performing final status check..."
+if pgrep httpd > /dev/null; then
+    echo "SUCCESS: Apache is running (PID: $(pgrep httpd | head -1))"
+    echo "Web server listening on port 80"
+    netstat -tlnp | grep :80 || ss -tlnp | grep :80 || echo "Port 80 status check failed"
+else
+    echo "WARNING: Apache does not appear to be running"
+    echo "Attempting one final restart..."
+    systemctl start httpd || /usr/sbin/httpd &
+fi
+
+# Log completion
+echo "Web server setup completed at $(date)"
+echo "Check /var/log/user-data.log for detailed logs"
