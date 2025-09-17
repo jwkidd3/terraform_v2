@@ -54,19 +54,19 @@ cd terraform-lab10
 ```hcl
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
   }
-  
+
   cloud {
     organization = "user1-terraform-training"  # Replace with your org name
-    
+
     workspaces {
-      name = "user1-infrastructure-lab9"      # Replace with your username
+      name = "user1-terraform-cloud-lab10"      # Replace with your username
     }
   }
 }
@@ -88,23 +88,37 @@ variable "environment" {
 
 locals {
   name_prefix = "${var.username}-${var.environment}"
-  
+
   common_tags = {
-    Owner           = var.username
-    Environment     = var.environment
-    ManagedBy       = "TerraformCloud"
-    Workspace       = "infrastructure-lab9"
-    Lab             = "9"
-    DeploymentType  = "Remote"
-    CreatedAt       = timestamp()
+    Owner       = var.username
+    Environment = var.environment
+    ManagedBy   = "TerraformCloud"
+    Lab         = "10"
   }
 }
 
-# Data sources
-data "aws_availability_zones" "available" {
-  state = "available"
+# Simple S3 bucket for demonstrating Terraform Cloud
+resource "aws_s3_bucket" "demo" {
+  bucket = "${local.name_prefix}-demo-${random_string.suffix.result}"
+
+  tags = local.common_tags
 }
 
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# S3 bucket versioning
+resource "aws_s3_bucket_versioning" "demo" {
+  bucket = aws_s3_bucket.demo.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Simple EC2 instance
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -115,419 +129,54 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# VPC for cloud-managed infrastructure
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  name = "${local.name_prefix}-vpc"
-  cidr = "10.100.0.0/16"
-
-  azs             = slice(data.aws_availability_zones.available.names, 0, 2)
-  private_subnets = ["10.100.1.0/24", "10.100.2.0/24"]
-  public_subnets  = ["10.100.101.0/24", "10.100.102.0/24"]
-
-  enable_nat_gateway   = true
-  single_nat_gateway   = true  # Cost optimization for training
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = merge(local.common_tags, {
-    Type = "CloudManagedVPC"
-  })
-}
-
-# Security group for web servers
-resource "aws_security_group" "web" {
-  name_prefix = "${local.name_prefix}-web-"
-  description = "Security group for Terraform Cloud managed web servers"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.100.0.0/16"]  # Only from VPC
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-web-sg"
-  })
-}
-
-# Application Load Balancer
-resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = module.vpc.public_subnets
-
-  enable_deletion_protection = false
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-alb"
-    Type = "ApplicationLoadBalancer"
-  })
-}
-
-# ALB Security Group
-resource "aws_security_group" "alb" {
-  name_prefix = "${local.name_prefix}-alb-"
-  description = "Security group for ALB"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-alb-sg"
-  })
-}
-
-# Target Group
-resource "aws_lb_target_group" "web" {
-  name     = "${local.name_prefix}-web-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = module.vpc.vpc_id
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    interval            = 30
-    matcher             = "200"
-    path                = "/"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
-  }
-
-  tags = local.common_tags
-}
-
-# ALB Listener
-resource "aws_lb_listener" "web" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.web.arn
-  }
-
-  tags = local.common_tags
-}
-
-# Launch Template
-resource "aws_launch_template" "web" {
-  name_prefix   = "${local.name_prefix}-web-"
-  image_id      = data.aws_ami.amazon_linux.id
+resource "aws_instance" "demo" {
+  ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
 
-  vpc_security_group_ids = [aws_security_group.web.id]
-
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    username    = var.username
-    environment = var.environment
-  }))
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = merge(local.common_tags, {
-      Name = "${local.name_prefix}-web-server"
-      Type = "WebServer"
-    })
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# Auto Scaling Group
-resource "aws_autoscaling_group" "web" {
-  name                = "${local.name_prefix}-asg"
-  vpc_zone_identifier = module.vpc.private_subnets
-  target_group_arns   = [aws_lb_target_group.web.arn]
-  health_check_type   = "ELB"
-  health_check_grace_period = 300
-
-  min_size         = 1
-  max_size         = 3
-  desired_capacity = 2
-
-  launch_template {
-    id      = aws_launch_template.web.id
-    version = "$Latest"
-  }
-
-  # Instance refresh configuration
-  instance_refresh {
-    strategy = "Rolling"
-    preferences {
-      min_healthy_percentage = 50
-    }
-  }
-
-  tag {
-    key                 = "Name"
-    value               = "${local.name_prefix}-asg"
-    propagate_at_launch = false
-  }
-
-  dynamic "tag" {
-    for_each = local.common_tags
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
-  }
-}
-
-# CloudWatch Dashboard for monitoring
-resource "aws_cloudwatch_dashboard" "infrastructure" {
-  dashboard_name = "${local.name_prefix}-dashboard"
-
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
-
-        properties = {
-          metrics = [
-            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", aws_lb.main.arn_suffix],
-            [".", "TargetResponseTime", ".", "."],
-            [".", "HTTPCode_Target_2XX_Count", ".", "."]
-          ]
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-2"
-          title   = "ALB Performance Metrics"
-          period  = 300
-        }
-      },
-      {
-        type   = "metric"
-        x      = 0
-        y      = 6
-        width  = 12
-        height = 6
-
-        properties = {
-          metrics = [
-            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", aws_autoscaling_group.web.name],
-            [".", "GroupInServiceInstances", ".", "."],
-            [".", "GroupTotalInstances", ".", "."]
-          ]
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-2"
-          title   = "Auto Scaling Group Metrics"
-          period  = 300
-        }
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-# S3 bucket for application logs and artifacts
-resource "aws_s3_bucket" "app_artifacts" {
-  bucket = "${local.name_prefix}-artifacts-${random_string.bucket_suffix.result}"
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    systemctl start httpd
+    systemctl enable httpd
+    echo "<h1>Terraform Cloud Demo - ${var.username}</h1>" > /var/www/html/index.html
+    echo "<p>Managed by Terraform Cloud</p>" >> /var/www/html/index.html
+  EOF
+  )
 
   tags = merge(local.common_tags, {
-    Type = "ApplicationArtifacts"
+    Name = "${local.name_prefix}-demo-instance"
   })
-}
-
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-# S3 bucket encryption disabled for simplicity in shared training environment
-
-resource "aws_s3_bucket_versioning" "app_artifacts" {
-  bucket = aws_s3_bucket.app_artifacts.id
-  versioning_configuration {
-    status = "Disabled"
-  }
 }
 ```
 
-### Step 3: Create User Data Script
-Create **user_data.sh:**
+### Step 3: Create Outputs File
+Create **outputs.tf:**
 
-```bash
-#!/bin/bash
-yum update -y
-yum install -y httpd awscli
+```hcl
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.demo.id
+}
 
-systemctl start httpd
-systemctl enable httpd
+output "instance_id" {
+  description = "ID of the EC2 instance"
+  value       = aws_instance.demo.id
+}
 
-# Create dynamic content showing Terraform Cloud integration
-cat <<EOF > /var/www/html/index.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Terraform Cloud Managed Infrastructure</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 40px; 
-            background: linear-gradient(135deg, #623ce4 0%, #7c4dff 100%);
-        }
-        .container { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 10px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-        }
-        .header { 
-            color: #623ce4; 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 2px solid #7c4dff;
-            padding-bottom: 20px;
-        }
-        .cloud-badge {
-            background: #623ce4;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            display: inline-block;
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        .info-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 20px; 
-            margin: 30px 0; 
-        }
-        .info-card { 
-            background: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 8px; 
-            border-left: 4px solid #623ce4; 
-        }
-        .feature { 
-            background: #e3f2fd; 
-            padding: 10px; 
-            margin: 10px 0; 
-            border-radius: 5px; 
-        }
-        .status { color: #28a745; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🌩️ Terraform Cloud Managed Infrastructure</h1>
-            <div class="cloud-badge">Remote Execution Environment</div>
-            <h2>Owner: ${username} | Environment: ${environment}</h2>
-        </div>
-        
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>📊 Instance Information</h3>
-                <p><strong>Instance ID:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/instance-id'); ?></p>
-                <p><strong>Instance Type:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/instance-type'); ?></p>
-                <p><strong>AZ:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/placement/availability-zone'); ?></p>
-                <p><strong>Private IP:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/local-ipv4'); ?></p>
-                <p><strong>Launch Time:</strong> $(date)</p>
-            </div>
-            
-            <div class="info-card">
-                <h3>☁️ Terraform Cloud Features</h3>
-                <div class="feature">✅ Remote State Management</div>
-                <div class="feature">✅ Remote Plan & Apply</div>
-                <div class="feature">✅ VCS Integration</div>
-                <div class="feature">✅ Workspace Management</div>
-                <div class="feature">✅ Variable Sets</div>
-                <div class="feature">✅ Policy as Code (Sentinel)</div>
-                <div class="feature">✅ Cost Estimation</div>
-                <div class="feature">✅ Team Collaboration</div>
-            </div>
-            
-            <div class="info-card">
-                <h3>🏗️ Infrastructure Components</h3>
-                <p><strong>VPC:</strong> Custom VPC with public/private subnets</p>
-                <p><strong>Load Balancer:</strong> Application Load Balancer</p>
-                <p><strong>Auto Scaling:</strong> 1-3 instances based on demand</p>
-                <p><strong>Security:</strong> Layered security groups</p>
-                <p><strong>Monitoring:</strong> CloudWatch Dashboard</p>
-                <p><strong>High Availability:</strong> Multi-AZ deployment</p>
-            </div>
-            
-            <div class="info-card">
-                <h3>🔄 Deployment Details</h3>
-                <p><strong>Managed By:</strong> Terraform Cloud</p>
-                <p><strong>Workspace:</strong> infrastructure-lab9</p>
-                <p><strong>Execution:</strong> Remote (Cloud-based)</p>
-                <p><strong>State Storage:</strong> Terraform Cloud</p>
-                <p><strong>Collaboration:</strong> <span class="status">Team-enabled</span></p>
-                <p><strong>Version Control:</strong> <span class="status">Git-integrated</span></p>
-            </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 8px;">
-            <h3>🎉 Successfully Deployed via Terraform Cloud!</h3>
-            <p>This infrastructure was deployed using Terraform Cloud's remote execution capabilities,
-            demonstrating enterprise-grade infrastructure management with collaboration, security, and automation.</p>
-        </div>
-    </div>
-</body>
-</html>
-EOF
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.demo.public_ip
+}
 
-# Set permissions
-chown apache:apache /var/www/html/index.html
-chmod 644 /var/www/html/index.html
-
-# Restart Apache
-systemctl restart httpd
-
-echo "Terraform Cloud managed web server setup completed"
+output "terraform_cloud_workspace" {
+  description = "Terraform Cloud workspace information"
+  value = {
+    workspace_name = "user1-terraform-cloud-lab10"
+    organization   = "user1-terraform-training"
+    execution_mode = "remote"
+  }
+}
 ```
 
 ---
@@ -578,90 +227,33 @@ terraform output
 
 ---
 
-## 🚀 **Exercise 10.3: Advanced Terraform Cloud Features (10 minutes)**
+## 🚀 **Exercise 10.3: Explore Terraform Cloud Features (10 minutes)**
 
-### Step 1: Create Outputs File
-Create **outputs.tf:**
-
-```hcl
-output "application_url" {
-  description = "URL to access the Terraform Cloud managed application"
-  value       = "http://${aws_lb.main.dns_name}"
-}
-
-output "infrastructure_summary" {
-  description = "Summary of Terraform Cloud managed infrastructure"
-  value = {
-    vpc_id                = module.vpc.vpc_id
-    vpc_cidr              = module.vpc.vpc_cidr_block
-    public_subnets        = module.vpc.public_subnets
-    private_subnets       = module.vpc.private_subnets
-    alb_dns_name          = aws_lb.main.dns_name
-    alb_zone_id           = aws_lb.main.zone_id
-    auto_scaling_group    = aws_autoscaling_group.web.name
-    s3_artifacts_bucket   = aws_s3_bucket.app_artifacts.id
-    dashboard_url         = "https://console.aws.amazon.com/cloudwatch/home?region=us-east-2#dashboards:name=${aws_cloudwatch_dashboard.infrastructure.dashboard_name}"
-  }
-}
-
-output "terraform_cloud_details" {
-  description = "Terraform Cloud workspace and execution details"
-  value = {
-    execution_mode        = "remote"
-    state_storage        = "terraform_cloud"
-    workspace_management = "cloud_based"
-    collaboration_enabled = true
-    # cost_estimation not available in free tier
-    policy_enforcement   = "available"
-    remote_operations    = "enabled"
-  }
-}
-
-output "deployment_info" {
-  description = "Information about the current deployment"
-  value = {
-    deployed_by          = "terraform_cloud"
-    environment          = var.environment
-    managed_resources    = "vpc, alb, asg, security_groups, cloudwatch, s3"
-    high_availability    = "multi_az"
-    auto_scaling_enabled = true
-    monitoring_enabled   = true
-    remote_execution     = true
-  }
-}
-
-output "workspace_features" {
-  description = "Terraform Cloud workspace features demonstrated"
-  value = {
-    remote_state         = "✅ Centralized state storage"
-    remote_execution     = "✅ Cloud-based plan/apply"
-    variable_management  = "✅ Secure variable storage"
-    workspace_isolation  = "✅ Isolated execution environment"
-    run_history         = "✅ Complete audit trail"
-    collaboration       = "✅ Team access and permissions"
-    # cost_estimation     = "Available in paid tiers"
-    policy_checks       = "✅ Governance and compliance"
-  }
-}
-```
-
-### Step 2: Test Terraform Cloud Features
+### Step 1: Test Terraform Cloud Features
 1. **State Management**: View state versions in Terraform Cloud UI
 2. **Run Details**: Review plan output and apply status
 3. **Variable Management**: Update variables through the UI
 4. **Run History**: Review previous runs and changes
-5. **Collaboration**: Invite team members (if available)
 
-### Step 3: Explore Advanced Workspace Settings
-1. **General Settings**: 
-   - Auto Apply: Configure automatic applies
-   - Terraform Version: Set specific version
-2. **VCS Settings**: 
-   - Connect to Git repository (optional)
-   - Configure automatic runs on commits
-3. **Notifications**: 
-   - Set up Slack/email notifications
-   - Configure run status alerts
+### Step 2: Test Your Resources
+```bash
+# Check outputs
+terraform output
+
+# Test the web server
+curl http://$(terraform output -raw instance_public_ip)
+
+# Check S3 bucket
+aws s3 ls $(terraform output -raw s3_bucket_name)
+```
+
+### Step 3: Workspace Settings
+1. **General Settings**:
+   - Auto Apply: Keep manual for learning
+   - Terraform Version: Note the version used
+2. **Variables**:
+   - Review environment vs Terraform variables
+   - Update username variable if needed
 
 ---
 

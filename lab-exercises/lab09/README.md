@@ -350,14 +350,6 @@ resource "aws_security_group" "web" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  ingress {
-    description     = "SSH from bastion"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
-  }
-
   egress {
     description = "All outbound traffic"
     from_port   = 0
@@ -372,33 +364,6 @@ resource "aws_security_group" "web" {
   })
 }
 
-# Security Group for Bastion Host
-resource "aws_security_group" "bastion" {
-  name_prefix = "${local.name_prefix}-bastion-"
-  description = "Security group for bastion host"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "All outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-bastion-sg"
-    Type = "BastionSecurityGroup"
-  })
-}
 
 # Security Group for Database
 resource "aws_security_group" "database" {
@@ -494,28 +459,6 @@ resource "aws_lb_listener" "web" {
   })
 }
 
-# Bastion Host in Public Subnet
-resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.public[0].id
-  vpc_security_group_ids      = [aws_security_group.bastion.id]
-  associate_public_ip_address = true
-
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y htop wget curl
-    echo "Bastion Host Ready" > /home/ec2-user/bastion-ready.txt
-  EOF
-  )
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-bastion"
-    Type = "BastionHost"
-    Tier = "Management"
-  })
-}
 
 # Web Servers in Private Subnets
 resource "aws_instance" "web" {
@@ -601,7 +544,7 @@ cat <<EOF > /var/www/html/index.php
                 <li>✅ Application Load Balancer with health checks</li>
                 <li>✅ Layered security groups for network segmentation</li>
                 <li>✅ Dedicated database subnets (no internet access)</li>
-                <li>✅ Bastion host for secure administrative access</li>
+                <li>✅ Private subnets for enhanced security</li>
             </ul>
         </div>
         
@@ -610,7 +553,7 @@ cat <<EOF > /var/www/html/index.php
             <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
             <p><strong>Subnet Type:</strong> Private Application Subnet</p>
             <p><strong>Route Table:</strong> Routes through NAT Gateway</p>
-            <p><strong>Security Group:</strong> Allows HTTP from ALB, SSH from Bastion</p>
+            <p><strong>Security Group:</strong> Allows HTTP from ALB only</p>
         </div>
     </div>
 </body>
@@ -654,10 +597,6 @@ output "application_url" {
   value       = "http://${aws_lb.main.dns_name}"
 }
 
-output "bastion_public_ip" {
-  description = "Public IP of the bastion host"
-  value       = aws_instance.bastion.public_ip
-}
 
 output "web_server_private_ips" {
   description = "Private IP addresses of web servers"
@@ -669,7 +608,6 @@ output "security_groups" {
   value = {
     alb_security_group      = aws_security_group.alb.id
     web_security_group      = aws_security_group.web.id
-    bastion_security_group  = aws_security_group.bastion.id
     database_security_group = aws_security_group.database.id
   }
 }
@@ -708,7 +646,7 @@ done
 - ✅ Configured advanced networking with NAT Gateways and proper routing
 - ✅ Implemented layered security with purpose-built security groups
 - ✅ Deployed Application Load Balancer with health checks and target groups
-- ✅ Created bastion host architecture for secure administrative access
+- ✅ Implemented private subnet architecture for enhanced security
 - ✅ Separated tiers with public, private, and database subnets
 
 **Key Networking Concepts Mastered:**
@@ -722,7 +660,7 @@ done
 - Internet Gateway for public subnet connectivity
 - NAT Gateways for secure private subnet internet access
 - Database subnet isolation (no internet access)
-- Bastion host for secure SSH access to private resources
+- Private subnet isolation for web server security
 - Application Load Balancer for high availability and scalability
 - Health checks and automatic failover capabilities
 

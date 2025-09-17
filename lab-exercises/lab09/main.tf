@@ -34,9 +34,8 @@ locals {
   vpc_cidr    = "10.0.0.0/16"
 
   # Calculate subnet CIDRs dynamically
-  public_subnets   = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets  = ["10.0.11.0/24", "10.0.12.0/24"]
-  database_subnets = ["10.0.21.0/24", "10.0.22.0/24"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
 
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
 
@@ -102,47 +101,27 @@ resource "aws_subnet" "private" {
   })
 }
 
-# Database Subnets (for RDS, ElastiCache)
-resource "aws_subnet" "database" {
-  count = length(local.database_subnets)
 
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = local.database_subnets[count.index]
-  availability_zone = local.availability_zones[count.index]
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-${count.index + 1}"
-    Type = "DatabaseSubnet"
-    Tier = "Database"
-    AZ   = local.availability_zones[count.index]
-  })
-}
-
-# Elastic IPs for NAT Gateways
+# Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
-  count = length(local.public_subnets)
-
   domain     = "vpc"
   depends_on = [aws_internet_gateway.main]
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-nat-eip-${count.index + 1}"
+    Name = "${local.name_prefix}-nat-eip"
     Type = "NATGatewayEIP"
   })
 }
 
-# NAT Gateways
+# Single NAT Gateway (cost optimization)
 resource "aws_nat_gateway" "main" {
-  count = length(local.public_subnets)
-
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
   depends_on    = [aws_internet_gateway.main]
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-nat-${count.index + 1}"
+    Name = "${local.name_prefix}-nat"
     Type = "NATGateway"
-    AZ   = local.availability_zones[count.index]
   })
 }
 
@@ -162,29 +141,19 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table" "private" {
-  count  = length(local.private_subnets)
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+    nat_gateway_id = aws_nat_gateway.main.id
   }
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-private-rt-${count.index + 1}"
+    Name = "${local.name_prefix}-private-rt"
     Type = "PrivateRouteTable"
-    AZ   = local.availability_zones[count.index]
   })
 }
 
-resource "aws_route_table" "database" {
-  vpc_id = aws_vpc.main.id
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-rt"
-    Type = "DatabaseRouteTable"
-  })
-}
 
 # Route Table Associations
 resource "aws_route_table_association" "public" {
@@ -198,25 +167,10 @@ resource "aws_route_table_association" "private" {
   count = length(local.private_subnets)
 
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
-resource "aws_route_table_association" "database" {
-  count = length(local.database_subnets)
 
-  subnet_id      = aws_subnet.database[count.index].id
-  route_table_id = aws_route_table.database.id
-}
-
-# Database subnet group for RDS
-resource "aws_db_subnet_group" "main" {
-  name       = "${local.name_prefix}-db-subnet-group"
-  subnet_ids = aws_subnet.database[*].id
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-db-subnet-group"
-  })
-}
 
 # Security Group for Application Load Balancer
 resource "aws_security_group" "alb" {
@@ -254,33 +208,6 @@ resource "aws_security_group" "alb" {
   })
 }
 
-# Security Group for Bastion Host
-resource "aws_security_group" "bastion" {
-  name_prefix = "${local.name_prefix}-bastion-"
-  description = "Security group for bastion host"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "All outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-bastion-sg"
-    Type = "BastionSecurityGroup"
-  })
-}
 
 # Security Group for Web Servers
 resource "aws_security_group" "web" {
@@ -296,13 +223,6 @@ resource "aws_security_group" "web" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  ingress {
-    description     = "SSH from bastion"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
-  }
 
   egress {
     description = "All outbound traffic"
@@ -318,33 +238,6 @@ resource "aws_security_group" "web" {
   })
 }
 
-# Security Group for Database
-resource "aws_security_group" "database" {
-  name_prefix = "${local.name_prefix}-db-"
-  description = "Security group for database servers"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "MySQL/MariaDB from web servers"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
-
-  ingress {
-    description     = "PostgreSQL from web servers"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-sg"
-    Type = "DatabaseSecurityGroup"
-  })
-}
 
 # Application Load Balancer
 resource "aws_lb" "main" {
@@ -406,28 +299,6 @@ resource "aws_lb_listener" "web" {
   })
 }
 
-# Bastion Host in Public Subnet
-resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.public[0].id
-  vpc_security_group_ids      = [aws_security_group.bastion.id]
-  associate_public_ip_address = true
-
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y htop wget curl
-    echo "Bastion Host Ready" > /home/ec2-user/bastion-ready.txt
-  EOF
-  )
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-bastion"
-    Type = "BastionHost"
-    Tier = "Management"
-  })
-}
 
 # Web Servers in Private Subnets
 resource "aws_instance" "web" {

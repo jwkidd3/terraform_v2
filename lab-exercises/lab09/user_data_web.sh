@@ -72,8 +72,8 @@ cat <<EOF > /var/www/html/index.php
                 <li>✅ NAT Gateways for secure outbound internet access</li>
                 <li>✅ Application Load Balancer with health checks</li>
                 <li>✅ Layered security groups for network segmentation</li>
-                <li>✅ Dedicated database subnets (no internet access)</li>
-                <li>✅ Bastion host for secure administrative access</li>
+                <li>✅ Simple 2-tier architecture (web and data layers)</li>
+                <li>✅ Private subnets for enhanced security</li>
             </ul>
         </div>
 
@@ -81,8 +81,8 @@ cat <<EOF > /var/www/html/index.php
             <h3>Network Configuration</h3>
             <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
             <p><strong>Subnet Type:</strong> Private Application Subnet</p>
-            <p><strong>Route Table:</strong> Routes through NAT Gateway</p>
-            <p><strong>Security Group:</strong> Allows HTTP from ALB, SSH from Bastion</p>
+            <p><strong>Route Table:</strong> Routes through single NAT Gateway (cost optimized)</p>
+            <p><strong>Security Group:</strong> Allows HTTP from ALB only</p>
         </div>
     </div>
 </body>
@@ -148,8 +148,8 @@ cat <<EOF > /var/www/html/index.html
                 <li>✅ NAT Gateways for secure outbound internet access</li>
                 <li>✅ Application Load Balancer with health checks</li>
                 <li>✅ Layered security groups for network segmentation</li>
-                <li>✅ Dedicated database subnets (no internet access)</li>
-                <li>✅ Bastion host for secure administrative access</li>
+                <li>✅ Simple 2-tier architecture (web and data layers)</li>
+                <li>✅ Private subnets for enhanced security</li>
             </ul>
         </div>
 
