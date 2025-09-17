@@ -372,14 +372,17 @@ resource "aws_lb_target_group" "web" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
+    unhealthy_threshold = 3
+    timeout             = 10
     interval            = 30
-    path                = "/"
+    path                = "/health.html"
     matcher             = "200"
     port                = "traffic-port"
     protocol            = "HTTP"
   }
+
+  # Give instances time to start up
+  deregistration_delay = 60
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-web-tg"
