@@ -81,7 +81,8 @@ variable "instance_count" {
 
 # Simple S3 bucket
 resource "aws_s3_bucket" "app_bucket" {
-  bucket = "${var.environment}-${random_string.suffix.result}"
+  bucket        = "${var.environment}-${random_string.suffix.result}"
+  force_destroy = true
 
   tags = {
     Environment = var.environment

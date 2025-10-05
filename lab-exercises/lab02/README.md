@@ -296,8 +296,9 @@ resource "random_id" "bucket_suffix" {
 
 # S3 bucket for application storage
 resource "aws_s3_bucket" "app_storage" {
-  bucket = local.bucket_name
-  
+  bucket        = local.bucket_name
+  force_destroy = true
+
   tags = merge(local.common_tags, {
     Name        = "${local.name_prefix}-storage"
     Purpose     = "Application Storage"

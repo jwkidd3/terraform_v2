@@ -99,7 +99,8 @@ locals {
 
 # Simple S3 bucket for demonstrating Terraform Cloud
 resource "aws_s3_bucket" "demo" {
-  bucket = "${local.name_prefix}-demo-${random_string.suffix.result}"
+  bucket        = "${local.name_prefix}-demo-${random_string.suffix.result}"
+  force_destroy = true
 
   tags = local.common_tags
 }

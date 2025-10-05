@@ -1312,44 +1312,29 @@ resource "aws_instance" "web" {
                 </section>
 
                 <section>
-                    <h3>Remote State with Locking</h3>
-                    <pre><code class="language-hcl"># S3 backend with DynamoDB locking
+                    <h3>Terraform Cloud Remote State</h3>
+                    <pre><code class="language-hcl"># Terraform Cloud backend
 terraform {
-  backend "s3" {
-    bucket         = "company-terraform-state"
-    key            = "infrastructure/production/terraform.tfstate"
-    region         = "us-east-2"
-    encrypt        = true
-    dynamodb_table = "terraform-state-lock"
-    
-    # Additional security
-    kms_key_id = "alias/terraform-state-key"
-    
-    # Workspace support
-    workspace_key_prefix = "workspaces"
-  }
-}
+  cloud {
+    organization = "my-organization"
 
-# State file versioning and backup
-resource "aws_s3_bucket_versioning" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-  
-  rule {
-    id     = "state_file_lifecycle"
-    status = "Enabled"
-    
-    noncurrent_version_expiration {
-      noncurrent_days = 30
+    workspaces {
+      name = "production-infrastructure"
     }
   }
-}</code></pre>
+}
+
+# Benefits of Terraform Cloud state:
+# - Automatic state locking
+# - State versioning and backup
+# - Encryption at rest and in transit
+# - Team collaboration features
+# - Cost estimation
+# - Policy enforcement
+# - No infrastructure to manage</code></pre>
+                    <div class="success">
+                        <strong>Best Practice:</strong> Terraform Cloud provides enterprise-grade state management without requiring S3/DynamoDB infrastructure setup.
+                    </div>
                 </section>
 
                 <section>

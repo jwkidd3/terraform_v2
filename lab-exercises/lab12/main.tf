@@ -339,7 +339,8 @@ resource "aws_autoscaling_group" "web" {
 
 # S3 Bucket for static assets
 resource "aws_s3_bucket" "static_assets" {
-  bucket = "${local.name_prefix}-static-${random_string.bucket_suffix.result}"
+  bucket        = "${local.name_prefix}-static-${random_string.bucket_suffix.result}"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Purpose = "StaticAssets"

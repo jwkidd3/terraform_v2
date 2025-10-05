@@ -614,12 +614,12 @@
                 <div class="three-column" style="margin-top: 20px;">
                     <div class="column">
                         <div class="info">
-                            <h4>🧪 Lab 6: Remote State</h4>
+                            <h4>🧪 Lab 6: Local State Management</h4>
                             <ul style="font-size: 0.7em;">
-                                <li>S3 + DynamoDB backend setup</li>
-                                <li>State locking & encryption</li>
-                                <li>Migration from local state</li>
-                                <li>Lifecycle policies & cost optimization</li>
+                                <li>State file structure & inspection</li>
+                                <li>State manipulation commands</li>
+                                <li>State backup & recovery</li>
+                                <li>Shared environment best practices</li>
                             </ul>
                         </div>
                     </div>
@@ -667,14 +667,14 @@
                     <div class="column">
                         <div class="info" style="padding: 15px;">
                             <h4>🗄️ Lab 6: Local State Management</h4>
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Production-ready state backend implementation</p>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Understanding and managing Terraform state</p>
                             <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>S3 Backend:</strong> Encrypted bucket with versioning, lifecycle policies</li>
-                                <li><strong>DynamoDB Locking:</strong> Prevent concurrent modifications</li>
-                                <li><strong>State Migration:</strong> Move from local to remote with validation</li>
-                                <li><strong>Security:</strong> KMS encryption, IAM policies, bucket policies</li>
-                                <li><strong>Cost Optimization:</strong> Lifecycle rules, intelligent tiering</li>
-                                <li><strong>Monitoring:</strong> CloudWatch metrics, SNS notifications</li>
+                                <li><strong>State Structure:</strong> Understanding state file format and contents</li>
+                                <li><strong>State Commands:</strong> terraform state list, show, rm, and import</li>
+                                <li><strong>State Operations:</strong> Safe manipulation and recovery techniques</li>
+                                <li><strong>Dependency Tracking:</strong> How Terraform manages resource relationships</li>
+                                <li><strong>Shared Environments:</strong> Best practices for team collaboration</li>
+                                <li><strong>State Security:</strong> Protecting sensitive data in state files</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
                                 <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Master team collaboration state patterns used by 90% of enterprise Terraform implementations</p>
@@ -1172,19 +1172,19 @@ output "application_endpoint" {
             <section class="lab-callout" data-background-color="#17a2b8">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">☁️</span> State Management Challenge!</h1>
-                    <h2><span class="emoji">🗄️</span> Lab 6: Remote State Management</h2>
+                    <h2><span class="emoji">🗄️</span> Lab 6: Local State Management</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Implement secure S3 + DynamoDB backend with encryption</li>
-                            <li>✅ Configure state locking to prevent concurrent modifications</li>
-                            <li>✅ Migrate local state to production-ready remote backend</li>
-                            <li>✅ Handle lifecycle policies, versioning, and cost optimization</li>
+                            <li>✅ Understand Terraform state file structure and contents</li>
+                            <li>✅ Use state commands for inspection and manipulation</li>
+                            <li>✅ Practice state backup and recovery techniques</li>
+                            <li>✅ Apply best practices for shared environment workflows</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build production-ready state management for team collaboration!</p>
+
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Master state management fundamentals for team collaboration!</p>
                     </div>
                     <h2 style="margin-top: 30px; font-size: 2em;">🌊 Master State Management!</h2>
                 </div>
@@ -1865,11 +1865,11 @@ terraform state rm aws_instance.old</code></pre>
                 </div>
             </section>
 
-            <!-- Section 3: Data Sources and Remote State -->
+            <!-- Section 3: Data Sources and Integration -->
             <section>
                 <section class="section-divider">
-                    <h2>📊 Section 3: Data Sources & Remote State</h2>
-                    <p>Integrate existing infrastructure and enable cross-stack collaboration</p>
+                    <h2>📊 Section 3: Data Sources & Integration</h2>
+                    <p>Integrate existing infrastructure and discover resources dynamically</p>
                 </section>
 
 
@@ -1931,63 +1931,65 @@ data "aws_subnets" "private" {
                         </div>
                     </div>
                 </section>                <section>
-                    <h3>Remote State Data Source</h3>
-                    <pre><code class="language-hcl"># Reference another Terraform state
-data "terraform_remote_state" "network" {
-  backend = "s3"
-  config = {
-    bucket = "my-terraform-state"
-    key    = "network/terraform.tfstate"
-    region = "us-east-2"
+                    <h3>Cross-Stack Integration Patterns</h3>
+                    <pre><code class="language-hcl"># Using outputs from modules
+module "vpc" {
+  source = "./modules/networking"
+  cidr   = "10.0.0.0/16"
+}
+
+module "application" {
+  source    = "./modules/app"
+  vpc_id    = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
+}
+
+# Or using data sources to discover existing resources
+data "aws_vpc" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.username}-vpc"]
   }
 }
 
-# Use remote state outputs
 resource "aws_instance" "app" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  subnet_id              = data.terraform_remote_state.network.outputs.private_subnet_ids[0]
-  vpc_security_group_ids = [data.terraform_remote_state.network.outputs.app_security_group_id]
-  
-  tags = {
-    Name = "app-server"
-  }
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  subnet_id     = data.aws_subnets.private.ids[0]
 }</code></pre>
                     <div class="info">
-                        <strong>Best Practice:</strong> Structure your infrastructure into logical layers (network, security, compute) with separate state files.
+                        <strong>Best Practice:</strong> Use module composition for infrastructure layers. Enterprise remote state patterns are covered in Terraform Cloud (Day 3).
                     </div>
                 </section>
 
                 <section>
-                    <h3>Remote State Configuration</h3>
-                    <pre><code class="language-hcl"># Backend configuration
-terraform {
-  backend "s3" {
-    bucket         = "my-terraform-state"
-    key            = "infrastructure/production/terraform.tfstate"
-    region         = "us-east-2"
-    encrypt        = true
-    dynamodb_table = "terraform-state-lock"
-  }
-}</code></pre>
+                    <h3>State Management Concepts</h3>
+                    <pre><code class="language-bash"># Common state commands
+terraform state list                    # List all resources
+terraform state show aws_instance.app   # Show resource details
+terraform state rm aws_instance.old     # Remove from state
+terraform state mv aws_instance.a aws_instance.b  # Rename resource
+
+# State backup
+cp terraform.tfstate terraform.tfstate.backup</code></pre>
                     <div class="two-column">
                         <div class="column">
-                            <h4>Benefits</h4>
+                            <h4>State Best Practices</h4>
                             <ul>
-                                <li>Team collaboration</li>
-                                <li>State locking</li>
-                                <li>Backup and versioning</li>
-                                <li>Security and encryption</li>
+                                <li>Always backup before operations</li>
+                                <li>Use unique resource naming</li>
+                                <li>Protect sensitive data</li>
+                                <li>Version control .gitignore</li>
                             </ul>
                         </div>
                         <div class="column">
-                            <h4>Configuration Options</h4>
+                            <h4>Enterprise Options</h4>
                             <ul>
+                                <li>Terraform Cloud (Day 3)</li>
                                 <li>S3 + DynamoDB (AWS)</li>
                                 <li>Azure Storage</li>
                                 <li>GCS (Google Cloud)</li>
                                 <li>Consul (HashiCorp)</li>
-                                <li>etcd (Kubernetes)</li>
                             </ul>
                         </div>
                     </div>

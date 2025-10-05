@@ -126,7 +126,8 @@ data "aws_availability_zones" "available" {
 
 # S3 bucket for application assets
 resource "aws_s3_bucket" "app_assets" {
-  bucket = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
+  bucket        = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-assets"

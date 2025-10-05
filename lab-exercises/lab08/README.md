@@ -342,7 +342,8 @@ resource "aws_lb" "app" {
 
 # S3 Bucket for application data with environment-specific settings
 resource "aws_s3_bucket" "app_data" {
-  bucket = "${local.name_prefix}-app-data-${random_string.bucket_suffix.result}"
+  bucket        = "${local.name_prefix}-app-data-${random_string.bucket_suffix.result}"
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-app-data"
