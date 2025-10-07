@@ -17,7 +17,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
 }
 
 # Local values for environment-specific logic
