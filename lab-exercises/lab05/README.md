@@ -390,6 +390,12 @@ variable "username" {
   description = "Your unique username"
   type        = string
 }
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-2"
+}
 ```
 
 **main.tf:**
@@ -410,7 +416,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
 }
 
 # Use the module to create a development application
@@ -536,3 +542,9 @@ terraform destroy
 ```
 
 Remember: This module demonstrates production-ready patterns while remaining focused on core learning objectives. Each component serves a specific purpose in teaching module design and Terraform best practices.
+
+---
+
+## **Next Steps**
+
+Lab 6 covers state management, where you will learn how Terraform tracks your infrastructure using state files, practice safe state manipulation techniques, and understand best practices for managing state in shared environments.

@@ -17,7 +17,7 @@ By the end of this lab, you will be able to:
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Lab 9 (Terraform Cloud Integration)
+- Completion of Lab 10 (Terraform Cloud Integration)
 - Terraform Cloud account (free tier sufficient)
 - Understanding of basic Terraform concepts
 
@@ -34,7 +34,7 @@ echo "Your username: $TF_VAR_username"
 
 ---
 
-## 🏗️ **Exercise 10.1: Multiple Workspaces (20 minutes)**
+## 🏗️ **Exercise 11.1: Multiple Workspaces (20 minutes)**
 
 ### Step 1: Create Lab Directory
 ```bash
@@ -44,6 +44,9 @@ cd terraform-lab11
 ```
 
 ### Step 2: Simple Infrastructure Configuration
+
+> **Note — CLI-driven workflow authentication:** Since this lab uses the **CLI-driven workflow**, you do not need a `cloud {}` block in your configuration. Instead, authenticate with `terraform login` (shown in Exercise 11.4) and select the target workspace with `terraform workspace select`. Terraform Cloud will manage remote state and execution automatically once the workspace is selected.
+
 **main.tf:**
 ```hcl
 terraform {
@@ -53,6 +56,10 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
     }
   }
 }
@@ -77,6 +84,11 @@ variable "instance_count" {
   description = "Number of instances"
   type        = number
   default     = 1
+}
+
+variable "username" {
+  description = "Your unique username"
+  type        = string
 }
 
 # Simple S3 bucket
@@ -149,13 +161,13 @@ git commit -m "Initial workspace configuration"
 
 ---
 
-## ☁️ **Exercise 10.2: Create Development Workspace (10 minutes)**
+## ☁️ **Exercise 11.2: Create Development Workspace (10 minutes)**
 
 ### Step 1: Create Development Workspace
 1. Go to Terraform Cloud: https://app.terraform.io
 2. In your organization, click **New Workspace**
 3. Choose **CLI-driven workflow** (easier for learning)
-4. Workspace name: `lab10-development`
+4. Workspace name: `lab11-development`
 5. Description: "Development environment workspace"
 
 ### Step 2: Configure Workspace Variables
@@ -176,12 +188,12 @@ Add these **Terraform Variables**:
 
 ---
 
-## 🚀 **Exercise 10.3: Create Staging Workspace (10 minutes)**
+## 🚀 **Exercise 11.3: Create Staging Workspace (10 minutes)**
 
 ### Step 1: Create Staging Workspace
 1. Click **New Workspace**
 2. **CLI-driven workflow**
-3. Workspace name: `lab10-staging`
+3. Workspace name: `lab11-staging`
 4. Description: "Staging environment workspace"
 
 ### Step 2: Configure Different Variables
@@ -200,10 +212,10 @@ Add **Terraform Variables** (different from dev):
 
 ---
 
-## 🔧 **Exercise 10.4: Test and Compare Workspaces (5 minutes)**
+## 🔧 **Exercise 11.4: Test and Compare Workspaces (5 minutes)**
 
 ### Step 1: Deploy to Development
-1. Switch to **lab10-development** workspace
+1. Switch to **lab11-development** workspace
 2. In your terminal:
 ```bash
 # Login to Terraform Cloud
@@ -214,7 +226,7 @@ terraform init
 
 # Select the development workspace when prompted
 # Or set it explicitly:
-terraform workspace select lab10-development
+terraform workspace select lab11-development
 
 # Plan and apply
 terraform plan
@@ -222,11 +234,11 @@ terraform apply
 ```
 
 ### Step 2: Deploy to Staging
-1. Switch to **lab10-staging** workspace in the UI
+1. Switch to **lab11-staging** workspace in the UI
 2. In your terminal:
 ```bash
 # Switch workspace
-terraform workspace select lab10-staging
+terraform workspace select lab11-staging
 
 # Plan and apply
 terraform plan
@@ -272,20 +284,20 @@ In Terraform Cloud UI:
 ## 🧹 **Cleanup**
 ```bash
 # Destroy resources in both workspaces
-terraform workspace select lab10-development
+terraform workspace select lab11-development
 terraform destroy
 
-terraform workspace select lab10-staging
+terraform workspace select lab11-staging
 terraform destroy
 ```
 
 ---
 
 ## 🎓 **Next Steps**
-In **Lab 11**, we'll explore **Terraform modules and the registry** to create reusable infrastructure components.
+In **Lab 12**, we'll explore **VCS integration and automated workflows** to set up GitHub-triggered Terraform Cloud deployments.
 
 **Key topics coming up:**
-- Module creation and publishing
-- Using the Terraform Registry
-- Module versioning and best practices
-- Private module sharing
+- GitHub VCS integration with Terraform Cloud
+- Webhook-triggered runs and automated deployments
+- Pull request workflows and collaborative reviews
+- GitOps patterns for infrastructure automation

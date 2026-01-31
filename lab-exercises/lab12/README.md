@@ -66,7 +66,7 @@ cp ~/environment/lab-exercises/lab12/terraform.tfvars .
 
 # Update your username in terraform.tfvars
 echo 'username = "YOUR_USERNAME"' > terraform.tfvars
-echo 'environment = "vcs-driven"' >> terraform.tfvars
+echo 'environment = "gitops"' >> terraform.tfvars
 echo 'app_version = "v1.0.0"' >> terraform.tfvars
 ```
 
@@ -187,7 +187,7 @@ Make a change to test the VCS integration:
 **Edit terraform.tfvars:**
 ```hcl
 username = "YOUR_USERNAME"  # Your actual username
-environment = "vcs-driven"
+environment = "gitops"
 app_version = "v1.1.0"  # Bump version
 desired_instances = 3    # Scale up
 ```

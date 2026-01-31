@@ -36,7 +36,7 @@ locals {
     Environment = var.environment
     Project     = "MultiEnvironment"
     ManagedBy   = "Terraform"
-    Lab         = "7"
+    Lab         = "8"
   }
 }
 

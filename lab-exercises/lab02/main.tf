@@ -1,28 +1,86 @@
-# main.tf - Main resource definitions
+# main.tf - AWS Infrastructure Deployment
 
-# Generate random ID for unique resource naming
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.4"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# Data Sources - Query existing AWS infrastructure
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+}
+
+# Generate random ID for unique bucket naming
 resource "random_id" "bucket_suffix" {
   byte_length = 4
-  
-  keepers = {
-    username = var.username
-    project  = var.project_name
-  }
 }
 
 # S3 bucket for application storage
 resource "aws_s3_bucket" "app_storage" {
-  bucket        = local.bucket_name
+  bucket        = "${var.username}-${var.environment}-storage-${random_id.bucket_suffix.hex}"
   force_destroy = true
 
-  tags = merge(local.common_tags, {
-    Name        = "${local.name_prefix}-storage"
-    Purpose     = "Application Storage"
-    Compliance  = "Development"
-  })
+  tags = {
+    Name        = "${var.username}-${var.environment}-storage"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
+  }
 }
-
-
 
 resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
   bucket = aws_s3_bucket.app_storage.id
@@ -33,21 +91,26 @@ resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
   restrict_public_buckets = true
 }
 
-# Security group for EC2 instances
+# Security group for EC2 instance
 resource "aws_security_group" "web_sg" {
-  name        = "${local.name_prefix}-web-security-group"
-  description = "Security group for web servers"
+  name        = "${var.username}-${var.environment}-web-sg"
+  description = "Security group for web server"
   vpc_id      = data.aws_vpc.default.id
 
-  dynamic "ingress" {
-    for_each = local.ingress_rules
-    content {
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
-      protocol    = ingress.value.protocol
-      cidr_blocks = ingress.value.cidr_blocks
-      description = ingress.value.description
-    }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP access"
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "SSH access"
   }
 
   egress {
@@ -58,104 +121,40 @@ resource "aws_security_group" "web_sg" {
     description = "All outbound traffic"
   }
 
-  tags = merge(local.common_tags, {
-    Name    = "${local.name_prefix}-web-sg"
-    Purpose = "Web Server Security"
-  })
-}
-
-# IAM role for EC2 instances
-resource "aws_iam_role" "ec2_role" {
-  name = "${local.name_prefix}-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-resource "aws_iam_role_policy" "ec2_s3_access" {
-  name = "${local.name_prefix}-ec2-s3-access"
-  role = aws_iam_role.ec2_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = "${aws_s3_bucket.app_storage.arn}/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket"
-        ]
-        Resource = aws_s3_bucket.app_storage.arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${local.name_prefix}-ec2-profile"
-  role = aws_iam_role.ec2_role.name
+  tags = {
+    Name        = "${var.username}-${var.environment}-web-sg"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
+  }
 }
 
 # EC2 instance
 resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_types[var.environment]
-  subnet_id              = data.aws_subnet.selected[0].id
+  instance_type          = "t3.micro"
+  subnet_id              = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  
-  monitoring = var.enable_monitoring
-  
-  metadata_options {
-    http_endpoint = "enabled"
-    http_tokens   = "required"
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    systemctl start httpd
+    systemctl enable httpd
+    echo "<h1>Terraform Lab 2 - ${var.username}</h1>" > /var/www/html/index.html
+    echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
+    echo "<p>Region: ${var.aws_region}</p>" >> /var/www/html/index.html
+    echo "<p>Deployed with Terraform!</p>" >> /var/www/html/index.html
+  EOF
+  )
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-web-server"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
   }
-
-  root_block_device {
-    volume_type = "gp3"
-    volume_size = 20
-    encrypted   = false
-    
-    tags = merge(local.common_tags, {
-      Name = "${local.name_prefix}-root-volume"
-    })
-  }
-
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    bucket_name   = aws_s3_bucket.app_storage.bucket
-    username      = var.username
-    environment   = var.environment
-    project_name  = var.project_name
-    aws_region    = data.aws_region.current.name
-  }))
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-web-server"
-    Type = "WebServer"
-  })
-
-  depends_on = [
-    aws_iam_role_policy.ec2_s3_access,
-    aws_s3_bucket.app_storage
-  ]
 }

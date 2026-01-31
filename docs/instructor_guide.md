@@ -24,7 +24,7 @@
 ## Instructor Setup Checklist
 
 ### 1. Technical Environment
-- [ ] **Cloud Accounts**: AWS, Azure, GCP sandboxes with appropriate permissions
+- [ ] **Cloud Accounts**: AWS sandboxes with appropriate permissions, Terraform Cloud accounts
 - [ ] **Terraform Installation**: Latest stable version (1.5+) 
 - [ ] **Lab Environment**: Pre-provisioned infrastructure for exercises
 - [ ] **Backup Plans**: Alternative cloud accounts, offline scenarios
@@ -638,7 +638,7 @@ Ask participants to explain:
 
 ---
 
-## Day 3: Advanced Terraform Techniques and Real-World Applications
+## Day 3: Terraform Cloud and Enterprise Workflows
 
 ### Morning Session (4 hours)
 
@@ -646,394 +646,144 @@ Ask participants to explain:
 **Interactive Review:**
 - "Show me your favorite module from yesterday"
 - "What's the difference between locals and variables?"
-- "How do workspaces help with team collaboration?"
+- "How do registry modules help with code reuse?"
 
-#### 9:15-9:45 | Multi-Cloud Strategies (30 min)
-**Teaching Approach**: Business case first, technical implementation second
+#### 9:15-9:45 | Introduction to Terraform Cloud (30 min)
+**Teaching Approach**: Problems with local execution first, then Terraform Cloud solutions
 
-**Business Scenarios:**
-1. **Vendor Risk Mitigation**: "Don't put all eggs in one basket"
-2. **Compliance Requirements**: "Data must stay in specific regions/clouds"
-3. **Cost Optimization**: "Use best price/performance for each workload"
-4. **Disaster Recovery**: "Geographic distribution for resilience"
+**Key Problems to Illustrate:**
+1. **State Conflicts**: "What happens when two people run Terraform at the same time?"
+2. **Credential Management**: "AWS keys on everyone's laptop is a security risk"
+3. **Consistency**: "Different Terraform versions across the team"
+4. **Audit Trail**: "Who changed what and when?"
 
-**Technical Implementation:**
-```hcl
-# Multi-provider configuration
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0"
-    }
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 5.0"
-    }
-  }
-}
-
-# Provider configurations
-provider "aws" {
-  region = "us-east-2"
-}
-
-provider "azurerm" {
-  features {}
-}
-
-provider "google" {
-  project = "my-project"
-  region  = "us-central1"
-}
+**Terraform Cloud Benefits:**
+```
+Local Terraform              →  Terraform Cloud
+─────────────────────────────────────────────────
+Local state files            →  Remote encrypted state
+No locking                   →  Automatic state locking
+Keys on laptops              →  Centralized variable management
+No audit trail               →  Complete run history
+Version inconsistency        →  Consistent execution environment
 ```
 
-#### 9:45-10:45 | Multi-Cloud Setup Lab (60 min)
-**Lab Objective**: Deploy resources across multiple clouds
+**Interactive Discussion:**
+- "Who has experienced state conflicts in their team?"
+- "How do you currently manage credentials?"
 
-**Exercise Structure:**
-- **AWS**: Primary application infrastructure
-- **Azure**: Backup storage and disaster recovery
-- **GCP**: Analytics and machine learning workloads
+#### 9:45-10:45 | Lab 10: Terraform Cloud Integration (45 min)
+**Lab Objective**: Set up Terraform Cloud and deploy infrastructure remotely
 
-**Simplified Example:**
-```hcl
-# AWS - Main application
-resource "aws_instance" "web" {
-  ami           = data.aws_ami.latest.id
-  instance_type = "t3.medium"
-  
-  tags = {
-    Name = "Primary-Web-Server"
-    Cloud = "AWS"
-  }
-}
+**Key Steps:**
+1. Create Terraform Cloud organization and workspace
+2. Configure the `cloud` block in Terraform configuration
+3. Set up environment variables (AWS credentials) and Terraform variables
+4. Run `terraform login`, `terraform init`, `terraform plan`, `terraform apply`
+5. Monitor remote execution in the Terraform Cloud UI
 
-# Azure - Backup storage
-resource "azurerm_storage_account" "backup" {
-  name                     = "${var.project_name}backup${var.environment}"
-  resource_group_name      = azurerm_resource_group.main.name
-  location                = "East US"
-  account_tier            = "Standard"
-  account_replication_type = "GRS"
-  
-  tags = {
-    purpose = "backup"
-    cloud   = "Azure"
-  }
-}
+**Teaching During Lab:**
+- Walk through the cloud block configuration
+- Show how variables are managed securely in the UI
+- Demonstrate the run history and state versions
+- Point out the plan output differences (remote vs local)
 
-# GCP - Analytics
-resource "google_bigquery_dataset" "analytics" {
-  dataset_id = "${var.project_name}_analytics_${var.environment}"
-  location   = "US"
-  
-  labels = {
-    purpose = "analytics"
-    cloud   = "gcp"
-  }
-}
+**Common Issues & Solutions:**
+- **Auth token**: Run `terraform login` and follow the browser flow
+- **Variable missing**: Add `username` as a Terraform variable in the workspace
+- **Permission errors**: Verify AWS credentials are set as environment variables
+
+#### 11:00-11:15 | Workspace Concepts (15 min)
+**Teaching Method**: Build on Lab 10 experience
+
+**Key Concepts:**
+- Each workspace = separate state + variables + run history
+- Workspace naming conventions (project-environment pattern)
+- Tags for organization
+- CLI-driven vs VCS-driven workflows
+
+#### 11:15-12:00 | Lab 11: Terraform Cloud Workspaces (45 min)
+**Lab Objective**: Create multiple workspaces for environment separation
+
+**Key Steps:**
+1. Create `lab11-development` and `lab11-staging` workspaces
+2. Configure different variables per workspace (instance_count, environment)
+3. Add workspace tags for organization
+4. Deploy to development, then switch and deploy to staging
+5. Compare workspace state, variables, and resources
+
+**Teaching During Lab:**
+- "Notice how each workspace has its own state"
+- "Same code, different configurations per environment"
+- Show workspace comparison in the UI
+
+#### 12:00-12:30 | VCS Integration Concepts (30 min)
+**Teaching Method**: Show the GitOps workflow
+
+**Workflow Diagram:**
+```
+Developer pushes code → GitHub triggers webhook →
+Terraform Cloud runs plan → Team reviews plan →
+Approve and apply → Infrastructure updated
 ```
 
-**Instructor Focus:**
-- "Each cloud has strengths - use them appropriately"
-- "Provider configuration is key"
-- "State management becomes more complex"
+**Key Benefits:**
+- Automatic plans on pull requests
+- Code review before infrastructure changes
+- Complete audit trail tied to git commits
+- No need to run Terraform locally
 
-#### 11:00-12:30 | Production Multi-Cloud Lab (90 min)
-**Advanced Scenario**: Complete multi-cloud architecture
+### Afternoon Session (3 hours)
 
-**Architecture Overview:**
-- **AWS**: Primary compute, networking, databases
-- **Azure**: Backup, disaster recovery, Windows workloads  
-- **GCP**: Data analytics, machine learning
+#### 1:30-2:15 | Lab 12: VCS Integration and GitOps (45 min)
+**Lab Objective**: Connect GitHub to Terraform Cloud for automated deployments
 
-**Lab Components:**
-1. **Cross-cloud networking** (VPC peering, VPN)
-2. **Data replication** (S3 → Azure Blob → GCS)
-3. **Disaster recovery** (automated failover)
+**Key Steps:**
+1. Create a GitHub repository with Terraform configuration
+2. Create a VCS-driven workspace in Terraform Cloud
+3. Connect the GitHub repository to the workspace
+4. Push a change and watch the automatic plan
+5. Review and approve the apply
 
-**Sample Advanced Configuration:**
-```hcl
-# Cross-cloud data replication
-resource "aws_s3_bucket_replication_configuration" "azure_backup" {
-  depends_on = [aws_s3_bucket_versioning.source]
-  
-  role   = aws_iam_role.replication.arn
-  bucket = aws_s3_bucket.source.id
-  
-  rule {
-    id     = "replicate-to-azure"
-    status = "Enabled"
-    
-    destination {
-      bucket        = "arn:aws:s3:::${azurerm_storage_account.backup.name}"
-      storage_class = "STANDARD_IA"
-    }
-  }
-}
+**Teaching During Lab:**
+- Walk through the GitHub OAuth connection
+- Show automatic plan generation on push
+- Demonstrate the pull request workflow
+- Explain branch-based environment strategies
 
-# Cross-cloud networking
-resource "aws_vpn_connection" "azure_connection" {
-  customer_gateway_id = aws_customer_gateway.azure.id
-  type               = "ipsec.1"
-  vpn_gateway_id     = aws_vpn_gateway.main.id
-  
-  tags = {
-    Name = "AWS-Azure-VPN"
-  }
-}
-```
+#### 2:15-2:45 | Course Review and Best Practices (30 min)
+**Format**: Interactive discussion
 
-**Teaching Strategy:**
-- Provide scaffold code to save time
-- Focus on concepts, not syntax memorization
-- Emphasize real-world applicability
+**Key Takeaways by Day:**
+- **Day 1**: Terraform fundamentals, provider configuration, variables, state basics
+- **Day 2**: Modules, registry modules, multi-environment patterns, VPC networking
+- **Day 3**: Terraform Cloud, workspaces, VCS integration
 
-### Afternoon Session (4 hours)
+**Best Practices Summary:**
+1. Always use remote state in team environments
+2. Use modules for reusable infrastructure
+3. Validate variables with validation blocks
+4. Tag all resources consistently
+5. Use VCS-driven workflows for production
 
-#### 1:30-2:00 | Advanced Terraform Functions (30 min)
-**Teaching Method**: Problem-solution pairs
+#### 2:45-3:15 | Certification Preparation (30 min)
+**HashiCorp Terraform Associate Overview:**
+- Exam format and objectives
+- Topics covered in this course vs additional study needed
+- Recommended study timeline
+- Practice resources
 
-**Common Scenarios:**
-1. **Data Transformation**: Converting between formats
-2. **Conditional Logic**: Environment-based decisions
-3. **Loop Constructs**: Handling lists and maps
-4. **String Manipulation**: Generating names and paths
-
-**Live Coding Examples:**
-```hcl
-# Conditional resource creation
-resource "aws_instance" "web" {
-  count = var.environment == "prod" ? 3 : 1
-  
-  instance_type = (
-    var.environment == "prod" ? "t3.large" :
-    var.environment == "staging" ? "t3.medium" :
-    "t3.small"
-  )
-}
-
-# Complex loops
-locals {
-  server_configs = {
-    for server in var.servers : server.name => {
-      instance_type = lookup(server, "instance_type", "t3.micro")
-      subnet_id    = var.subnets[server.availability_zone]
-      
-      tags = merge(
-        var.default_tags,
-        server.tags,
-        {
-          Name = "${var.project_name}-${server.name}"
-          AZ   = server.availability_zone
-        }
-      )
-    }
-  }
-}
-
-# String functions
-locals {
-  resource_names = [
-    for i in range(var.instance_count) :
-    "${var.project_name}-web-${format("%02d", i + 1)}"
-  ]
-  
-  backup_bucket_name = replace(
-    lower("${var.project_name}-${var.environment}-backups"),
-    "_",
-    "-"
-  )
-}
-```
-
-#### 2:00-3:45 | Complete Automation Lab (105 min)
-**Capstone Exercise**: End-to-end automated infrastructure
-
-**Project**: Deploy a complete web application stack with:
-- Multi-tier architecture (web, app, database)
-- Auto-scaling and load balancing
-- Monitoring and alerting
-- CI/CD integration
-- Security best practices
-
-**Lab Phases:**
-
-**Phase 1: Foundation** (25 min)
-```hcl
-# Complete networking setup
-module "networking" {
-  source = "./modules/networking"
-  
-  environment = var.environment
-  vpc_cidr   = "10.0.0.0/16"
-  
-  public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnet_cidrs = ["10.0.10.0/24", "10.0.11.0/24"]
-  database_subnet_cidrs = ["10.0.20.0/24", "10.0.21.0/24"]
-}
-
-# Security groups
-module "security" {
-  source = "./modules/security"
-  
-  vpc_id = module.networking.vpc_id
-  
-  allowed_cidr_blocks = var.allowed_cidr_blocks
-  database_access_sgs = [module.compute.app_security_group_id]
-}
-```
-
-**Phase 2: Application Tier** (40 min)
-```hcl
-# Load balancer and auto-scaling
-module "web_tier" {
-  source = "./modules/web-tier"
-  
-  vpc_id                = module.networking.vpc_id
-  public_subnet_ids     = module.networking.public_subnet_ids
-  private_subnet_ids    = module.networking.private_subnet_ids
-  web_security_group_id = module.security.web_security_group_id
-  
-  min_size     = var.web_tier_min_size
-  max_size     = var.web_tier_max_size
-  desired_size = var.web_tier_desired_size
-  
-  health_check_path = "/health"
-  
-  tags = local.common_tags
-}
-
-# Application servers
-module "app_tier" {
-  source = "./modules/app-tier"
-  
-  vpc_id                = module.networking.vpc_id
-  private_subnet_ids    = module.networking.private_subnet_ids
-  app_security_group_id = module.security.app_security_group_id
-  
-  database_endpoint = module.database.endpoint
-  cache_endpoint   = module.cache.endpoint
-  
-  min_size     = var.app_tier_min_size
-  max_size     = var.app_tier_max_size
-  desired_size = var.app_tier_desired_size
-  
-  tags = local.common_tags
-}
-```
-
-**Phase 3: Data Tier** (40 min)
-```hcl
-# RDS Database
-module "database" {
-  source = "./modules/database"
-  
-  vpc_id               = module.networking.vpc_id
-  database_subnet_ids  = module.networking.database_subnet_ids
-  database_security_group_id = module.security.database_security_group_id
-  
-  engine         = "postgres"
-  engine_version = "13.7"
-  instance_class = var.database_instance_class
-  
-  allocated_storage = var.database_allocated_storage
-  multi_az         = var.environment == "prod"
-  
-  backup_retention_period = var.environment == "prod" ? 30 : 7
-  
-  tags = local.common_tags
-}
-
-# ElastiCache for caching
-module "cache" {
-  source = "./modules/cache"
-  
-  vpc_id              = module.networking.vpc_id
-  private_subnet_ids  = module.networking.private_subnet_ids
-  cache_security_group_id = module.security.cache_security_group_id
-  
-  node_type      = var.cache_node_type
-  num_cache_nodes = var.environment == "prod" ? 3 : 1
-  
-  tags = local.common_tags
-}
-```
-
-**Instructor Role During Lab:**
-- Provide pre-built modules to save time
-- Focus on integration patterns
-- Encourage experimentation with parameters
-- Help troubleshoot complex dependency issues
-
-#### 4:00-4:15 | Ecosystem Overview (15 min)
-**Quick Tour**: Essential tools and integrations
+#### 3:15-3:45 | Ecosystem Overview (30 min)
+**Quick Tour**: Essential tools and integrations beyond this course
 
 **Key Tools:**
-1. **Terragrunt**: DRY configurations
+1. **Sentinel**: Policy as code (Terraform Cloud paid tier)
 2. **tflint**: Code quality and linting
-3. **Checkov**: Security scanning
-4. **Atlantis**: Pull request automation
-5. **Terraform Cloud**: Remote execution platform
+3. **Checkov/tfsec**: Security scanning
+4. **Atlantis**: Open-source pull request automation
+5. **Terragrunt**: DRY configurations for multiple environments
 
-**Demo:**
-```bash
-# Show quick examples of each tool
-tflint .
-checkov -f main.tf
-terragrunt plan-all
-```
-
-#### 4:15-4:45 | Final Integration Lab (30 min)
-**Objective**: Add enterprise tools to the complete solution
-
-**Exercises:**
-1. **Add tflint configuration** (.tflint.hcl)
-2. **Set up Checkov scanning** 
-3. **Configure Terragrunt** for DRY code
-4. **Add cost estimation** with infracost
-
-**Sample Integrations:**
-```yaml
-# .github/workflows/terraform.yml
-name: 'Terraform'
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      
-    - name: Terraform Format Check
-      run: terraform fmt -check
-      
-    - name: Run TFLint
-      run: tflint --init && tflint
-      
-    - name: Run Checkov
-      run: checkov -f . --framework terraform
-      
-    - name: Terraform Plan
-      run: terraform plan -out=tfplan
-      
-    - name: Cost Estimation
-      run: infracost breakdown --path=.
-```
-
-#### 4:45-5:00 | Course Wrap-up (15 min)
+#### 3:45-4:00 | Course Wrap-up (15 min)
 **Final Discussion:**
 - "What will you implement first at work?"
 - "What was your biggest 'aha' moment?"
@@ -1091,11 +841,11 @@ jobs:
 3. How do workspaces help with environment management?
 4. What's the difference between locals and variables?
 
-**Day 3 - Advanced**
-1. What are the benefits and challenges of multi-cloud deployments?
-2. How do you handle complex conditional logic in Terraform?
-3. What tools would you use to improve code quality in a Terraform project?
-4. How would you implement CI/CD for Terraform in your organization?
+**Day 3 - Terraform Cloud**
+1. What problems does Terraform Cloud solve compared to local execution?
+2. How do workspaces help with multi-environment management?
+3. What are the benefits of VCS-driven workflows?
+4. How do you manage sensitive variables in Terraform Cloud?
 
 ---
 

@@ -58,7 +58,13 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
+}
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-2"
 }
 
 variable "username" {
@@ -256,7 +262,7 @@ output "state_info" {
     backend_type      = "local"
     state_location    = "${path.cwd}/terraform.tfstate"
     workspace         = terraform.workspace
-    resource_count    = length(values(data.terraform_remote_state.self))
+    state_file        = "terraform.tfstate"
   }
 }
 

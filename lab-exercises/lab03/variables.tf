@@ -37,24 +37,10 @@ variable "application_config" {
     name    = string
     version = string
     port    = number
-    health_check = object({
-      path     = string
-      interval = number
-      timeout  = number
-    })
-    scaling = object({
-      min_size         = number
-      max_size         = number
-      desired_capacity = number
-    })
   })
   validation {
     condition     = var.application_config.port >= 1024 && var.application_config.port <= 65535
     error_message = "Application port must be between 1024 and 65535."
-  }
-  validation {
-    condition     = var.application_config.scaling.min_size <= var.application_config.scaling.desired_capacity && var.application_config.scaling.desired_capacity <= var.application_config.scaling.max_size
-    error_message = "Scaling configuration: min_size <= desired_capacity <= max_size."
   }
 }
 
@@ -85,41 +71,6 @@ variable "instance_types" {
   }
 }
 
-# Sensitive database configuration
-variable "database_config" {
-  description = "Database configuration with sensitive data"
-  type = object({
-    engine            = string
-    engine_version    = string
-    instance_class    = string
-    allocated_storage = number
-    username          = string
-    password          = string
-    backup_retention  = number
-    multi_az          = bool
-  })
-  sensitive = true
-  validation {
-    condition     = length(var.database_config.password) >= 12
-    error_message = "Database password must be at least 12 characters long."
-  }
-  validation {
-    condition     = can(regex("[A-Z]", var.database_config.password)) && can(regex("[a-z]", var.database_config.password)) && can(regex("[0-9]", var.database_config.password))
-    error_message = "Database password must contain uppercase, lowercase, and numeric characters."
-  }
-}
-
-# List of availability zones
-variable "availability_zones" {
-  description = "List of availability zones to deploy into"
-  type        = list(string)
-  default     = []
-  validation {
-    condition     = length(var.availability_zones) >= 2 || length(var.availability_zones) == 0
-    error_message = "Either specify at least 2 availability zones or leave empty for auto-detection."
-  }
-}
-
 # Enterprise tagging configuration
 variable "tags" {
   description = "Common tags to apply to all resources"
@@ -134,14 +85,12 @@ variable "security_config" {
     enable_encryption   = bool
     enable_logging      = bool
     allowed_cidr_blocks = list(string)
-    ssl_certificate_arn = string
     backup_enabled      = bool
   })
   default = {
     enable_encryption   = false
     enable_logging      = true
     allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-    ssl_certificate_arn = ""
     backup_enabled      = true
   }
   validation {
@@ -160,7 +109,6 @@ variable "cost_allocation" {
     project_code = string
     cost_center  = string
     billing_team = string
-    budget_alert = number
   })
   validation {
     condition     = can(regex("^[A-Z]{3}-[0-9]{4}$", var.cost_allocation.project_code))
@@ -173,8 +121,4 @@ variable "key_pair_name" {
   description = "Name of the EC2 Key Pair for SSH access"
   type        = string
   default     = ""
-  validation {
-    condition     = var.key_pair_name == "" || length(var.key_pair_name) > 0
-    error_message = "Key pair name must be empty or a valid key pair name."
-  }
 }

@@ -493,15 +493,15 @@
                                 <li>Basic Terraform workflow with containers</li>
                                 <li>Foundation concepts without cloud complexity</li></ul>
                             </li>
-                            <li><strong>Lab 2: First AWS Terraform Configuration</strong>
-                                <ul><li>Deploy production-ready AWS infrastructure with 8+ resources</li>
-                                <li>Enterprise security patterns with IAM roles and encrypted storage</li>
-                                <li>Complete workflow with advanced tagging strategies</li></ul>
+                            <li><strong>Lab 2: AWS Infrastructure with Terraform</strong>
+                                <ul><li>Deploy S3 bucket, EC2 instance, and security group</li>
+                                <li>Use data sources for AMI lookup and VPC discovery</li>
+                                <li>Variable validation and resource tagging</li></ul>
                             </li>
-                            <li><strong>Lab 3: Advanced Variables and Data Sources</strong>
-                                <ul><li>Build auto-scaling web applications with 12+ AWS resources</li>
-                                <li>Advanced variable validation and complex data types</li>
-                                <li>Enterprise monitoring with CloudWatch and security groups</li></ul>
+                            <li><strong>Lab 3: Advanced Variables and Configuration</strong>
+                                <ul><li>Complex variable types: objects, maps, lists</li>
+                                <li>Advanced validation with regex and CIDR checks</li>
+                                <li>Dynamic blocks, conditionals, and locals</li></ul>
                             </li>
                             <li><strong>Lab 4: Dependencies & Lifecycle</strong>
                                 <ul><li>Complex resource relationships</li>
@@ -586,8 +586,8 @@
                         
                         <h3><span class="emoji">💸</span> Real Business Impact</h3>
                         <ul style="font-size: 0.85em;">
-                            <li><strong>Downtime Costs:</strong> $5,600 per minute average for enterprise</li>
-                            <li><strong>Labor Inefficiency:</strong> 60-70% of ops time spent on manual tasks</li>
+                            <li><strong>Downtime Costs:</strong> Unplanned outages are expensive — automation reduces recovery time</li>
+                            <li><strong>Labor Inefficiency:</strong> Significant ops time spent on repetitive manual tasks</li>
                             <li><strong>Security Vulnerabilities:</strong> Manual processes miss security updates</li>
                             <li><strong>Compliance Failures:</strong> Can't prove configuration compliance</li>
                             <li><strong>Innovation Paralysis:</strong> Fear of change slows business growth</li>
@@ -630,14 +630,14 @@
                 <h2><span class="emoji">📈</span> Enterprise Infrastructure as Code: Market Reality & Success Stories</h2>
                 <div class="two-column">
                     <div class="column">
-                        <h3><span class="emoji">📊</span> Industry Adoption Statistics (2024)</h3>
+                        <h3><span class="emoji">📊</span> Why Organizations Adopt IaC</h3>
                         <ul style="font-size: 0.8em;">
-                            <li><strong>76% of enterprises</strong> now use IaC for production workloads</li>
-                            <li><strong>89% report</strong> improved deployment reliability</li>
-                            <li><strong>67% reduction</strong> in infrastructure-related incidents</li>
-                            <li><strong>45% faster</strong> time-to-market for new applications</li>
-                            <li><strong>$2.3M average</strong> annual savings per enterprise</li>
-                            <li><strong>92% compliance improvement</strong> in regulated industries</li>
+                            <li><strong>Consistency:</strong> Eliminate configuration drift across environments</li>
+                            <li><strong>Speed:</strong> Provision infrastructure in minutes instead of days</li>
+                            <li><strong>Reliability:</strong> Repeatable deployments reduce human error</li>
+                            <li><strong>Scalability:</strong> Manage hundreds of resources with the same effort as one</li>
+                            <li><strong>Cost Control:</strong> Track and optimize infrastructure spend through code review</li>
+                            <li><strong>Compliance:</strong> Enforce security policies and audit trails automatically</li>
                         </ul>
                         
                         <h3><span class="emoji">🏆</span> Key Success Factors</h3>
@@ -698,7 +698,7 @@
                             </tr>
                             <tr style="background-color: #e3f2fd;">
                                 <td style="padding: 4px; border: 1px solid #ccc;"><strong>Spotify</strong></td>
-                                <td style="padding: 4px; border: 1px solid #ccc;">Multi-cloud automation</td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Infrastructure automation</td>
                             </tr>
                             <tr>
                                 <td style="padding: 4px; border: 1px solid #ccc;"><strong>Uber</strong></td>
@@ -716,11 +716,11 @@
                         <h3>Enterprise Adoption Statistics</h3>
                         <div class="highlight">
                             <ul>
-                                <li><strong>87% of enterprises</strong> are adopting IaC (2024)</li>
-                                <li><strong>60% faster</strong> deployment times</li>
-                                <li><strong>45% reduction</strong> in infrastructure costs</li>
-                                <li><strong>70% fewer</strong> configuration incidents</li>
-                                <li><strong>3x faster</strong> disaster recovery</li>
+                                <li><strong>Growing adoption</strong> of IaC across enterprises of all sizes</li>
+                                <li><strong>Faster deployments</strong> through automated provisioning</li>
+                                <li><strong>Lower costs</strong> via right-sizing and lifecycle management</li>
+                                <li><strong>Fewer incidents</strong> from consistent, tested configurations</li>
+                                <li><strong>Faster recovery</strong> by rebuilding from code instead of manual steps</li>
                             </ul>
                         </div>
                         
@@ -1212,7 +1212,7 @@ Configuration → Planned → Creating → Created → Updating → Updated → 
             <section class="lab-callout" data-background-color="#28a745">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">☁️</span> Next Challenge: AWS Cloud Infrastructure!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 2: First AWS Terraform Configuration</h2>
+                    <h2><span class="emoji">⚙️</span> Lab 2: AWS Infrastructure with Terraform</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
@@ -1359,14 +1359,14 @@ terraform fmt -recursive
             <section class="lab-callout" data-background-color="#fd7e14">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">📊</span> Next Challenge: Dynamic Configuration!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 3: Variables and Data Sources</h2>
+                    <h2><span class="emoji">⚙️</span> Lab 3: Advanced Variables and Configuration</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Build auto-scaling web applications with 12+ AWS resources</li>
-                            <li>✅ Implement advanced variable validation and complex data types</li>
-                            <li>✅ Deploy enterprise monitoring with CloudWatch integration</li>
-                            <li>✅ Master dynamic configuration patterns for multi-environment use</li>
+                            <li>✅ Complex variable types: objects, maps, and validation rules</li>
+                            <li>✅ Dynamic blocks and conditional resource creation</li>
+                            <li>✅ Locals for computed values and tagging strategies</li>
+                            <li>✅ Data sources for dynamic infrastructure discovery</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1669,7 +1669,7 @@ module "web_server" {
                         </div>
 
                         <div class="highlight">
-                            <p><strong>🔬 Lab 2: First AWS Terraform Configuration</strong></p>
+                            <p><strong>🔬 Lab 2: AWS Infrastructure with Terraform</strong></p>
                             <ul>
                                 <li>Deploy production-ready infrastructure with 8+ resources</li>
                                 <li>Implement enterprise security with IAM and encryption</li>
@@ -1680,7 +1680,7 @@ module "web_server" {
                         </div>
 
                         <div class="success">
-                            <p><strong>🔬 Lab 3: Advanced Variables and Data Sources</strong></p>
+                            <p><strong>🔬 Lab 3: Advanced Variables and Configuration</strong></p>
                             <ul>
                                 <li>Advanced variable types with validation and complex objects</li>
                                 <li>Dynamic resource discovery with sophisticated data sources</li>

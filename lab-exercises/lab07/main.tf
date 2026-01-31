@@ -13,7 +13,7 @@ terraform {
   }
   
   # Using local backend for this lab
-  # Remote state configuration is covered in Lab 5
+  # Remote state configuration is covered in Lab 6
 }
 
 provider "aws" {
@@ -67,7 +67,7 @@ locals {
     Environment = var.environment
     Project     = "RegistryModules"
     ManagedBy   = "Terraform"
-    Lab         = "6"
+    Lab         = "7"
   }
 }
 

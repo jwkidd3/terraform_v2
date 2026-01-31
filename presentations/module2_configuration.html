@@ -627,10 +627,10 @@
                         <div class="success">
                             <h4>🧪 Lab 7: Registry Modules</h4>
                             <ul style="font-size: 0.7em;">
-                                <li>6+ module integration</li>
-                                <li>VPC, ALB, RDS, S3 modules</li>
-                                <li>KMS encryption & Parameter Store</li>
-                                <li>Enterprise patterns & best practices</li>
+                                <li>3 registry modules (VPC, SG, S3)</li>
+                                <li>EC2 with ALB deployment</li>
+                                <li>Module outputs and cross-references</li>
+                                <li>Multi-environment tfvars patterns</li>
                             </ul>
                         </div>
                     </div>
@@ -648,7 +648,7 @@
                 </div>
                 <div class="enterprise" style="margin-top: 15px;">
                     <h4>📈 Industry Impact & Career Advancement</h4>
-                    <p><strong>Market Differentiation:</strong> These advanced configuration patterns are used by 95% of Fortune 500 companies. Master skills directly applicable to <strong>DevOps Engineer ($95k-$150k)</strong>, <strong>Cloud Architect ($120k-$180k)</strong>, and <strong>Platform Engineer ($110k-$160k)</strong> positions. Gain expertise in enterprise patterns that separate senior practitioners from junior users.</p>
+                    <p><strong>Career Impact:</strong> These configuration patterns are widely used in enterprise environments. Master skills directly applicable to DevOps Engineer, Cloud Architect, and Platform Engineer roles. Gain expertise in enterprise patterns that separate senior practitioners from junior users.</p>
                 </div>
             </section>
 
@@ -683,15 +683,15 @@
                     </div>
                     <div class="column">
                         <div class="success" style="padding: 15px;">
-                            <h4>🔧 Lab 7: Advanced Multi-Module Composition</h4>
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Enterprise registry modules & production patterns</p>
+                            <h4>🔧 Lab 7: Working with Registry Modules</h4>
+                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Using Terraform Registry modules for infrastructure</p>
                             <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>Enterprise Registry Modules:</strong> VPC, Security, Database, Load Balancing</li>
-                                <li><strong>Cross-Module Dependencies:</strong> Output consumption, data passing</li>
-                                <li><strong>Secrets Management:</strong> Parameter Store, KMS encryption</li>
-                                <li><strong>Production Patterns:</strong> Blue/green ready, high availability</li>
-                                <li><strong>Monitoring Integration:</strong> CloudWatch, SNS, dashboards</li>
-                                <li><strong>Cost Tags:</strong> Comprehensive resource tagging strategy</li>
+                                <li><strong>Registry Modules:</strong> VPC, Security Group, and S3 modules</li>
+                                <li><strong>Module Configuration:</strong> Input variables and module outputs</li>
+                                <li><strong>Cross-Module References:</strong> Connecting module outputs to other resources</li>
+                                <li><strong>EC2 with ALB:</strong> Application Load Balancer and web servers</li>
+                                <li><strong>Resource Tagging:</strong> Consistent tagging across modules</li>
+                                <li><strong>Multi-Environment:</strong> tfvars for different environments</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
                                 <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Build enterprise-grade multi-tier architectures with professional module composition</p>
@@ -724,12 +724,12 @@
                             <h4>🌐 Lab 9: Advanced Networking with VPC</h4>
                             <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Production networking & security architecture</p>
                             <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>Multi-AZ VPC:</strong> Public, private, database subnets</li>
-                                <li><strong>Application Load Balancer:</strong> Multi-target, health checks</li>
+                                <li><strong>2-Tier VPC:</strong> Public and private subnets across AZs</li>
+                                <li><strong>Application Load Balancer:</strong> Health checks, web tier routing</li>
                                 <li><strong>Security Groups:</strong> Layered security, least privilege</li>
-                                <li><strong>NAT Gateways:</strong> High availability, cost optimization</li>
-                                <li><strong>Route Tables:</strong> Complex routing, security zones</li>
-                                <li><strong>Network ACLs:</strong> Additional security layer implementation</li>
+                                <li><strong>NAT Gateway:</strong> Private subnet internet access</li>
+                                <li><strong>Route Tables:</strong> Public and private routing</li>
+                                <li><strong>Auto Scaling:</strong> EC2 instances in private subnets</li>
                             </ul>
                             <div style="background: rgba(98, 60, 228, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
                                 <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Design enterprise networking architectures with security best practices and high availability</p>
@@ -2205,7 +2205,7 @@ module "vpc" {
             <section class="lab-callout" data-background-color="#20c997">
                 <div style="text-align: center; color: white;">
                     <h1><span class="emoji">🌐</span> Networking Architecture Challenge!</h1>
-                    <h2><span class="emoji">🏗️</span> Lab 9: VPC Networking and Multi-Tier Architecture</h2>
+                    <h2><span class="emoji">🏗️</span> Lab 9: VPC Networking and 2-Tier Architecture</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">

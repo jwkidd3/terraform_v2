@@ -6,6 +6,7 @@ output "state_info" {
     backend_type   = "local"
     state_location = "${path.cwd}/terraform.tfstate"
     workspace      = terraform.workspace
+    state_file     = "terraform.tfstate"
   }
 }
 

@@ -1,4 +1,4 @@
-# data.tf - Advanced Data Sources for Dynamic Discovery
+# data.tf - Data Sources for Dynamic Discovery
 
 # Find the latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {
@@ -47,34 +47,4 @@ data "aws_subnets" "default" {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
   }
-}
-
-# Get subnet details for each subnet
-data "aws_subnet" "default" {
-  for_each = toset(data.aws_subnets.default.ids)
-  id       = each.value
-}
-
-# Find the default security group
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = data.aws_vpc.default.id
-}
-
-# Get current AWS partition (useful for ARN construction)
-data "aws_partition" "current" {}
-
-
-# Get Route 53 hosted zone (if exists)
-data "aws_route53_zone" "main" {
-  count        = var.security_config.ssl_certificate_arn != "" ? 1 : 0
-  name         = "example.com"
-  private_zone = false
-}
-
-# Find SSL certificate (if specified)
-data "aws_acm_certificate" "main" {
-  count    = var.security_config.ssl_certificate_arn != "" ? 1 : 0
-  domain   = "example.com" # Replace with actual domain
-  statuses = ["ISSUED"]
 }

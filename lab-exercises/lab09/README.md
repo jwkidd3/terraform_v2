@@ -1,29 +1,29 @@
-# Lab 9: VPC Networking and Multi-Tier Architecture
-**Duration:** 45 minutes  
-**Difficulty:** Intermediate  
-**Day:** 2  
+# Lab 9: VPC Networking and 2-Tier Architecture
+**Duration:** 45 minutes
+**Difficulty:** Intermediate
+**Day:** 2
 **Environment:** AWS Cloud9
 
 ---
 
-## 🎯 **Learning Objectives**
+## Learning Objectives
 By the end of this lab, you will be able to:
 - Design and implement a production-ready VPC with public and private subnets
-- Configure advanced routing, NAT Gateways, and Internet connectivity
-- Deploy a multi-tier application architecture across availability zones
+- Configure advanced routing, a NAT Gateway, and Internet connectivity
+- Deploy a 2-tier application architecture across availability zones
 - Implement proper security group rules for network segmentation
-- Configure Application Load Balancer with health checks and target groups
+- Configure an Application Load Balancer with health checks and target groups
 
 ---
 
-## 📋 **Prerequisites**
-- Completion of Labs 1-7
+## Prerequisites
+- Completion of Labs 1-8
 - Understanding of networking concepts (CIDR, subnets, routing)
 - Knowledge of AWS availability zones and regions
 
 ---
 
-## 🛠️ **Lab Setup**
+## Lab Setup
 
 ### Set Your Username
 ```bash
@@ -34,7 +34,7 @@ echo "Your username: $TF_VAR_username"
 
 ---
 
-## 🌐 **Exercise 9.1: Design Multi-Tier VPC Architecture (20 minutes)**
+## Exercise 9.1: Design 2-Tier VPC Architecture (20 minutes)
 
 ### Step 1: Create Lab Directory
 ```bash
@@ -44,31 +44,14 @@ cd terraform-lab9
 ```
 
 ### Step 2: Create Production-Ready VPC Infrastructure
-Let's build a comprehensive VPC that supports a multi-tier application.
+Let's build a comprehensive VPC that supports a 2-tier application with public subnets (for the ALB and NAT Gateway) and private subnets (for the web/application servers).
 
-**main.tf:**
+**variables.tf:**
 ```hcl
-terraform {
-  required_version = ">= 1.5"
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-  
-  # Using local backend for this lab
-}
-
-provider "aws" {
-  region = "us-east-2"
-}
-
 variable "username" {
   description = "Your unique username"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
     error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
@@ -79,6 +62,36 @@ variable "environment" {
   description = "Environment name"
   type        = string
   default     = "development"
+}
+
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "us-east-2"
+}
+```
+
+**terraform.tfvars:**
+```hcl
+username    = "user1" # Replace with your username
+environment = "development"
+```
+
+**main.tf:**
+```hcl
+terraform {
+  required_version = ">= 1.5"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
 }
 
 # Data sources for dynamic resource selection
@@ -100,19 +113,18 @@ data "aws_ami" "amazon_linux" {
 locals {
   name_prefix = "${var.username}-${var.environment}"
   vpc_cidr    = "10.0.0.0/16"
-  
+
   # Calculate subnet CIDRs dynamically
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
-  database_subnets = ["10.0.21.0/24", "10.0.22.0/24"]
-  
+
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
-  
+
   common_tags = {
     Owner       = var.username
     Environment = var.environment
     ManagedBy   = "Terraform"
-    Project     = "VPC-Lab-8"
+    Project     = "VPC-Lab-9"
   }
 }
 
@@ -170,51 +182,31 @@ resource "aws_subnet" "private" {
   })
 }
 
-# Database Subnets (for RDS, ElastiCache)
-resource "aws_subnet" "database" {
-  count = length(local.database_subnets)
 
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = local.database_subnets[count.index]
-  availability_zone = local.availability_zones[count.index]
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-${count.index + 1}"
-    Type = "DatabaseSubnet"
-    Tier = "Database"
-    AZ   = local.availability_zones[count.index]
-  })
-}
-
-# Elastic IPs for NAT Gateways
+# Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
-  count = length(local.public_subnets)
-
-  domain = "vpc"
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.main]
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-nat-eip-${count.index + 1}"
+    Name = "${local.name_prefix}-nat-eip"
     Type = "NATGatewayEIP"
   })
 }
 
-# NAT Gateways for private subnet internet access
+# Single NAT Gateway (cost optimization)
 resource "aws_nat_gateway" "main" {
-  count = length(local.public_subnets)
-
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+  depends_on    = [aws_internet_gateway.main]
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-nat-${count.index + 1}"
-    AZ   = local.availability_zones[count.index]
+    Name = "${local.name_prefix}-nat"
+    Type = "NATGateway"
   })
-
-  depends_on = [aws_internet_gateway.main]
 }
 
-# Route table for public subnets
+# Route Tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -229,77 +221,38 @@ resource "aws_route_table" "public" {
   })
 }
 
-# Route table associations for public subnets
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-private-rt"
+    Type = "PrivateRouteTable"
+  })
+}
+
+
+# Route Table Associations
 resource "aws_route_table_association" "public" {
-  count = length(aws_subnet.public)
+  count = length(local.public_subnets)
 
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Route tables for private subnets (one per AZ for high availability)
-resource "aws_route_table" "private" {
+resource "aws_route_table_association" "private" {
   count = length(local.private_subnets)
 
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-private-rt-${count.index + 1}"
-    Type = "PrivateRouteTable"
-    AZ   = local.availability_zones[count.index]
-  })
-}
-
-# Route table associations for private subnets
-resource "aws_route_table_association" "private" {
-  count = length(aws_subnet.private)
-
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
-# Route table for database subnets (no internet access)
-resource "aws_route_table" "database" {
-  vpc_id = aws_vpc.main.id
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-rt"
-    Type = "DatabaseRouteTable"
-  })
-}
 
-# Route table associations for database subnets
-resource "aws_route_table_association" "database" {
-  count = length(aws_subnet.database)
-
-  subnet_id      = aws_subnet.database[count.index].id
-  route_table_id = aws_route_table.database.id
-}
-
-# Database subnet group for RDS
-resource "aws_db_subnet_group" "main" {
-  name       = "${local.name_prefix}-db-subnet-group"
-  subnet_ids = aws_subnet.database[*].id
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-db-subnet-group"
-  })
-}
-```
-
----
-
-## 🛡️ **Exercise 9.2: Implement Security Groups (15 minutes)**
-
-### Step 1: Create Comprehensive Security Groups
-Add security group configurations to **main.tf**:
-
-```hcl
 # Security Group for Application Load Balancer
 resource "aws_security_group" "alb" {
   name_prefix = "${local.name_prefix}-alb-"
@@ -336,6 +289,7 @@ resource "aws_security_group" "alb" {
   })
 }
 
+
 # Security Group for Web Servers
 resource "aws_security_group" "web" {
   name_prefix = "${local.name_prefix}-web-"
@@ -349,6 +303,7 @@ resource "aws_security_group" "web" {
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
+
 
   egress {
     description = "All outbound traffic"
@@ -365,43 +320,6 @@ resource "aws_security_group" "web" {
 }
 
 
-# Security Group for Database
-resource "aws_security_group" "database" {
-  name_prefix = "${local.name_prefix}-db-"
-  description = "Security group for database servers"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "MySQL/MariaDB from web servers"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
-
-  ingress {
-    description     = "PostgreSQL from web servers"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-database-sg"
-    Type = "DatabaseSecurityGroup"
-  })
-}
-```
-
----
-
-## 🚀 **Exercise 9.3: Deploy Multi-Tier Application (10 minutes)**
-
-### Step 1: Add Application Infrastructure
-Continue adding to **main.tf**:
-
-```hcl
 # Application Load Balancer
 resource "aws_lb" "main" {
   name               = "${local.name_prefix}-alb"
@@ -428,14 +346,17 @@ resource "aws_lb_target_group" "web" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
+    unhealthy_threshold = 3
+    timeout             = 10
     interval            = 30
-    path                = "/"
+    path                = "/health.html"
     matcher             = "200"
     port                = "traffic-port"
     protocol            = "HTTP"
   }
+
+  # Give instances time to start up
+  deregistration_delay = 60
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-web-tg"
@@ -493,17 +414,48 @@ resource "aws_lb_target_group_attachment" "web" {
 }
 ```
 
-### Step 2: Create Web Server User Data Script
+---
+
+## Exercise 9.2: Create Web Server User Data Script
+
 Create **user_data_web.sh**:
 
 ```bash
 #!/bin/bash
+exec > >(tee /var/log/user-data.log) 2>&1  # Log all output
+
+echo "Starting user data script at $(date)"
+
+# Update system
+echo "Updating system packages..."
 yum update -y
-yum install -y httpd php mysql
+
+# Install Apache HTTP Server and PHP
+echo "Installing Apache and PHP..."
+yum install -y httpd php
+
+echo "Apache installation completed"
+
+# Create web directory if it doesn't exist
+mkdir -p /var/www/html
 
 # Start and enable Apache
+echo "Starting Apache..."
 systemctl start httpd
 systemctl enable httpd
+
+# Wait for service to be ready
+sleep 3
+
+# Verify Apache is running
+if systemctl is-active --quiet httpd; then
+    echo "Apache started successfully"
+else
+    echo "Apache failed to start with systemctl, trying manual start..."
+    # Try to start manually
+    /usr/sbin/httpd -D FOREGROUND &
+    sleep 3
+fi
 
 # Create dynamic web page
 cat <<EOF > /var/www/html/index.php
@@ -525,7 +477,7 @@ cat <<EOF > /var/www/html/index.php
             <h1>🚀 Multi-Tier VPC Application</h1>
             <h2>Server <span class="server-id">${server_id}</span> - Owner: ${username}</h2>
         </div>
-        
+
         <div class="info-section">
             <h3>Infrastructure Details</h3>
             <p><strong>Environment:</strong> ${environment}</p>
@@ -534,7 +486,7 @@ cat <<EOF > /var/www/html/index.php
             <p><strong>Private IP:</strong> <?php echo file_get_contents('http://169.254.169.254/latest/meta-data/local-ipv4'); ?></p>
             <p><strong>Server Time:</strong> <?php echo date('Y-m-d H:i:s T'); ?></p>
         </div>
-        
+
         <div class="info-section">
             <h3>VPC Architecture Features</h3>
             <ul>
@@ -543,16 +495,16 @@ cat <<EOF > /var/www/html/index.php
                 <li>✅ NAT Gateways for secure outbound internet access</li>
                 <li>✅ Application Load Balancer with health checks</li>
                 <li>✅ Layered security groups for network segmentation</li>
-                <li>✅ Dedicated database subnets (no internet access)</li>
+                <li>✅ Simple 2-tier architecture (web and data layers)</li>
                 <li>✅ Private subnets for enhanced security</li>
             </ul>
         </div>
-        
+
         <div class="info-section">
             <h3>Network Configuration</h3>
             <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
             <p><strong>Subnet Type:</strong> Private Application Subnet</p>
-            <p><strong>Route Table:</strong> Routes through NAT Gateway</p>
+            <p><strong>Route Table:</strong> Routes through single NAT Gateway (cost optimized)</p>
             <p><strong>Security Group:</strong> Allows HTTP from ALB only</p>
         </div>
     </div>
@@ -561,29 +513,141 @@ cat <<EOF > /var/www/html/index.php
 EOF
 
 # Set proper permissions
-chown apache:apache /var/www/html/index.php
+chown apache:apache /var/www/html/index.php 2>/dev/null || chown www-data:www-data /var/www/html/index.php 2>/dev/null || true
 chmod 644 /var/www/html/index.php
 
 # Restart Apache to ensure everything is loaded
-systemctl restart httpd
+echo "Restarting Apache to load new configuration..."
+if systemctl restart httpd; then
+    echo "Apache restarted successfully"
+else
+    echo "systemctl restart failed, trying manual restart..."
+    pkill -f httpd 2>/dev/null || true
+    sleep 2
+    /usr/sbin/httpd -D FOREGROUND &
+    sleep 2
+fi
 
 # Create health check endpoint
 echo "OK" > /var/www/html/health.html
+chown apache:apache /var/www/html/health.html 2>/dev/null || chown www-data:www-data /var/www/html/health.html 2>/dev/null || true
+
+# Create backup static HTML index page (fallback if PHP fails)
+cat <<EOF > /var/www/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Tier Application - Server ${server_id}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f4; }
+        .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 20px; }
+        .info-section { background-color: #ecf0f1; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .server-id { color: #e74c3c; font-weight: bold; }
+        .status { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Multi-Tier VPC Application</h1>
+            <h2>Server <span class="server-id">${server_id}</span> - Owner: ${username}</h2>
+            <p class="status">✅ Apache HTTP Server Running</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Infrastructure Details</h3>
+            <p><strong>Environment:</strong> ${environment}</p>
+            <p><strong>Server:</strong> Web Server ${server_id}</p>
+            <p><strong>VPC CIDR:</strong> 10.0.0.0/16</p>
+            <p><strong>Subnet Type:</strong> Private Application Subnet</p>
+        </div>
+
+        <div class="info-section">
+            <h3>VPC Architecture Features</h3>
+            <ul>
+                <li>✅ Multi-AZ deployment for high availability</li>
+                <li>✅ Private subnets for application tier security</li>
+                <li>✅ NAT Gateways for secure outbound internet access</li>
+                <li>✅ Application Load Balancer with health checks</li>
+                <li>✅ Layered security groups for network segmentation</li>
+                <li>✅ Simple 2-tier architecture (web and data layers)</li>
+                <li>✅ Private subnets for enhanced security</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h3>Health Check Status</h3>
+            <p class="status">✅ Health check endpoint: /health.html</p>
+            <p class="status">✅ Web server responding on port 80</p>
+            <p><strong>Last updated:</strong> <script>document.write(new Date().toLocaleString());</script></p>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+chown apache:apache /var/www/html/index.html 2>/dev/null || chown www-data:www-data /var/www/html/index.html 2>/dev/null || true
+
+# Test health check endpoint
+echo "Testing health check endpoint..."
+sleep 5
+if curl -s localhost/health.html | grep -q "OK"; then
+    echo "✅ Health check endpoint responding correctly"
+else
+    echo "⚠️  Health check endpoint not responding, creating again..."
+    echo "OK" > /var/www/html/health.html
+    chown apache:apache /var/www/html/health.html 2>/dev/null || true
+fi
+
+# Test main web page
+if curl -s localhost/ | grep -q "Multi-Tier"; then
+    echo "✅ Main web page responding correctly"
+else
+    echo "⚠️  Main web page not responding as expected"
+fi
+
+# Final status check
+echo "Performing final status check..."
+if pgrep httpd > /dev/null; then
+    echo "SUCCESS: Apache is running (PID: $(pgrep httpd | head -1))"
+    echo "Web server listening on port 80"
+    netstat -tlnp | grep :80 || ss -tlnp | grep :80 || echo "Port 80 status check failed"
+
+    # Test both endpoints
+    echo "Available endpoints:"
+    echo "  - http://[ALB-DNS]/ (main application)"
+    echo "  - http://[ALB-DNS]/health.html (health check)"
+else
+    echo "WARNING: Apache does not appear to be running"
+    echo "Attempting one final restart..."
+    systemctl start httpd || /usr/sbin/httpd &
+    sleep 3
+fi
+
+# Log completion
+echo "Web server setup completed at $(date)"
+echo "Health check endpoint: /health.html"
+echo "Main application endpoint: /"
+echo "Check /var/log/user-data.log for detailed logs"
 ```
 
-### Step 3: Create Outputs
+---
+
+## Exercise 9.3: Create Outputs and Deploy (10 minutes)
+
+### Step 1: Create Outputs
 Create **outputs.tf**:
 
 ```hcl
 output "vpc_info" {
   description = "VPC configuration details"
   value = {
-    vpc_id                = aws_vpc.main.id
-    vpc_cidr              = aws_vpc.main.cidr_block
-    availability_zones    = local.availability_zones
-    public_subnet_ids     = aws_subnet.public[*].id
-    private_subnet_ids    = aws_subnet.private[*].id
-    database_subnet_ids   = aws_subnet.database[*].id
+    vpc_id             = aws_vpc.main.id
+    vpc_cidr           = aws_vpc.main.cidr_block
+    availability_zones = local.availability_zones
+    public_subnet_ids  = aws_subnet.public[*].id
+    private_subnet_ids = aws_subnet.private[*].id
   }
 }
 
@@ -606,19 +670,18 @@ output "web_server_private_ips" {
 output "security_groups" {
   description = "Security group IDs for different tiers"
   value = {
-    alb_security_group      = aws_security_group.alb.id
-    web_security_group      = aws_security_group.web.id
-    database_security_group = aws_security_group.database.id
+    alb_security_group = aws_security_group.alb.id
+    web_security_group = aws_security_group.web.id
   }
 }
 
-output "nat_gateway_ips" {
-  description = "Public IP addresses of NAT Gateways"
-  value       = aws_eip.nat[*].public_ip
+output "nat_gateway_ip" {
+  description = "Public IP address of NAT Gateway"
+  value       = aws_eip.nat.public_ip
 }
 ```
 
-### Step 4: Deploy and Test the Infrastructure
+### Step 2: Deploy and Test the Infrastructure
 ```bash
 # Initialize and deploy
 terraform init
@@ -638,37 +701,39 @@ done
 
 ---
 
-## 🎯 **Lab Summary**
+## Lab Summary
 
-**What You've Accomplished:**
-- ✅ Designed and implemented a production-ready VPC with multi-tier architecture
-- ✅ Deployed infrastructure across multiple Availability Zones for high availability
-- ✅ Configured advanced networking with NAT Gateways and proper routing
-- ✅ Implemented layered security with purpose-built security groups
-- ✅ Deployed Application Load Balancer with health checks and target groups
-- ✅ Implemented private subnet architecture for enhanced security
-- ✅ Separated tiers with public, private, and database subnets
+**What You Accomplished:**
+- Designed and implemented a production-ready VPC with a 2-tier architecture
+- Deployed infrastructure across multiple Availability Zones for high availability
+- Configured networking with a single NAT Gateway and proper routing
+- Implemented layered security with ALB and web server security groups
+- Deployed an Application Load Balancer with health checks and target groups
+- Placed web servers in private subnets for enhanced security
 
 **Key Networking Concepts Mastered:**
-- **VPC Design**: Multi-tier architecture with proper CIDR planning
+- **VPC Design**: 2-tier architecture with proper CIDR planning
 - **High Availability**: Multi-AZ deployment patterns
 - **Security**: Network segmentation with security groups
-- **Routing**: Advanced routing with NAT Gateways and route tables
+- **Routing**: Routing with a NAT Gateway and route tables
 - **Load Balancing**: Application Load Balancer configuration and health checks
 
 **Production-Ready Features:**
 - Internet Gateway for public subnet connectivity
-- NAT Gateways for secure private subnet internet access
-- Database subnet isolation (no internet access)
+- Single NAT Gateway for cost-optimized private subnet internet access
 - Private subnet isolation for web server security
 - Application Load Balancer for high availability and scalability
-- Health checks and automatic failover capabilities
+- Health checks (`/health.html`) and automatic failover capabilities
 
 ---
 
-## 🧹 **Cleanup**
+## Cleanup
 ```bash
 terraform destroy -var="username=$TF_VAR_username"
 ```
 
-This lab demonstrates enterprise networking patterns that form the foundation of production AWS workloads. The architecture supports scalability, security, and high availability while maintaining operational simplicity.
+---
+
+## Next Steps
+
+In **Lab 10**, you will explore **Terraform Cloud** for remote state management, collaborative workflows, and centralized execution of Terraform runs.

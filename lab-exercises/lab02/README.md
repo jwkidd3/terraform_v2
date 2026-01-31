@@ -1,69 +1,62 @@
-# Lab 2: First AWS Terraform Configuration
-**Duration:** 45 minutes  
-**Difficulty:** Beginner  
-**Day:** 1  
+# Lab 2: AWS Infrastructure with Terraform
+**Duration:** 45 minutes
+**Difficulty:** Beginner
+**Day:** 1
 **Environment:** AWS Cloud9
 
 ---
 
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Configure the AWS provider with proper authentication
-- Create multiple AWS resources using Terraform best practices
-- Implement resource tagging strategies for enterprise environments
+- Configure the AWS provider and understand provider concepts
 - Use data sources to query existing AWS infrastructure
-- Apply proper naming conventions and resource organization
-- Understand Terraform state management in cloud environments
+- Create core AWS resources (S3, EC2, Security Groups)
+- Define input variables with validation rules
+- Create structured outputs for resource information
 
 ---
 
 ## 📋 **Prerequisites**
 - Completion of Lab 1 (Terraform with Docker)
 - AWS Cloud9 environment with appropriate IAM permissions
-- Basic understanding of AWS services (S3, VPC, IAM)
+- Terraform installed (from Lab 1)
 
 ---
 
 ## 🛠️ **Lab Setup**
 
-### Environment Configuration
+### Set Your Username
 ```bash
-# Set your unique identifier
-export TF_VAR_username="user1"  # Replace with your assigned username
-export TF_VAR_environment="development"
-export AWS_DEFAULT_REGION="us-east-2"
-
-echo "Username: $TF_VAR_username"
-echo "Environment: $TF_VAR_environment" 
-echo "AWS Region: $AWS_DEFAULT_REGION"
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "Your username: $TF_VAR_username"
 ```
 
-### Verify AWS Access
+### Navigate to the Lab Directory
 ```bash
-# Confirm AWS credentials and permissions
-aws sts get-caller-identity
-aws s3 ls
-aws iam list-attached-user-policies --user-name $(aws sts get-caller-identity --query 'Arn' --output text | cut -d'/' -f2) 2>/dev/null || echo "Using role-based access"
+cd ~/environment/lab-exercises/lab02
 ```
 
 ---
 
-## 📝 **Exercise 2.1: AWS Provider and Infrastructure Foundation (15 minutes)**
+## 📝 **Exercise 2.1: Review Configuration (15 minutes)**
 
-### Step 1: Create Project Structure
+The configuration files for this lab are already pre-created. In this exercise, you will review each file to understand how Terraform manages AWS infrastructure.
+
+### Step 1: Review main.tf
+
+Open `main.tf` and examine the configuration. This single file contains the Terraform block, provider configuration, data sources, and all resources.
+
 ```bash
-cd ~/environment
-mkdir -p terraform-lab2/{configs,modules,environments}
-cd terraform-lab2
+cat main.tf
 ```
 
-### Step 2: Create versions.tf - Provider Configuration
 ```hcl
-# versions.tf - Provider and version constraints
+# main.tf - AWS Infrastructure Deployment
 
 terraform {
   required_version = ">= 1.5.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -78,25 +71,179 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  
-  default_tags {
-    tags = {
-      Environment   = var.environment
-      Project       = var.project_name
-      Owner         = var.username
-      ManagedBy     = "Terraform"
-      CostCenter    = "Training"
-      CreatedDate   = formatdate("YYYY-MM-DD", timestamp())
-    }
+}
+
+# Data Sources - Query existing AWS infrastructure
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
   }
 }
 
-provider "random" {
-  # Configuration options
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+}
+
+# Generate random ID for unique bucket naming
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
+# S3 bucket for application storage
+resource "aws_s3_bucket" "app_storage" {
+  bucket        = "${var.username}-${var.environment}-storage-${random_id.bucket_suffix.hex}"
+  force_destroy = true
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-storage"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
+  bucket = aws_s3_bucket.app_storage.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Security group for EC2 instance
+resource "aws_security_group" "web_sg" {
+  name        = "${var.username}-${var.environment}-web-sg"
+  description = "Security group for web server"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP access"
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "SSH access"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-web-sg"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
+  }
+}
+
+# EC2 instance
+resource "aws_instance" "web_server" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  subnet_id              = data.aws_subnets.default.ids[0]
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    systemctl start httpd
+    systemctl enable httpd
+    echo "<h1>Terraform Lab 2 - ${var.username}</h1>" > /var/www/html/index.html
+    echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
+    echo "<p>Region: ${var.aws_region}</p>" >> /var/www/html/index.html
+    echo "<p>Deployed with Terraform!</p>" >> /var/www/html/index.html
+  EOF
+  )
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-web-server"
+    Environment = var.environment
+    Owner       = var.username
+    ManagedBy   = "Terraform"
+    Lab         = "2"
+  }
 }
 ```
 
-### Step 3: Create variables.tf - Input Variables
+#### Key Concepts in main.tf
+
+**Terraform Block:** Defines version constraints for Terraform itself (`>= 1.5.0`) and the required providers (`aws ~> 5.0`, `random ~> 3.4`). This ensures everyone on the team uses compatible versions.
+
+**Provider Configuration:** The `provider "aws"` block configures the AWS provider with a region from a variable. Providers are plugins that Terraform uses to interact with cloud APIs.
+
+**Data Sources:** These read information from AWS without creating anything:
+- `aws_caller_identity` -- Gets your AWS account ID
+- `aws_region` -- Gets the current region name
+- `aws_availability_zones` -- Lists available AZs in the region
+- `aws_ami` -- Finds the latest Amazon Linux 2 AMI using filters
+- `aws_vpc` / `aws_subnets` -- Discovers the default VPC and its subnets
+
+**Resources:** These create and manage actual infrastructure:
+- `random_id` -- Generates a random hex suffix for globally unique S3 bucket names
+- `aws_s3_bucket` -- Creates an S3 bucket with `force_destroy` enabled for easy cleanup
+- `aws_s3_bucket_public_access_block` -- Blocks all public access to the bucket (security best practice)
+- `aws_security_group` -- Creates a security group allowing HTTP (port 80) and SSH (port 22) inbound traffic
+- `aws_instance` -- Launches a `t3.micro` EC2 instance with a user data script that installs and starts Apache HTTPD
+
+---
+
+### Step 2: Review variables.tf
+
+Open `variables.tf` to see how input variables are defined with types, defaults, and validation rules.
+
+```bash
+cat variables.tf
+```
+
 ```hcl
 # variables.tf - Input variable definitions
 
@@ -114,7 +261,7 @@ variable "environment" {
   description = "Environment name (development, staging, production)"
   type        = string
   default     = "development"
-  
+
   validation {
     condition     = contains(["development", "staging", "production"], var.environment)
     error_message = "Environment must be development, staging, or production."
@@ -126,472 +273,25 @@ variable "aws_region" {
   type        = string
   default     = "us-east-2"
 }
-
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-  default     = "terraform-training"
-}
-
-variable "allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to access resources"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
-variable "instance_types" {
-  description = "Map of instance types for different environments"
-  type        = map(string)
-  default = {
-    development = "t3.micro"
-    staging     = "t3.small"
-    production  = "t3.medium"
-  }
-}
-
-variable "enable_monitoring" {
-  description = "Enable detailed monitoring for resources"
-  type        = bool
-  default     = true
-}
 ```
+
+#### Key Concepts in variables.tf
+
+- **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block enforces a length between 3 and 20 characters.
+- **`environment`** defaults to `"development"` and uses the `contains()` function to only accept `"development"`, `"staging"`, or `"production"`.
+- **`aws_region`** defaults to `"us-east-2"` with no additional validation.
+- **Validation blocks** run during `terraform plan` and `terraform apply`, catching invalid input before any resources are created.
 
 ---
 
-## 🔍 **Exercise 2.2: Data Sources and Local Values (10 minutes)**
+### Step 3: Review outputs.tf
 
-### Step 1: Create data.tf - Data Source Queries
-```hcl
-# data.tf - Data source definitions
+Open `outputs.tf` to see how Terraform exposes resource attributes after deployment.
 
-# Get current AWS account information
-data "aws_caller_identity" "current" {}
-
-# Get current AWS region
-data "aws_region" "current" {}
-
-# Get availability zones in current region
-data "aws_availability_zones" "available" {
-  state = "available"
-  
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-# Get latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-  
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-  
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
-
-# Get default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Get default VPC subnets
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-  
-  filter {
-    name   = "default-for-az"
-    values = ["true"]
-  }
-}
-
-# Get specific subnet details
-data "aws_subnet" "selected" {
-  count = length(data.aws_subnets.default.ids)
-  id    = data.aws_subnets.default.ids[count.index]
-}
-```
-
-### Step 2: Create locals.tf - Computed Values
-```hcl
-# locals.tf - Local value definitions
-
-locals {
-  # Common naming convention
-  name_prefix = "${var.username}-${var.project_name}-${var.environment}"
-  
-  # Common tags for all resources
-  common_tags = {
-    Environment    = var.environment
-    Project        = var.project_name
-    Owner          = var.username
-    ManagedBy      = "Terraform"
-    DeploymentDate = formatdate("YYYY-MM-DD-hhmm", timestamp())
-  }
-  
-  # Resource-specific configurations
-  bucket_name = "${local.name_prefix}-storage-${random_id.bucket_suffix.hex}"
-  
-  # Network configuration
-  selected_azs = slice(data.aws_availability_zones.available.names, 0, min(2, length(data.aws_availability_zones.available.names)))
-  
-  # Security group rules
-  ingress_rules = {
-    ssh = {
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_blocks = var.allowed_cidr_blocks
-      description = "SSH access"
-    }
-    http = {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTP access"
-    }
-    https = {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "HTTPS access"
-    }
-  }
-}
-```
-
----
-
-## 🏗️ **Exercise 2.3: Core AWS Resources (15 minutes)**
-
-### Step 1: Create main.tf - Primary Resources
-```hcl
-# main.tf - Main resource definitions
-
-# Generate random ID for unique resource naming
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
-  
-  keepers = {
-    username = var.username
-    project    = var.project_name
-  }
-}
-
-# S3 bucket for application storage
-resource "aws_s3_bucket" "app_storage" {
-  bucket        = local.bucket_name
-  force_destroy = true
-
-  tags = merge(local.common_tags, {
-    Name        = "${local.name_prefix}-storage"
-    Purpose     = "Application Storage"
-    Compliance  = "Development"
-  })
-}
-
-resource "aws_s3_bucket_versioning" "app_storage_versioning" {
-  bucket = aws_s3_bucket.app_storage.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-# S3 bucket encryption disabled for simplicity in shared training environment
-
-resource "aws_s3_bucket_public_access_block" "app_storage_pab" {
-  bucket = aws_s3_bucket.app_storage.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# Security group for EC2 instances
-resource "aws_security_group" "web_sg" {
-  name        = "${local.name_prefix}-web-security-group"
-  description = "Security group for web servers"
-  vpc_id      = data.aws_vpc.default.id
-
-  dynamic "ingress" {
-    for_each = local.ingress_rules
-    content {
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
-      protocol    = ingress.value.protocol
-      cidr_blocks = ingress.value.cidr_blocks
-      description = ingress.value.description
-    }
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "All outbound traffic"
-  }
-
-  tags = merge(local.common_tags, {
-    Name    = "${local.name_prefix}-web-sg"
-    Purpose = "Web Server Security"
-  })
-}
-
-# IAM role for EC2 instances
-resource "aws_iam_role" "ec2_role" {
-  name = "${local.name_prefix}-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-resource "aws_iam_role_policy" "ec2_s3_access" {
-  name = "${local.name_prefix}-ec2-s3-access"
-  role = aws_iam_role.ec2_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = "${aws_s3_bucket.app_storage.arn}/*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:ListBucket"
-        ]
-        Resource = aws_s3_bucket.app_storage.arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${local.name_prefix}-ec2-profile"
-  role = aws_iam_role.ec2_role.name
-}
-
-# EC2 instance
-resource "aws_instance" "web_server" {
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_types[var.environment]
-  subnet_id              = data.aws_subnet.selected[0].id
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  
-  monitoring = var.enable_monitoring
-  
-  metadata_options {
-    http_endpoint = "enabled"
-    http_tokens   = "required"
-  }
-
-  root_block_device {
-    volume_type = "gp3"
-    volume_size = 20
-    encrypted   = false
-    
-    tags = merge(local.common_tags, {
-      Name = "${local.name_prefix}-root-volume"
-    })
-  }
-
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    bucket_name   = aws_s3_bucket.app_storage.bucket
-    username      = var.username
-    environment   = var.environment
-    project_name  = var.project_name
-    aws_region    = data.aws_region.current.name
-  }))
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-web-server"
-    Type = "WebServer"
-  })
-
-  depends_on = [
-    aws_iam_role_policy.ec2_s3_access,
-    aws_s3_bucket.app_storage
-  ]
-}
-```
-
-### Step 2: Create user_data.sh - Instance Bootstrap Script
 ```bash
-#!/bin/bash
-# user_data.sh - EC2 instance bootstrap script
-
-# Variables from Terraform template
-BUCKET_NAME="${bucket_name}"
-USERNAME="${username}"
-ENVIRONMENT="${environment}"
-PROJECT_NAME="${project_name}"
-AWS_REGION="${aws_region}"
-
-# Update system packages
-yum update -y
-
-# Install required packages
-yum install -y httpd aws-cli jq
-
-# Install CloudWatch agent
-yum install -y amazon-cloudwatch-agent
-
-# Start and enable services
-systemctl start httpd
-systemctl enable httpd
-
-# Create web content
-cat > /var/www/html/index.html << EOF
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraform Lab 2 - AWS Infrastructure</title>
-    <style>
-        body { 
-            font-family: 'Arial', sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .container { 
-            max-width: 800px; 
-            margin: 0 auto; 
-            background: rgba(255,255,255,0.1); 
-            padding: 30px; 
-            border-radius: 15px; 
-            backdrop-filter: blur(10px);
-        }
-        .header { text-align: center; margin-bottom: 30px; }
-        .info-card { 
-            background: rgba(255,255,255,0.2); 
-            padding: 20px; 
-            margin: 15px 0; 
-            border-radius: 10px; 
-        }
-        .terraform { color: #623CE4; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .success { color: #4CAF50; }
-        .aws-orange { color: #FF9900; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 <span class="terraform">Terraform</span> Lab 2 Success!</h1>
-            <h2>AWS Infrastructure Deployment</h2>
-        </div>
-        
-        <div class="grid">
-            <div class="info-card">
-                <h3>📊 Infrastructure Details</h3>
-                <p><strong>Owner:</strong> $TF_VAR_username</p>
-                <p><strong>Environment:</strong> $ENVIRONMENT</p>
-                <p><strong>Project:</strong> $PROJECT_NAME</p>
-                <p><strong>Region:</strong> $AWS_REGION</p>
-            </div>
-            
-            <div class="info-card">
-                <h3>🏗️ Resources Created</h3>
-                <ul>
-                    <li>EC2 Instance (this server!)</li>
-                    <li>S3 Bucket: $BUCKET_NAME</li>
-                    <li>Security Groups</li>
-                    <li>IAM Roles & Policies</li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="info-card">
-            <h3>✅ What You've Accomplished</h3>
-            <ul>
-                <li><span class="success">✓</span> Deployed production-ready AWS infrastructure</li>
-                <li><span class="success">✓</span> Implemented security best practices</li>
-                <li><span class="success">✓</span> Used enterprise tagging strategies</li>
-                <li><span class="success">✓</span> Applied proper IAM permissions</li>
-                <li><span class="success">✓</span> Configured storage</li>
-            </ul>
-        </div>
-        
-        <div class="info-card">
-            <h3>🎯 <span class="aws-orange">AWS</span> + <span class="terraform">Terraform</span> = Infrastructure as Code</h3>
-            <p>This entire environment was created from code - no manual clicking required!</p>
-            <p><strong>Next:</strong> You'll learn advanced variables and data source patterns.</p>
-        </div>
-    </div>
-</body>
-</html>
-EOF
-
-# Test S3 connectivity and create a test file
-echo "Infrastructure deployed successfully on $(date)" > /tmp/deployment-status.txt
-aws s3 cp /tmp/deployment-status.txt s3://$BUCKET_NAME/status/deployment-status.txt --region $AWS_REGION
-
-# Configure log forwarding to CloudWatch (optional)
-cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
-{
-    "logs": {
-        "logs_collected": {
-            "files": {
-                "collect_list": [
-                    {
-                        "file_path": "/var/log/httpd/access_log",
-                        "log_group_name": "/aws/ec2/terraform-lab2/httpd/access",
-                        "log_stream_name": "$TF_VAR_username-{instance_id}"
-                    }
-                ]
-            }
-        }
-    }
-}
-EOF
+cat outputs.tf
 ```
 
----
-
-## 📤 **Exercise 2.4: Outputs and State Management (5 minutes)**
-
-### Step 1: Create outputs.tf
 ```hcl
 # outputs.tf - Output value definitions
 
@@ -599,48 +299,33 @@ output "account_info" {
   description = "AWS account information"
   value = {
     account_id = data.aws_caller_identity.current.account_id
-    arn        = data.aws_caller_identity.current.arn
-    user_id    = data.aws_caller_identity.current.user_id
-  }
-}
-
-output "infrastructure_info" {
-  description = "Infrastructure deployment information"
-  value = {
-    region               = data.aws_region.current.name
-    availability_zones   = local.selected_azs
-    vpc_id              = data.aws_vpc.default.id
-    subnet_ids          = data.aws_subnets.default.ids
+    region     = data.aws_region.current.name
   }
 }
 
 output "s3_bucket" {
   description = "S3 bucket information"
   value = {
-    name         = aws_s3_bucket.app_storage.bucket
-    arn          = aws_s3_bucket.app_storage.arn
-    domain_name  = aws_s3_bucket.app_storage.bucket_domain_name
-    region       = aws_s3_bucket.app_storage.region
+    name        = aws_s3_bucket.app_storage.bucket
+    arn         = aws_s3_bucket.app_storage.arn
+    domain_name = aws_s3_bucket.app_storage.bucket_domain_name
   }
 }
 
 output "ec2_instance" {
   description = "EC2 instance information"
   value = {
-    id               = aws_instance.web_server.id
-    public_ip        = aws_instance.web_server.public_ip
-    private_ip       = aws_instance.web_server.private_ip
-    instance_type    = aws_instance.web_server.instance_type
-    availability_zone = aws_instance.web_server.availability_zone
+    id            = aws_instance.web_server.id
+    public_ip     = aws_instance.web_server.public_ip
+    instance_type = aws_instance.web_server.instance_type
   }
 }
 
 output "security_group" {
   description = "Security group information"
   value = {
-    id          = aws_security_group.web_sg.id
-    name        = aws_security_group.web_sg.name
-    description = aws_security_group.web_sg.description
+    id   = aws_security_group.web_sg.id
+    name = aws_security_group.web_sg.name
   }
 }
 
@@ -648,142 +333,203 @@ output "web_application_url" {
   description = "URL to access the deployed web application"
   value       = "http://${aws_instance.web_server.public_ip}"
 }
-
-output "resource_summary" {
-  description = "Summary of all created resources"
-  value = {
-    resources_created = 8
-    estimated_monthly_cost = "$15-25 USD"
-    cleanup_command = "terraform destroy"
-  }
-}
-
-output "next_steps" {
-  description = "What to explore next"
-  value = [
-    "Visit the web application URL to see your deployed infrastructure",
-    "Check the S3 bucket for the deployment status file",
-    "Review the security group rules and IAM policies created",
-    "Explore the Terraform state file to understand resource tracking"
-  ]
-}
 ```
 
-### Step 2: Create terraform.tfvars
-```hcl
-# terraform.tfvars - Variable value assignments
+#### Key Concepts in outputs.tf
 
-# Replace with your actual values
-username        = "user1"
-environment     = "development"
-project_name    = "terraform-training"
-aws_region      = "us-east-2"
+- Outputs use **structured maps** to group related information (e.g., `s3_bucket` returns name, ARN, and domain name together).
+- The `web_application_url` output constructs a full URL from the EC2 instance's public IP, making it easy to access your deployed application.
+- Data source outputs like `account_info` show information queried from AWS, not resources you created.
+- Outputs are displayed after every `terraform apply` and can be queried individually with `terraform output <name>`.
 
-# Security configuration
-allowed_cidr_blocks = ["0.0.0.0/0"]  # Restrict this in production
+---
 
-# Feature flags
-enable_monitoring = true
+## 🚀 **Exercise 2.2: Deploy and Validate (20 minutes)**
+
+### Step 1: Initialize Terraform
+
+```bash
+terraform init
+```
+
+You should see Terraform downloading the AWS and Random providers. The output will show:
+- Provider `hashicorp/aws` version `~> 5.0` installed
+- Provider `hashicorp/random` version `~> 3.4` installed
+
+### Step 2: Validate the Configuration
+
+```bash
+terraform validate
+```
+
+This checks the syntax and internal consistency of the configuration files. You should see: `Success! The configuration is valid.`
+
+### Step 3: Preview the Deployment Plan
+
+```bash
+terraform plan
+```
+
+Review the plan output carefully. You should see Terraform planning to create:
+- 1 `random_id` resource (bucket_suffix)
+- 1 `aws_s3_bucket` resource (app_storage)
+- 1 `aws_s3_bucket_public_access_block` resource (app_storage_pab)
+- 1 `aws_security_group` resource (web_sg)
+- 1 `aws_instance` resource (web_server)
+
+The plan also reads data sources (caller identity, region, availability zones, AMI, VPC, subnets) to gather information needed by the resources.
+
+### Step 4: Apply the Configuration
+
+```bash
+terraform apply
+```
+
+When prompted, type `yes` to confirm. Terraform will create all the resources. This may take 2-3 minutes, primarily waiting for the EC2 instance to launch.
+
+### Step 5: Review the Outputs
+
+```bash
+# View all outputs
+terraform output
+
+# View specific outputs
+terraform output account_info
+terraform output s3_bucket
+terraform output ec2_instance
+terraform output web_application_url
+```
+
+### Step 6: Test the Web Application
+
+```bash
+# Get the web URL
+WEB_URL=$(terraform output -raw web_application_url)
+echo "Web URL: $WEB_URL"
+
+# Test the web server (may take 1-2 minutes for user_data to complete)
+curl $WEB_URL
+```
+
+You should see an HTML response containing your username, environment, and region. If the connection is refused, wait a minute or two for the EC2 user data script to finish installing and starting Apache.
+
+### Step 7: Verify the S3 Bucket
+
+```bash
+# Get the bucket name
+BUCKET_NAME=$(terraform output -json s3_bucket | jq -r '.name')
+echo "Bucket name: $BUCKET_NAME"
+
+# Verify the bucket exists
+aws s3 ls s3://$BUCKET_NAME
+```
+
+### Step 8: Examine the State
+
+```bash
+# List all resources Terraform is managing
+terraform state list
+
+# Show details of a specific resource
+terraform state show aws_instance.web_server
+terraform state show aws_s3_bucket.app_storage
 ```
 
 ---
 
-## ⚙️ **Exercise 2.5: Deploy and Validate (10 minutes)**
+## 🔧 **Exercise 2.3: Explore and Modify (10 minutes)**
 
-### Step 1: Initialize and Plan
+### Step 1: Change the Environment Variable
+
+Let's see what happens when we change the `environment` variable from the default `"development"` to `"staging"`.
+
 ```bash
-# Initialize Terraform
-terraform init
-
-# Validate configuration
-terraform validate
-
-# Format code
-terraform fmt
-
-# Create deployment plan
-terraform plan -out=tfplan
-
-# Review the plan output carefully
+terraform plan -var="environment=staging"
 ```
 
-### Step 2: Deploy Infrastructure
+Review the plan output carefully. Notice how many resources Terraform wants to change. Resources that include the environment name in their configuration will be affected:
+- The **S3 bucket** name includes the environment, so it will be **destroyed and recreated** (replacement)
+- The **security group** name includes the environment, so it will be **destroyed and recreated** (replacement)
+- The **EC2 instance** user data and tags include the environment, so it will be **destroyed and recreated** (replacement)
+
+> **Important:** Do NOT apply this change. This exercise is to observe how variable changes cascade through your infrastructure. Simply review the plan output.
+
+### Step 2: Test Variable Validation
+
+Try providing an invalid environment value:
+
 ```bash
-# Apply the plan
-terraform apply tfplan
+terraform plan -var="environment=invalid"
+```
 
-# View outputs
-terraform output
+You should see the validation error: `Environment must be development, staging, or production.`
 
-# Show state
+Try providing a username that is too short:
+
+```bash
+terraform plan -var="username=ab"
+```
+
+You should see: `Username must be between 3 and 20 characters.`
+
+### Step 3: Inspect Resources in Detail
+
+```bash
+# View the full deployed state
 terraform show
-```
 
-### Step 3: Validate Deployment
-```bash
-# Get the web application URL
-WEB_URL=$(terraform output -raw web_application_url)
-echo "Web Application: $WEB_URL"
+# Check the EC2 instance details
+terraform state show aws_instance.web_server
 
-# Test the web server (wait 2-3 minutes for full deployment)
-curl -s $WEB_URL | grep "Success" && echo "✅ Web server is running!"
+# Check the security group rules
+terraform state show aws_security_group.web_sg
 
-# Check S3 bucket
-S3_BUCKET=$(terraform output -json s3_bucket | jq -r '.name')
-aws s3 ls s3://$S3_BUCKET/status/
-
-# Verify EC2 instance
-EC2_ID=$(terraform output -json ec2_instance | jq -r '.id')
-aws ec2 describe-instances --instance-ids $EC2_ID --query 'Reservations[0].Instances[0].State.Name'
+# Check the S3 bucket configuration
+terraform state show aws_s3_bucket.app_storage
 ```
 
 ---
 
 ## 🎉 **Lab Summary**
 
-### What You Built:
-✅ **Production-ready AWS infrastructure** with 8+ resources  
-✅ **Security best practices** with proper IAM and access controls  
-✅ **Enterprise tagging strategy** for cost management and compliance  
-✅ **Dynamic data source integration** for environment-agnostic code  
-✅ **Comprehensive monitoring and logging** setup  
-✅ **Proper resource dependencies** and lifecycle management  
+In this lab, you accomplished the following:
 
-### Key Concepts Mastered:
-- **Provider Configuration**: AWS provider with default tags
-- **Data Sources**: Querying existing AWS infrastructure
-- **Local Values**: Computing derived values and configurations
-- **Resource Dependencies**: Explicit and implicit relationship management
-- **Security**: IAM roles, security groups, access controls
-- **Best Practices**: Naming conventions, tagging, and monitoring
-
-### Production Skills Gained:
-- Infrastructure as Code for enterprise environments
-- AWS security and compliance patterns
-- Resource lifecycle and state management
-- Cost optimization through proper tagging
-- Automated deployment and validation
+- **Provider Configuration:** Configured the AWS provider with version constraints and a region variable
+- **Data Sources:** Used five data sources to dynamically query AWS for account info, AMIs, VPCs, and subnets -- no hardcoded IDs
+- **S3 Bucket:** Created a private S3 bucket with a globally unique name using `random_id` and blocked all public access
+- **Security Group:** Defined a security group with HTTP and SSH ingress rules and unrestricted egress
+- **EC2 Instance:** Launched a web server with an inline user data script that installs Apache HTTPD and serves a custom page
+- **Variables with Validation:** Defined input variables with types, defaults, and validation rules that catch invalid input early
+- **Structured Outputs:** Created map-based outputs to expose resource information after deployment
 
 ---
 
 ## 🧹 **Cleanup**
 
-```bash
-# Destroy all resources
-terraform destroy
+When you are finished with the lab, destroy all resources to avoid unnecessary AWS charges:
 
-# Confirm cleanup
-aws s3 ls | grep $(terraform output -raw s3_bucket | cut -d'-' -f1-3) || echo "✅ S3 bucket removed"
+```bash
+terraform destroy
 ```
+
+When prompted, type `yes` to confirm. Terraform will remove all resources it created (EC2 instance, security group, S3 bucket, etc.).
+
+Verify everything is cleaned up:
+
+```bash
+terraform state list
+```
+
+This should return no resources.
 
 ---
 
-## 🎯 **Next Steps**
+## ➡️ **Next Steps**
 
-In Lab 3, you'll learn:
-- Advanced variable types and validation patterns
-- Complex data source queries and filtering
-- Output value composition and sensitive data handling
-- Multi-resource deployments with for_each and count
+In **Lab 3**, you will learn:
+- Advanced variable patterns with complex types (objects, maps, lists)
+- Sensitive variable handling for secrets
+- Enterprise tagging and cost allocation strategies
+- Dynamic blocks and conditional resource creation
 
-**You've successfully deployed enterprise-grade AWS infrastructure with Terraform! 🚀**
+**Congratulations! You've successfully deployed AWS infrastructure with Terraform!**

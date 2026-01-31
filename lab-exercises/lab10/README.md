@@ -17,9 +17,9 @@ By the end of this lab, you will be able to:
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Labs 1-8
+- Completion of Labs 1-9
 - Terraform Cloud account (free tier sufficient)
-- Understanding of remote state management from Lab 5
+- Understanding of state management from Lab 6
 - GitHub account for VCS integration
 
 ---
@@ -59,6 +59,10 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
     }
   }
 
@@ -173,8 +177,8 @@ output "instance_public_ip" {
 output "terraform_cloud_workspace" {
   description = "Terraform Cloud workspace information"
   value = {
-    workspace_name = "user1-terraform-cloud-lab10"
-    organization   = "user1-terraform-training"
+    workspace_name = "${var.username}-terraform-cloud-lab10"   # Replace with your values
+    organization   = "${var.username}-terraform-training"      # Replace with your values
     execution_mode = "remote"
   }
 }
@@ -188,8 +192,8 @@ output "terraform_cloud_workspace" {
 1. In Terraform Cloud UI, go to your organization
 2. Click "New workspace"
 3. Choose "CLI-driven workflow"
-4. Name: `${username}-infrastructure-lab9`
-5. Description: "Lab 9 - Terraform Cloud Integration"
+4. Name: `${username}-terraform-cloud-lab10`
+5. Description: "Lab 10 - Terraform Cloud Integration"
 6. Click "Create workspace"
 
 ### Step 2: Configure Workspace Variables
@@ -278,7 +282,7 @@ Review what you've implemented:
 - ✅ **Remote State**: Centralized state management
 - ✅ **Workspace Isolation**: Separate workspace for different purposes
 - ✅ **Version Pinning**: Terraform and provider versions specified
-- ✅ **Monitoring Integration**: CloudWatch dashboard for visibility
+- ✅ **Version Pinning**: Provider and Terraform versions locked
 
 ---
 
@@ -286,9 +290,8 @@ Review what you've implemented:
 
 **What You've Accomplished:**
 - ✅ **Terraform Cloud Setup**: Created organization and configured remote execution workspace
-- ✅ **Remote Infrastructure Management**: Deployed complete application stack via Terraform Cloud
+- ✅ **Remote Infrastructure Management**: Deployed S3 bucket and EC2 instance via Terraform Cloud
 - ✅ **Secure Variable Management**: Implemented proper credential and variable storage
-- ✅ **Monitoring Integration**: Created CloudWatch dashboard for infrastructure visibility
 - ✅ **Enterprise Workflow**: Established foundation for team collaboration and governance
 - ✅ **Advanced Features**: Explored run history, state management, and workspace features
 
@@ -308,12 +311,10 @@ Review what you've implemented:
 - Workspace-based organization for team collaboration
 
 **Production-Ready Patterns:**
-- Multi-AZ deployment for high availability
-- Auto Scaling Groups with proper health checks
-- Application Load Balancer for traffic distribution
-- CloudWatch monitoring and dashboards
-- S3 configuration for shared environment
+- S3 bucket with versioning enabled
+- EC2 instance with user data configuration
 - Comprehensive resource tagging strategy
+- Remote state management via Terraform Cloud
 
 **Benefits Over Local Execution:**
 - Consistent execution environment across team members
@@ -335,3 +336,8 @@ terraform destroy
 ```
 
 This lab demonstrates the enterprise advantages of Terraform Cloud, providing centralized state management, remote execution, and the foundation for team collaboration while maintaining the same infrastructure-as-code principles you've learned throughout the course.
+
+---
+
+## ➡️ **Next Steps**
+Continue to **Lab 11**, which covers Terraform Cloud workspaces in greater depth, including multi-environment management and workspace strategies for team collaboration.

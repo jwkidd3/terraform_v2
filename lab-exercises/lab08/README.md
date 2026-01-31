@@ -45,14 +45,14 @@ cd terraform-lab8
 ```
 
 ### Step 2: Design Environment-Flexible Configuration
-We'll create infrastructure code that adapts to different environments using variable files.
+We'll create infrastructure code that adapts to different environments using variable files. The architecture uses Launch Templates and Auto Scaling Groups for scalable compute, with a conditional Application Load Balancer for high-availability environments.
 
 **variables.tf:**
 ```hcl
 variable "username" {
   description = "Your unique username"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
     error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
@@ -62,11 +62,17 @@ variable "username" {
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
-  
+
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "Environment must be dev, staging, or prod."
   }
+}
+
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "us-east-2"
 }
 
 variable "instance_type" {
@@ -76,18 +82,13 @@ variable "instance_type" {
 }
 
 variable "instance_count" {
-  description = "Number of instances to deploy"
+  description = "Number of instances to create"
   type        = number
   default     = 1
-  
-  validation {
-    condition     = var.instance_count >= 1 && var.instance_count <= 10
-    error_message = "Instance count must be between 1 and 10."
-  }
 }
 
 variable "enable_monitoring" {
-  description = "Enable CloudWatch monitoring"
+  description = "Enable detailed monitoring"
   type        = bool
   default     = false
 }
@@ -99,13 +100,13 @@ variable "enable_backups" {
 }
 
 variable "enable_high_availability" {
-  description = "Enable high availability features"
+  description = "Enable high availability configuration"
   type        = bool
   default     = false
 }
 
 variable "allowed_cidrs" {
-  description = "List of allowed CIDR blocks for access"
+  description = "CIDR blocks allowed to access resources"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
@@ -125,12 +126,60 @@ variable "cost_optimization" {
 }
 ```
 
-### Step 3: Create Main Configuration
+### Step 3: Create User Data Script
+The application servers use an external user data script loaded via `templatefile()`.
+
+**user_data.sh:**
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd
+
+# Start and enable Apache
+systemctl start httpd
+systemctl enable httpd
+
+# Create environment-specific content
+cat <<EOF > /var/www/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${environment} Environment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { background-color: #232f3e; color: white; padding: 20px; }
+        .content { padding: 20px; }
+        .env-${environment} { border-left: 5px solid #ff9900; padding-left: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Multi-Environment Demo</h1>
+        <h2>Environment: ${environment}</h2>
+    </div>
+    <div class="content">
+        <div class="env-${environment}">
+            <h3>Server Information</h3>
+            <p><strong>Owner:</strong> ${username}</p>
+            <p><strong>Environment:</strong> ${environment}</p>
+            <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
+            <p><strong>Availability Zone:</strong> $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)</p>
+            <p><strong>Server Time:</strong> $(date)</p>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+```
+
+### Step 4: Create Main Configuration
+This configuration uses Launch Templates and Auto Scaling Groups (rather than direct EC2 instances) for better scalability. An Application Load Balancer is conditionally created when `var.enable_high_availability` is enabled.
+
 **main.tf:**
 ```hcl
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -141,13 +190,33 @@ terraform {
       version = "~> 3.1"
     }
   }
-  
+
   # Using local backend for this lab
   # In production, you would use remote state per environment
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
+}
+
+# Local values for environment-specific logic
+locals {
+  name_prefix = "${var.username}-${var.environment}"
+
+  # Environment-specific settings
+  availability_zones = var.enable_high_availability ? slice(data.aws_availability_zones.available.names, 0, 2) : slice(data.aws_availability_zones.available.names, 0, 1)
+
+  backup_retention = var.environment == "prod" ? 30 : (var.environment == "staging" ? 7 : 1)
+
+  use_private_subnets = var.environment != "dev"
+
+  common_tags = {
+    Owner       = var.username
+    Environment = var.environment
+    Project     = "MultiEnvironment"
+    ManagedBy   = "Terraform"
+    Lab         = "8"
+  }
 }
 
 # Data sources
@@ -165,31 +234,7 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# Local values with environment-specific logic
-locals {
-  name_prefix = "${var.username}-${var.environment}"
-  
-  # Environment-specific tags
-  common_tags = {
-    Owner       = var.username
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Lab         = "7"
-    CostCenter  = var.environment == "prod" ? "production" : "development"
-  }
-  
-  # Determine subnet placement based on environment
-  use_private_subnets = var.environment == "prod" ? true : false
-  
-  # Set backup configuration based on environment
-  backup_retention = var.enable_backups ? (
-    var.environment == "prod" ? 30 : 
-    var.environment == "staging" ? 7 : 
-    1
-  ) : 0
-}
-
-# VPC Module
+# VPC Module - environment-aware configuration
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
@@ -197,14 +242,20 @@ module "vpc" {
   name = "${local.name_prefix}-vpc"
   cidr = "10.0.0.0/16"
 
-  azs             = slice(data.aws_availability_zones.available.names, 0, var.enable_high_availability ? 3 : 1)
-  private_subnets = var.enable_high_availability ? ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"] : ["10.0.1.0/24"]
-  public_subnets  = var.enable_high_availability ? ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"] : ["10.0.101.0/24"]
+  azs = local.availability_zones
 
-  # NAT Gateway configuration based on environment
+  # Environment-specific subnet configuration
+  private_subnets = local.use_private_subnets ? [
+    for i, az in local.availability_zones : "10.0.${i + 1}.0/24"
+  ] : []
+
+  public_subnets = [
+    for i, az in local.availability_zones : "10.0.${i + 101}.0/24"
+  ]
+
+  # NAT Gateway only for non-dev environments
   enable_nat_gateway = local.use_private_subnets
-  single_nat_gateway = !var.enable_high_availability
-  enable_vpn_gateway = false
+  single_nat_gateway = var.environment != "prod"  # Multiple NAT gateways only in prod
 
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -212,71 +263,50 @@ module "vpc" {
   tags = local.common_tags
 }
 
-# Security Group
+# Security group with environment-specific rules
 resource "aws_security_group" "app" {
   name_prefix = "${local.name_prefix}-app-"
+  description = "Security group for application servers"
   vpc_id      = module.vpc.vpc_id
-  description = "Security group for application servers in ${var.environment}"
 
+  # HTTP access
   ingress {
-    description = "HTTP from allowed CIDRs"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = var.allowed_cidrs
   }
 
-  ingress {
-    description = "HTTPS from allowed CIDRs"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_cidrs
-  }
-
-  # SSH access only in non-production environments
+  # SSH access (restricted in production)
   dynamic "ingress" {
-    for_each = var.environment != "prod" ? [1] : []
+    for_each = var.environment == "prod" ? [] : [1]
     content {
-      description = "SSH for debugging"
       from_port   = 22
       to_port     = 22
       protocol    = "tcp"
-      cidr_blocks = ["10.0.0.0/8"]
+      cidr_blocks = var.allowed_cidrs
     }
   }
 
   egress {
-    description = "Allow all outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-app-sg"
-  })
+  tags = local.common_tags
 }
 
-# EC2 Instances with environment-specific configuration
-resource "aws_instance" "app" {
-  count = var.instance_count
-
-  ami           = data.aws_ami.amazon_linux.id
+# Launch Template for environment-specific configuration
+resource "aws_launch_template" "app" {
+  name_prefix   = "${local.name_prefix}-"
+  image_id      = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
-  
-  # Use private subnets in production, public in dev/staging
-  subnet_id = local.use_private_subnets ? 
-    module.vpc.private_subnets[count.index % length(module.vpc.private_subnets)] :
-    module.vpc.public_subnets[count.index % length(module.vpc.public_subnets)]
-  
+
   vpc_security_group_ids = [aws_security_group.app.id]
-  
-  # Enable monitoring based on environment
-  monitoring = var.enable_monitoring
-  
-  # Use spot instances if cost optimization is enabled
+
+  # Use spot instances if configured
   dynamic "instance_market_options" {
     for_each = var.cost_optimization.use_spot_instances ? [1] : []
     content {
@@ -287,42 +317,61 @@ resource "aws_instance" "app" {
     }
   }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd
-    
-    # Environment-specific configuration
-    echo "Environment: ${var.environment}" > /var/www/html/info.txt
-    echo "Instance: ${count.index + 1}" >> /var/www/html/info.txt
-    echo "High Availability: ${var.enable_high_availability}" >> /var/www/html/info.txt
-    
-    # Create a simple HTML page
-    cat > /var/www/html/index.html <<HTML
-    <html>
-      <head><title>${var.environment} Server</title></head>
-      <body>
-        <h1>Environment: ${var.environment}</h1>
-        <h2>Instance ${count.index + 1} of ${var.instance_count}</h2>
-        <p>Owner: ${var.username}</p>
-        <p>Monitoring: ${var.enable_monitoring ? "Enabled" : "Disabled"}</p>
-        <p>Backups: ${var.enable_backups ? "Enabled" : "Disabled"}</p>
-      </body>
-    </html>
-    HTML
-    
-    systemctl start httpd
-    systemctl enable httpd
-  EOF
-  )
+  monitoring {
+    enabled = var.enable_monitoring
+  }
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-app-${count.index + 1}"
-    Type = "ApplicationServer"
-  })
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    environment = var.environment
+    username    = var.username
+  }))
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(local.common_tags, {
+      Type = "ApplicationServer"
+    })
+  }
+
+  tags = local.common_tags
 }
 
-# Application Load Balancer (only if high availability is enabled)
+# Auto Scaling Group for resilience
+resource "aws_autoscaling_group" "app" {
+  name                = "${local.name_prefix}-asg"
+  vpc_zone_identifier = local.use_private_subnets ? module.vpc.private_subnets : module.vpc.public_subnets
+  target_group_arns   = var.enable_high_availability ? [aws_lb_target_group.app[0].arn] : []
+
+  min_size         = 1
+  max_size         = var.enable_high_availability ? var.instance_count * 2 : var.instance_count
+  desired_capacity = var.instance_count
+
+  launch_template {
+    id      = aws_launch_template.app.id
+    version = "$Latest"
+  }
+
+  # Health checks
+  health_check_type         = var.enable_high_availability ? "ELB" : "EC2"
+  health_check_grace_period = 300
+
+  tag {
+    key                 = "Name"
+    value               = "${local.name_prefix}-asg"
+    propagate_at_launch = false
+  }
+
+  dynamic "tag" {
+    for_each = local.common_tags
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+}
+
+# Load Balancer for high availability environments
 resource "aws_lb" "app" {
   count = var.enable_high_availability ? 1 : 0
 
@@ -330,63 +379,46 @@ resource "aws_lb" "app" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.app.id]
-  subnets           = module.vpc.public_subnets
+  subnets            = module.vpc.public_subnets
 
-  enable_deletion_protection = var.environment == "prod"
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-alb"
-    Type = "LoadBalancer"
-  })
+  tags = local.common_tags
 }
 
-# S3 Bucket for application data with environment-specific settings
-resource "aws_s3_bucket" "app_data" {
-  bucket        = "${local.name_prefix}-app-data-${random_string.bucket_suffix.result}"
-  force_destroy = true
+resource "aws_lb_target_group" "app" {
+  count = var.enable_high_availability ? 1 : 0
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-app-data"
-    Type = "ApplicationData"
-  })
-}
+  name     = "${local.name_prefix}-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.vpc.vpc_id
 
-resource "aws_s3_bucket_versioning" "app_data" {
-  bucket = aws_s3_bucket.app_data.id
-  
-  versioning_configuration {
-    status = var.enable_backups ? "Enabled" : "Disabled"
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    unhealthy_threshold = 2
   }
+
+  tags = local.common_tags
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "app_data" {
-  count = var.enable_backups ? 1 : 0
-  
-  bucket = aws_s3_bucket.app_data.id
+resource "aws_lb_listener" "app" {
+  count = var.enable_high_availability ? 1 : 0
 
-  rule {
-    id     = "backup-lifecycle"
-    status = "Enabled"
+  load_balancer_arn = aws_lb.app[0].arn
+  port              = "80"
+  protocol          = "HTTP"
 
-    transition {
-      days          = var.environment == "prod" ? 30 : 7
-      storage_class = "STANDARD_IA"
-    }
-
-    expiration {
-      days = local.backup_retention
-    }
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app[0].arn
   }
-}
-
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
 }
 ```
 
-### Step 4: Create Output Configuration
+### Step 5: Create Output Configuration
 **outputs.tf:**
 ```hcl
 output "environment_info" {
@@ -412,31 +444,21 @@ output "vpc_info" {
   }
 }
 
-output "application_instances" {
-  description = "Application server details"
+output "application_endpoint" {
+  description = "Application endpoint URL"
+  value = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : "Check EC2 instances for public IPs"
+}
+
+output "security_groups" {
+  description = "Security group information"
   value = {
-    for i, instance in aws_instance.app : 
-    "instance-${i + 1}" => {
-      id         = instance.id
-      private_ip = instance.private_ip
-      public_ip  = instance.public_ip
-      subnet_id  = instance.subnet_id
-    }
+    app_security_group_id = aws_security_group.app.id
   }
 }
 
-output "s3_bucket" {
-  description = "S3 bucket for application data"
-  value = {
-    bucket_name = aws_s3_bucket.app_data.id
-    bucket_arn  = aws_s3_bucket.app_data.arn
-    versioning  = var.enable_backups ? "Enabled" : "Disabled"
-  }
-}
-
-output "load_balancer_dns" {
-  description = "Load balancer DNS (if enabled)"
-  value       = var.enable_high_availability ? aws_lb.app[0].dns_name : "N/A - High availability not enabled"
+output "cost_optimization" {
+  description = "Cost optimization settings applied"
+  value = var.cost_optimization
 }
 ```
 
@@ -444,7 +466,15 @@ output "load_balancer_dns" {
 
 ## 🚀 **Exercise 8.2: Environment-Specific Configurations (10 minutes)**
 
-### Step 1: Create Development Environment Configuration
+### Step 1: Create the Default Variable File
+The `terraform.tfvars` file sets the default username. Environment-specific settings are loaded separately via `-var-file`.
+
+**terraform.tfvars:**
+```hcl
+username = "user1"  # Replace with your username
+```
+
+### Step 2: Create Development Environment Configuration
 **environments/dev.tfvars:**
 ```hcl
 # Development Environment Configuration
@@ -454,7 +484,6 @@ instance_count           = 1
 enable_monitoring        = false
 enable_backups          = false
 enable_high_availability = false
-
 allowed_cidrs = ["0.0.0.0/0"]  # Open for development
 
 cost_optimization = {
@@ -464,7 +493,7 @@ cost_optimization = {
 }
 ```
 
-### Step 2: Create Staging Environment Configuration
+### Step 3: Create Staging Environment Configuration
 **environments/staging.tfvars:**
 ```hcl
 # Staging Environment Configuration
@@ -474,7 +503,6 @@ instance_count           = 2
 enable_monitoring        = true
 enable_backups          = true
 enable_high_availability = false
-
 allowed_cidrs = [
   "10.0.0.0/8",     # Internal network
   "172.16.0.0/12"   # VPN range
@@ -487,7 +515,7 @@ cost_optimization = {
 }
 ```
 
-### Step 3: Create Production Environment Configuration
+### Step 4: Create Production Environment Configuration
 **environments/prod.tfvars:**
 ```hcl
 # Production Environment Configuration
@@ -497,7 +525,6 @@ instance_count           = 3
 enable_monitoring        = true
 enable_backups          = true
 enable_high_availability = true
-
 allowed_cidrs = [
   "10.0.0.0/8"      # Only internal network
 ]
@@ -509,11 +536,11 @@ cost_optimization = {
 }
 ```
 
-### Step 4: Create and Deploy Environments
-```bash
+### Step 5: Create and Deploy Environments
+The `terraform.tfvars` file is loaded automatically, providing the `username`. You then pass the environment-specific file with `-var-file` to supply the remaining variables.
 
-# Create the three tfvars files with the content from Steps 1-3 above
-# For example, create dev.tfvars, staging.tfvars, and prod.tfvars
+```bash
+# Create the environment tfvars files with the content from Steps 2-4 above
 
 # Initialize Terraform
 terraform init
@@ -538,9 +565,9 @@ terraform plan -var-file=environments/staging.tfvars | grep -E "will be|must be"
 
 # View environment differences
 echo "\n=== Environment Resource Comparison ==="
-echo "Development:  t3.micro, 1 instance,  no HA"
-echo "Staging:      t3.small, 2 instances, no HA"
-echo "Production:   t3.medium, 3 instances, with HA"
+echo "Development:  t3.micro,  ASG desired=1, no HA,  spot instances"
+echo "Staging:      t3.small,  ASG desired=2, no HA,  on-demand"
+echo "Production:   t3.medium, ASG desired=3, with HA + ALB"
 ```
 
 ### Step 2: Create Environment Management Script
@@ -631,7 +658,7 @@ chmod +x deploy.sh
 | Feature | Development | Staging | Production |
 |---------|------------|---------|------------|
 | Instance Type | t3.micro | t3.small | t3.medium |
-| Instance Count | 1 | 2 | 3 |
+| ASG Desired Capacity | 1 | 2 | 3 |
 | High Availability | ❌ | ❌ | ✅ |
 | Monitoring | ❌ | ✅ | ✅ |
 | Backups | ❌ | ✅ | ✅ |
