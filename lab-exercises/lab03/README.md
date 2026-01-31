@@ -405,22 +405,7 @@ resource "aws_security_group" "web" {
 
 > **Key Concept:** The `dynamic` block iterates over `local.ingress_rules` and generates one `ingress` block per map entry. Adding or removing entries from the map automatically adjusts the security group rules -- no code duplication needed.
 
-### Step 2: Review Conditional Resources
-
-The S3 bucket versioning resource uses `count` with a conditional expression:
-
-```hcl
-resource "aws_s3_bucket_versioning" "logs" {
-  count  = var.security_config.backup_enabled ? 1 : 0
-  bucket = aws_s3_bucket.logs.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-```
-
-### Step 3: Review the EC2 Instance
+### Step 2: Review the EC2 Instance
 
 The EC2 instance demonstrates several patterns -- map lookup via locals, conditional key pair, and conditional encryption:
 
@@ -473,7 +458,7 @@ resource "aws_instance" "web" {
 > - `var.security_config.enable_encryption` toggles EBS encryption based on configuration.
 > - The `user_data` script installs Apache and creates a page showing the application name and environment.
 >
-> The `main.tf` file also contains a `random_id` resource for unique bucket naming, an `aws_s3_bucket` for logs, and an `aws_s3_bucket_public_access_block` for security. The `key_pair_name` variable (defined in `variables.tf` with an empty default) allows optional SSH access.
+> The `key_pair_name` variable (defined in `variables.tf` with an empty default) allows optional SSH access.
 
 ### Step 4: Review `versions.tf`
 
@@ -518,11 +503,7 @@ terraform plan
 
 Review the plan output carefully. You should see the following resources:
 
-- `random_id.bucket_suffix`
 - `aws_security_group.web` (with 4 dynamic ingress rules)
-- `aws_s3_bucket.logs`
-- `aws_s3_bucket_public_access_block.logs`
-- `aws_s3_bucket_versioning.logs` (conditional -- only if `backup_enabled = true`)
 - `aws_instance.web`
 
 ### Step 3: Apply the Configuration
@@ -552,9 +533,6 @@ terraform output application_url
 ```bash
 # Check the EC2 instance
 terraform output ec2_instance
-
-# Check the S3 bucket
-terraform output s3_bucket
 
 # Check the security group
 terraform output security_group
@@ -588,7 +566,7 @@ In this lab, you explored advanced Terraform variable and configuration patterns
 | **Data sources** | `data.tf` | Dynamically discover AMIs, VPCs, subnets, and account info |
 | **Locals** | `locals.tf` | Compute naming prefixes, merge tags, define ingress rules, estimate costs |
 | **Dynamic blocks** | Security group ingress rules | Generate repeated blocks from a map without duplication |
-| **Conditional expressions** | S3 versioning (`count`), key pair (`null`), encryption | Toggle resources and arguments based on configuration |
+| **Conditional expressions** | Key pair (`null`), encryption toggle | Toggle arguments based on configuration |
 | **Enterprise tagging** | `common_tags`, `default_tags` | Consistent tagging for cost allocation and compliance |
 
 ---

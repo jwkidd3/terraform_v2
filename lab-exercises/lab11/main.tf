@@ -1,21 +1,21 @@
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
   }
-  
+
   # Terraform Cloud backend configuration will be added during lab
+  # Students create a new directory and build configuration from README.md
 }
 
 provider "aws" {
   region = var.aws_region
 }
 
-# Username variable defined in variables.tf
-
-# Introduction to Terraform Cloud lab
-# Full implementation available in README.md
+# This is a placeholder file.
+# Lab 11 instructs students to create a new directory (~/environment/terraform-lab11)
+# and build the full configuration from the README instructions.

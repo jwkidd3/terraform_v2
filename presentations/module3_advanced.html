@@ -1335,28 +1335,6 @@ terraform force-unlock LOCK_ID</code></pre>
                 </section>
             </section>
 
-            <!-- Lab 12 Callout -->
-            <section class="lab-callout" data-background-color="#dc3545">
-                <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> VCS Integration & GitOps!</h1>
-                    <h2><span class="emoji">📋</span> Lab 12: VCS Integration and GitOps Workflows</h2>
-                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
-                        <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Connect GitHub repository to Terraform Cloud</li>
-                            <li>✅ Implement VCS-driven deployment workflows</li>
-                            <li>✅ Configure branch-based environments</li>
-                            <li>✅ Set up PR checks and approval gates</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Implement modern GitOps workflows with Terraform Cloud!</p>
-                    </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🚀 Automate Deployments!</h2>
-                </div>
-            </section>
-
             <!-- Section 3: CI/CD Integration -->
             <section>
                 <section>
@@ -1399,7 +1377,7 @@ on:
 env:
   TF_VERSION: '1.5.7'
   TF_IN_AUTOMATION: 'true'
-  
+
 jobs:
   validate:
     name: 'Validate and Test'
@@ -1407,26 +1385,26 @@ jobs:
     strategy:
       matrix:
         environment: [dev, staging, production]
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: ${{ env.TF_VERSION }}
-    
+
     - name: Terraform Format Check
       run: terraform fmt -check -recursive
-    
+
     - name: Terraform Validation
       run: |
         terraform init -backend=false
         terraform validate
-    
+
     - name: Security Scan
       uses: aquasecurity/tfsec-action@v1.0.0
-      
+
     - name: Policy Check
       run: |
         conftest verify --policy policies/ --data environments/${{ matrix.environment }}.json plan.json</code></pre>
@@ -1465,7 +1443,7 @@ variable "deployment_color" {
   description = "Current deployment color (blue or green)"
   type        = string
   default     = "blue"
-  
+
   validation {
     condition     = contains(["blue", "green"], var.deployment_color)
     error_message = "Deployment color must be blue or green."
@@ -1479,10 +1457,10 @@ locals {
 # Create both blue and green environments
 module "blue_environment" {
   source = "./modules/application"
-  
+
   environment_name = "blue"
   instance_count   = var.deployment_color == "blue" ? var.instance_count : 0
-  
+
   tags = {
     Color  = "blue"
     Active = var.deployment_color == "blue" ? "true" : "false"
@@ -1491,16 +1469,38 @@ module "blue_environment" {
 
 module "green_environment" {
   source = "./modules/application"
-  
-  environment_name = "green"  
+
+  environment_name = "green"
   instance_count   = var.deployment_color == "green" ? var.instance_count : 0
-  
+
   tags = {
     Color  = "green"
     Active = var.deployment_color == "green" ? "true" : "false"
   }
 }</code></pre>
                 </section>
+            </section>
+
+            <!-- Lab 12 Callout -->
+            <section class="lab-callout" data-background-color="#dc3545">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🔗</span> VCS Integration & GitOps!</h1>
+                    <h2><span class="emoji">📋</span> Lab 12: VCS Integration and GitOps Workflows</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.0em; line-height: 1.4;">
+                            <li>✅ Connect GitHub repository to Terraform Cloud</li>
+                            <li>✅ Implement VCS-driven deployment workflows</li>
+                            <li>✅ Configure webhook-triggered runs on Git push</li>
+                            <li>✅ Test speculative plans on feature branches</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Implement modern GitOps workflows with Terraform Cloud!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🚀 Automate Deployments!</h2>
+                </div>
             </section>
 
             <!-- Section 4: Policy as Code and Governance -->
@@ -1925,28 +1925,6 @@ provider "aws" {
                 </section>
             </section>
 
-            <!-- Lab 12 Callout -->
-            <section class="lab-callout" data-background-color="#fd7e14">
-                <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> GitOps Excellence!</h1>
-                    <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin: 15px 0;">
-                        <h3>🎯 Final Integration - What You'll Master:</h3>
-                        <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Connect GitHub repository to Terraform Cloud</li>
-                            <li>✅ Implement VCS-driven deployment workflows</li>
-                            <li>✅ Configure branch-based environments</li>
-                            <li>✅ Set up PR checks and approval gates</li>
-                            <li>✅ Create complete GitOps pipeline</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,193,7,0.2); padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 5px solid #ffc107;">
-                        
-                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Modern GitOps workflow implementation!</p>
-                    </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🏆 Complete Your Journey!</h2>
-                </div>
-            </section>
-
             <!-- Section 5: Performance and Scaling -->
             <section>
                 <section>
@@ -2067,7 +2045,7 @@ terraform {
                         <li>Terraform Cloud organization and workspace</li>
                         <li>Remote state management with cloud backend</li>
                         <li>Secure variable and credential management</li>
-                        <li>S3 bucket and EC2 instance via remote execution</li>
+                        <li>EC2 instance deployed via remote execution</li>
                     </ul>
                 </section>
 

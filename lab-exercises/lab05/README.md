@@ -1,7 +1,7 @@
 # Lab 5: Creating and Using Terraform Modules
-**Duration:** 45 minutes  
-**Difficulty:** Intermediate  
-**Day:** 1  
+**Duration:** 45 minutes
+**Difficulty:** Intermediate
+**Day:** 1
 **Environment:** AWS Cloud9
 
 ---
@@ -44,7 +44,7 @@ cd terraform-lab5
 mkdir -p modules/web-application
 ```
 
-### Step 2: Create a Comprehensive Web Application Module
+### Step 2: Create a Web Application Module
 Create the module files:
 
 **modules/web-application/variables.tf:**
@@ -53,7 +53,7 @@ Create the module files:
 variable "username" {
   description = "Your unique username"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
     error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
@@ -63,7 +63,7 @@ variable "username" {
 variable "app_name" {
   description = "Name of the application"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[a-zA-Z0-9-]{3,30}$", var.app_name))
     error_message = "App name must be 3-30 characters, letters, numbers, and hyphens only."
@@ -74,7 +74,7 @@ variable "environment" {
   description = "Environment (dev, staging, prod)"
   type        = string
   default     = "dev"
-  
+
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "Environment must be dev, staging, or prod."
@@ -99,7 +99,7 @@ variable "enable_monitoring" {
 # Local values for consistent resource naming
 locals {
   name_prefix = "${var.username}-${var.app_name}-${var.environment}"
-  
+
   common_tags = {
     Owner       = var.username
     Environment = var.environment
@@ -122,34 +122,6 @@ data "aws_ami" "amazon_linux" {
 
 data "aws_availability_zones" "available" {
   state = "available"
-}
-
-# S3 bucket for application assets
-resource "aws_s3_bucket" "app_assets" {
-  bucket        = "${local.name_prefix}-assets-${random_string.bucket_suffix.result}"
-  force_destroy = true
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-assets"
-    Type = "ApplicationAssets"
-  })
-}
-
-# Random string for unique bucket naming
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-# S3 bucket encryption disabled for simplicity in shared training environment
-
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "app_assets" {
-  bucket = aws_s3_bucket.app_assets.id
-  versioning_configuration {
-    status = "Disabled"
-  }
 }
 
 # Security group for web server
@@ -185,73 +157,18 @@ resource "aws_security_group" "web" {
   })
 }
 
-# IAM role for EC2 to access S3
-resource "aws_iam_role" "web_server" {
-  name = "${local.name_prefix}-web-server-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-# IAM policy for S3 access
-resource "aws_iam_role_policy" "web_server_s3" {
-  name = "${local.name_prefix}-s3-access"
-  role = aws_iam_role.web_server.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.app_assets.arn,
-          "${aws_s3_bucket.app_assets.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Instance profile
-resource "aws_iam_instance_profile" "web_server" {
-  name = "${local.name_prefix}-web-server-profile"
-  role = aws_iam_role.web_server.name
-
-  tags = local.common_tags
-}
-
 # EC2 instance
 resource "aws_instance" "web" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.web.id]
   availability_zone      = data.aws_availability_zones.available.names[0]
-  iam_instance_profile   = aws_iam_instance_profile.web_server.name
   monitoring             = var.enable_monitoring
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     app_name    = var.app_name
     environment = var.environment
     username    = var.username
-    bucket_name = aws_s3_bucket.app_assets.id
   }))
 
   tags = merge(local.common_tags, {
@@ -285,7 +202,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
 ```bash
 #!/bin/bash
 yum update -y
-yum install -y httpd aws-cli
+yum install -y httpd
 
 # Start and enable Apache
 systemctl start httpd
@@ -315,27 +232,21 @@ cat <<EOF > /var/www/html/index.html
             <p><strong>Owner:</strong> ${username}</p>
             <p><strong>Server launched:</strong> $(date)</p>
             <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
-            <p><strong>S3 Bucket:</strong> ${bucket_name}</p>
         </div>
         <div class="info-box">
             <h3>Module Features Demonstrated</h3>
             <ul>
-                <li>✅ Variable validation and defaults</li>
-                <li>✅ Local values and consistent naming</li>
-                <li>✅ Data sources for dynamic resource selection</li>
-                <li>✅ IAM roles and policies for secure S3 access</li>
-                <li>✅ CloudWatch monitoring and alarms</li>
-                <li>✅ Template files for dynamic content</li>
+                <li>Variable validation and defaults</li>
+                <li>Local values and consistent naming</li>
+                <li>Data sources for dynamic resource selection</li>
+                <li>CloudWatch monitoring with conditional creation</li>
+                <li>Template files for dynamic content</li>
             </ul>
         </div>
     </div>
 </body>
 </html>
 EOF
-
-# Test S3 connectivity and upload a test file
-echo "Testing S3 connectivity..." > /tmp/test-file.txt
-aws s3 cp /tmp/test-file.txt s3://${bucket_name}/test-connection.txt
 ```
 
 **modules/web-application/outputs.tf:**
@@ -361,19 +272,9 @@ output "website_url" {
   value       = "http://${aws_instance.web.public_ip}"
 }
 
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket for assets"
-  value       = aws_s3_bucket.app_assets.id
-}
-
 output "security_group_id" {
   description = "ID of the security group"
   value       = aws_security_group.web.id
-}
-
-output "iam_role_arn" {
-  description = "ARN of the IAM role"
-  value       = aws_iam_role.web_server.arn
 }
 ```
 
@@ -402,15 +303,11 @@ variable "aws_region" {
 ```hcl
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.1"
     }
   }
 }
@@ -423,10 +320,10 @@ provider "aws" {
 module "dev_blog" {
   source = "./modules/web-application"
 
-  username         = var.username
-  app_name         = "my-blog"
-  environment      = "dev"
-  instance_type    = "t3.micro"
+  username          = var.username
+  app_name          = "my-blog"
+  environment       = "dev"
+  instance_type     = "t3.micro"
   enable_monitoring = true
 }
 
@@ -434,10 +331,10 @@ module "dev_blog" {
 module "staging_portfolio" {
   source = "./modules/web-application"
 
-  username         = var.username
-  app_name         = "portfolio"
-  environment      = "staging"
-  instance_type    = "t3.small"
+  username          = var.username
+  app_name          = "portfolio"
+  environment       = "staging"
+  instance_type     = "t3.small"
   enable_monitoring = false
 }
 ```
@@ -448,18 +345,16 @@ module "staging_portfolio" {
 output "dev_blog_info" {
   description = "Information about the dev blog application"
   value = {
-    website_url     = module.dev_blog.website_url
-    instance_id     = module.dev_blog.instance_id
-    s3_bucket       = module.dev_blog.s3_bucket_name
+    website_url = module.dev_blog.website_url
+    instance_id = module.dev_blog.instance_id
   }
 }
 
 output "staging_portfolio_info" {
   description = "Information about the staging portfolio application"
   value = {
-    website_url     = module.staging_portfolio.website_url
-    instance_id     = module.staging_portfolio.instance_id
-    s3_bucket       = module.staging_portfolio.s3_bucket_name
+    website_url = module.staging_portfolio.website_url
+    instance_id = module.staging_portfolio.instance_id
   }
 }
 
@@ -478,9 +373,10 @@ output "all_websites" {
 terraform init
 terraform apply
 
-# After applying, test both websites
-echo "Dev Blog URL: $(terraform output -raw dev_blog_info | jq -r '.website_url')"
-echo "Portfolio URL: $(terraform output -raw staging_portfolio_info | jq -r '.website_url')"
+# After applying, check outputs
+terraform output dev_blog_info
+terraform output staging_portfolio_info
+terraform output all_websites
 ```
 
 ---
@@ -493,7 +389,7 @@ Answer these questions about your module:
 1. **Reusability**: How does using the same module twice demonstrate reusability?
 2. **Flexibility**: What makes this module flexible for different use cases?
 3. **Best Practices**: What Terraform best practices does this module implement?
-4. **Security**: How does the module implement security best practices?
+4. **Conditional Resources**: How does the `enable_monitoring` variable control CloudWatch alarm creation?
 
 ### Step 2: Test Module Validation
 Try these commands to see variable validation in action:
@@ -501,10 +397,6 @@ Try these commands to see variable validation in action:
 ```bash
 # This should fail validation - try it!
 terraform apply -var="username=USER-123-INVALID"
-
-# This should also fail - try it!
-terraform apply -var="username=user1" -replace="module.dev_blog.aws_instance.web" \
-  -var="dev_blog_environment=invalid"
 ```
 
 ---
@@ -512,10 +404,9 @@ terraform apply -var="username=user1" -replace="module.dev_blog.aws_instance.web
 ## 🎯 **Lab Summary**
 
 **What You've Accomplished:**
-- ✅ Created a comprehensive, reusable Terraform module with 8+ resources
+- ✅ Created a reusable Terraform module with EC2, security group, and CloudWatch resources
 - ✅ Implemented variable validation and smart defaults
 - ✅ Used data sources for dynamic resource selection
-- ✅ Integrated IAM roles, S3 storage, and CloudWatch monitoring
 - ✅ Deployed the same module with different configurations
 - ✅ Created outputs for easy access to resource information
 
@@ -527,21 +418,12 @@ terraform apply -var="username=user1" -replace="module.dev_blog.aws_instance.web
 - **Conditional Resources**: Using count to conditionally create resources
 - **Output Design**: Providing useful information for module consumers
 
-**Advanced Features Implemented:**
-- IAM roles and policies for secure service integration
-- CloudWatch monitoring with conditional creation
-- S3 bucket configured for shared training environment
-- Dynamic user data with template interpolation
-- Resource dependencies and proper ordering
-
 ---
 
 ## 🧹 **Cleanup**
 ```bash
 terraform destroy
 ```
-
-Remember: This module demonstrates production-ready patterns while remaining focused on core learning objectives. Each component serves a specific purpose in teaching module design and Terraform best practices.
 
 ---
 

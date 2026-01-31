@@ -31,15 +31,6 @@ output "security_group" {
   }
 }
 
-# S3 Bucket Information
-output "s3_bucket" {
-  description = "S3 bucket details"
-  value = {
-    name = aws_s3_bucket.logs.bucket
-    arn  = aws_s3_bucket.logs.arn
-  }
-}
-
 # EC2 Instance Information
 output "ec2_instance" {
   description = "EC2 instance details"

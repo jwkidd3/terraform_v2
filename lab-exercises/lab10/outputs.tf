@@ -1,21 +1,12 @@
-output "terraform_cloud_workspace" {
-  description = "Terraform Cloud workspace information"
-  value = {
-    message             = "Lab 10: Terraform Cloud Integration - Configuration set up for remote execution"
-    workspace_name      = "See README.md for workspace setup instructions"
-    remote_execution    = "enabled"
-    variable_management = "configured"
-    team_collaboration  = "ready"
-  }
-}
+# This is a placeholder file.
+# Lab 10 instructs students to create a new directory (~/environment/terraform-lab10)
+# and build the full configuration from the README instructions.
 
-output "lab_completion_status" {
-  description = "Lab 10 completion checklist"
+output "lab_instructions" {
+  description = "Lab 10 setup instructions"
   value = {
-    terraform_cloud_setup     = "Complete workspace creation in Terraform Cloud UI"
-    aws_credentials_configured = "Set AWS credentials as environment variables in workspace"
-    remote_execution_tested   = "Run terraform plan and apply remotely"
-    state_management         = "Verify state is stored in Terraform Cloud"
-    workspace_features       = "Explore workspace settings and team features"
+    message   = "Lab 10: Terraform Cloud Integration and Remote Execution"
+    setup     = "Create ~/environment/terraform-lab10 and follow README.md"
+    workspace = "Create a CLI-driven workspace in Terraform Cloud"
   }
 }

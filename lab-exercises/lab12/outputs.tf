@@ -18,11 +18,6 @@ output "load_balancer_dns" {
   value       = aws_lb.main.dns_name
 }
 
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket for static assets"
-  value       = aws_s3_bucket.static_assets.id
-}
-
 output "auto_scaling_group" {
   description = "Auto Scaling Group information"
   value = {

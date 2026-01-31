@@ -19,17 +19,7 @@ output "website_url" {
   value       = "http://${aws_instance.web.public_ip}"
 }
 
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket for assets"
-  value       = aws_s3_bucket.app_assets.id
-}
-
 output "security_group_id" {
   description = "ID of the security group"
   value       = aws_security_group.web.id
-}
-
-output "iam_role_arn" {
-  description = "ARN of the IAM role"
-  value       = aws_iam_role.web_server.arn
 }

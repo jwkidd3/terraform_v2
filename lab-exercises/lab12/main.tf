@@ -6,10 +6,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
   }
 
   cloud {
@@ -335,36 +331,4 @@ resource "aws_autoscaling_group" "web" {
       propagate_at_launch = true
     }
   }
-}
-
-# S3 Bucket for static assets
-resource "aws_s3_bucket" "static_assets" {
-  bucket        = "${local.name_prefix}-static-${random_string.bucket_suffix.result}"
-  force_destroy = true
-
-  tags = merge(local.common_tags, {
-    Purpose = "StaticAssets"
-  })
-}
-
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-resource "aws_s3_bucket_versioning" "static_assets" {
-  bucket = aws_s3_bucket.static_assets.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "static_assets" {
-  bucket = aws_s3_bucket.static_assets.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
 }

@@ -85,7 +85,7 @@ cat <<EOF > /var/www/html/index.html
                 <p><strong>VPC:</strong> Custom with public/private subnets</p>
                 <p><strong>Load Balancer:</strong> Application Load Balancer</p>
                 <p><strong>Auto Scaling:</strong> 1-3 instances</p>
-                <p><strong>Storage:</strong> S3 for static assets</p>
+                <p><strong>Storage:</strong> EBS instance storage</p>
             </div>
 
             <div class="info-card">

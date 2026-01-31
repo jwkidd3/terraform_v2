@@ -662,9 +662,8 @@
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🏦</span> Financial Services</h4>
                             <ul style="font-size: 0.7em;">
-                                <li><strong>JP Morgan:</strong> 10,000+ applications on IaC</li>
-                                <li><strong>Goldman Sachs:</strong> 95% infrastructure automated</li>
-                                <li><strong>Benefits:</strong> SOC compliance, disaster recovery, cost optimization</li>
+                                <li><strong>Common use cases:</strong> SOC compliance automation, disaster recovery</li>
+                                <li><strong>Benefits:</strong> Auditable infrastructure, consistent environments, cost optimization</li>
                             </ul>
                         </div>
                         
@@ -690,7 +689,7 @@
                         <table style="width: 100%; font-size: 0.7em; border-collapse: collapse;">
                             <tr style="background-color: #e3f2fd;">
                                 <td style="padding: 4px; border: 1px solid #ccc;"><strong>Netflix</strong></td>
-                                <td style="padding: 4px; border: 1px solid #ccc;">100% cloud-native IaC</td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Cloud-native IaC</td>
                             </tr>
                             <tr>
                                 <td style="padding: 4px; border: 1px solid #ccc;"><strong>Airbnb</strong></td>
@@ -748,7 +747,7 @@
                         
                         <h3>Industry Leaders Using IaC</h3>
                         <ul>
-                            <li><strong>Netflix:</strong> 100% cloud infrastructure</li>
+                            <li><strong>Netflix:</strong> Cloud-native infrastructure</li>
                             <li><strong>Spotify:</strong> Multi-region deployments</li>
                             <li><strong>Capital One:</strong> Banking compliance</li>
                             <li><strong>NASA:</strong> Scientific computing</li>
@@ -795,9 +794,8 @@
                             <ul>
                                 <li><strong>Major Cloud Providers:</strong>
                                     <ul>
-                                        <li>AWS (600+ resources)</li>
-                                        <li>Azure (400+ resources)</li>
-                                        <li>Google Cloud (300+ resources)</li>
+                                        <li>AWS (600+ resources) — used in this course</li>
+                                        <li>Azure, Google Cloud, and many others</li>
                                     </ul>
                                 </li>
                                 <li><strong>Infrastructure Providers:</strong>
@@ -1216,10 +1214,10 @@ Configuration → Planned → Creating → Created → Updating → Updated → 
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Deploy production-ready AWS infrastructure with 8+ resources</li>
-                            <li>✅ Implement enterprise security with IAM roles and encryption</li>
-                            <li>✅ Apply advanced tagging strategies for cost allocation</li>
-                            <li>✅ Master AWS provider patterns and state management</li>
+                            <li>✅ Deploy AWS infrastructure with S3, EC2, and security groups</li>
+                            <li>✅ Use data sources to discover existing AWS resources</li>
+                            <li>✅ Define input variables with validation rules</li>
+                            <li>✅ Create structured outputs for resource information</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1638,10 +1636,10 @@ module "web_server" {
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Master:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Build comprehensive web application module with 15+ resources</li>
-                            <li>✅ Implement enterprise IAM policies, encrypted storage, and monitoring</li>
-                            <li>✅ Master advanced module patterns with validation and conditionals</li>
-                            <li>✅ Deploy production-grade, reusable infrastructure components</li>
+                            <li>✅ Build a reusable web application module with EC2, security group, and CloudWatch</li>
+                            <li>✅ Implement variable validation and conditional resource creation</li>
+                            <li>✅ Use data sources and templatefile() for dynamic content</li>
+                            <li>✅ Deploy the same module multiple times with different configurations</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1671,11 +1669,10 @@ module "web_server" {
                         <div class="highlight">
                             <p><strong>🔬 Lab 2: AWS Infrastructure with Terraform</strong></p>
                             <ul>
-                                <li>Deploy production-ready infrastructure with 8+ resources</li>
-                                <li>Implement enterprise security with IAM and encryption</li>
-                                <li>Apply advanced tagging and cost allocation strategies</li>
-                                <li>Master AWS provider patterns and state management</li>
-                                <li>Enterprise AWS resource orchestration</li>
+                                <li>Configure the AWS provider and use data sources</li>
+                                <li>Create S3 buckets, EC2 instances, and security groups</li>
+                                <li>Define input variables with validation</li>
+                                <li>Create structured outputs for resource information</li>
                             </ul>
                         </div>
 
@@ -1704,9 +1701,9 @@ module "web_server" {
                         <div class="success">
                             <p><strong>🔬 Lab 5: Creating Production Modules</strong></p>
                             <ul>
-                                <li>Enterprise web application module with 15+ resources</li>
-                                <li>Advanced module architecture with validation and conditionals</li>
-                                <li>Deploy multiple production environments with single module</li>
+                                <li>Reusable web application module with EC2, security group, CloudWatch</li>
+                                <li>Module design with variable validation and conditional resources</li>
+                                <li>Deploy multiple applications from a single module definition</li>
                                 <li>Complex module inputs/outputs with sensitive data handling</li>
                                 <li>Production-grade code reusability and standardization</li>
                             </ul>

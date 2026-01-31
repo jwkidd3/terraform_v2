@@ -1,6 +1,6 @@
 #!/bin/bash
 yum update -y
-yum install -y httpd aws-cli
+yum install -y httpd
 
 # Start and enable Apache
 systemctl start httpd
@@ -30,24 +30,18 @@ cat <<EOF > /var/www/html/index.html
             <p><strong>Owner:</strong> ${username}</p>
             <p><strong>Server launched:</strong> $(date)</p>
             <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
-            <p><strong>S3 Bucket:</strong> ${bucket_name}</p>
         </div>
         <div class="info-box">
             <h3>Module Features Demonstrated</h3>
             <ul>
-                <li>✅ Variable validation and defaults</li>
-                <li>✅ Local values and consistent naming</li>
-                <li>✅ Data sources for dynamic resource selection</li>
-                <li>✅ IAM roles and policies for secure S3 access</li>
-                <li>✅ CloudWatch monitoring and alarms</li>
-                <li>✅ Template files for dynamic content</li>
+                <li>Variable validation and defaults</li>
+                <li>Local values and consistent naming</li>
+                <li>Data sources for dynamic resource selection</li>
+                <li>CloudWatch monitoring with conditional creation</li>
+                <li>Template files for dynamic content</li>
             </ul>
         </div>
     </div>
 </body>
 </html>
 EOF
-
-# Test S3 connectivity and upload a test file
-echo "Testing S3 connectivity..." > /tmp/test-file.txt
-aws s3 cp /tmp/test-file.txt s3://${bucket_name}/test-connection.txt

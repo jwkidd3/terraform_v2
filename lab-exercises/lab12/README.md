@@ -89,7 +89,7 @@ Remove the placeholder values and prepare for VCS-driven workflow:
 git add .
 git commit -m "Initial Terraform configuration for VCS-driven workflow
 
-- Add 3-tier web application infrastructure
+- Add web application infrastructure with ALB and Auto Scaling
 - Configure for Terraform Cloud VCS integration
 - Prepare for automated GitHub pulls and builds"
 
@@ -300,7 +300,7 @@ Compare the two approaches:
 ✅ **VCS-Driven Workflow** - Connected GitHub repository to Terraform Cloud
 ✅ **Automatic Code Pulling** - Terraform Cloud pulls and builds from GitHub automatically
 ✅ **Webhook Integration** - GitHub webhooks trigger Terraform Cloud runs
-✅ **Production Infrastructure** - 3-tier web application deployed via VCS workflow
+✅ **Production Infrastructure** - Web application with ALB and Auto Scaling deployed via VCS workflow
 ✅ **Branch-Based Planning** - Speculative plans for feature branches
 ✅ **Team Collaboration** - Infrastructure code shared through Git repository
 

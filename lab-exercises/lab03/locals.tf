@@ -55,8 +55,7 @@ locals {
 
   # Resource naming patterns
   resource_names = {
-    web_sg     = "${local.name_prefix}-web-sg"
-    s3_bucket  = "${local.name_prefix}-logs"
+    web_sg       = "${local.name_prefix}-web-sg"
     ec2_instance = "${local.name_prefix}-web"
   }
 }

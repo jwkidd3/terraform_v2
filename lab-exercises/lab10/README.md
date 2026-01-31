@@ -60,10 +60,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
   }
 
   cloud {
@@ -101,29 +97,7 @@ locals {
   }
 }
 
-# Simple S3 bucket for demonstrating Terraform Cloud
-resource "aws_s3_bucket" "demo" {
-  bucket        = "${local.name_prefix}-demo-${random_string.suffix.result}"
-  force_destroy = true
-
-  tags = local.common_tags
-}
-
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "demo" {
-  bucket = aws_s3_bucket.demo.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-# Simple EC2 instance
+# EC2 instance
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -159,11 +133,6 @@ resource "aws_instance" "demo" {
 Create **outputs.tf:**
 
 ```hcl
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket"
-  value       = aws_s3_bucket.demo.id
-}
-
 output "instance_id" {
   description = "ID of the EC2 instance"
   value       = aws_instance.demo.id
@@ -247,9 +216,6 @@ terraform output
 
 # Test the web server
 curl http://$(terraform output -raw instance_public_ip)
-
-# Check S3 bucket
-aws s3 ls $(terraform output -raw s3_bucket_name)
 ```
 
 ### Step 3: Workspace Settings
@@ -282,7 +248,6 @@ Review what you've implemented:
 - ✅ **Remote State**: Centralized state management
 - ✅ **Workspace Isolation**: Separate workspace for different purposes
 - ✅ **Version Pinning**: Terraform and provider versions specified
-- ✅ **Version Pinning**: Provider and Terraform versions locked
 
 ---
 
@@ -290,7 +255,7 @@ Review what you've implemented:
 
 **What You've Accomplished:**
 - ✅ **Terraform Cloud Setup**: Created organization and configured remote execution workspace
-- ✅ **Remote Infrastructure Management**: Deployed S3 bucket and EC2 instance via Terraform Cloud
+- ✅ **Remote Infrastructure Management**: Deployed EC2 instance via Terraform Cloud
 - ✅ **Secure Variable Management**: Implemented proper credential and variable storage
 - ✅ **Enterprise Workflow**: Established foundation for team collaboration and governance
 - ✅ **Advanced Features**: Explored run history, state management, and workspace features
@@ -311,7 +276,6 @@ Review what you've implemented:
 - Workspace-based organization for team collaboration
 
 **Production-Ready Patterns:**
-- S3 bucket with versioning enabled
 - EC2 instance with user data configuration
 - Comprehensive resource tagging strategy
 - Remote state management via Terraform Cloud

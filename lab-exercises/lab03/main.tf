@@ -1,10 +1,5 @@
 # main.tf - Advanced Variable Patterns Infrastructure
 
-# Random suffix for S3 bucket naming
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
-}
-
 # Security Group with dynamic ingress rules
 resource "aws_security_group" "web" {
   name        = "${local.name_prefix}-web-sg"
@@ -35,37 +30,6 @@ resource "aws_security_group" "web" {
     Name = "${local.name_prefix}-web-sg"
     Type = "WebServer"
   })
-}
-
-# S3 Bucket for application logs
-resource "aws_s3_bucket" "logs" {
-  bucket        = "${local.name_prefix}-logs-${random_id.bucket_suffix.hex}"
-  force_destroy = true
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-logs"
-    Type = "LogStorage"
-  })
-}
-
-# S3 bucket public access block
-resource "aws_s3_bucket_public_access_block" "logs" {
-  bucket = aws_s3_bucket.logs.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# S3 bucket versioning - conditional based on security config
-resource "aws_s3_bucket_versioning" "logs" {
-  count  = var.security_config.backup_enabled ? 1 : 0
-  bucket = aws_s3_bucket.logs.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
 }
 
 # EC2 Instance
