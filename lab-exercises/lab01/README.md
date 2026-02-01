@@ -1,6 +1,6 @@
-# Lab 1: Introduction to Terraform with Docker (BEGINNER FRIENDLY)
+# Lab 1: Introduction to Terraform with Docker
 **Duration:** 45 minutes  
-**Difficulty:** Complete Beginner  
+**Difficulty:** Introductory
 **Day:** 1  
 **Environment:** AWS Cloud9
 

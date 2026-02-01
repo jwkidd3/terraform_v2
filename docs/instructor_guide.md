@@ -124,7 +124,7 @@ resource "aws_instance" "web" {
 **Instructor Role:**
 - Circulate constantly
 - Help struggling participants immediately
-- Pair experienced participants with beginners
+- Pair experienced participants with newer learners
 - Announce common mistakes as you see them
 
 **Lab Structure:**
@@ -894,7 +894,7 @@ Approve and apply → Infrastructure updated
 ### Different Learning Speeds
 **Challenge**: Mixed experience levels in same class
 **Solution**:
-- Pair experienced with beginners
+- Pair experienced with newer learners
 - Provide "stretch goals" for quick finishers
 - Offer additional exercises for after class
 - One-on-one coaching during labs

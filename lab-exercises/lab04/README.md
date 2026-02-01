@@ -1,6 +1,6 @@
 # Lab 4: Resource Dependencies and Lifecycle Management
 **Duration:** 45 minutes  
-**Difficulty:** Beginner  
+**Difficulty:** Introductory
 **Day:** 1  
 **Environment:** AWS Cloud9
 

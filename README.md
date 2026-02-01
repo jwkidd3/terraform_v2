@@ -2,7 +2,7 @@
 
 **A comprehensive 3-day enterprise Terraform training course with specialized Terraform Cloud focus**
 
-[![Terraform](https://img.shields.io/badge/Terraform-%3E%3D%201.5-623CE4)](https://terraform.io)
+[![Terraform](https://img.shields.io/badge/Terraform-%3E%3D%201.9-623CE4)](https://terraform.io)
 [![AWS](https://img.shields.io/badge/AWS-Cloud9-FF9900)](https://aws.amazon.com/cloud9/)
 [![Duration](https://img.shields.io/badge/Duration-3%20Days-blue)](#)
 
@@ -10,7 +10,7 @@
 
 **Duration**: 3 days (9 hours hands-on labs + theory)
 **Format**: 70% Hands-on / 30% Theory
-**Level**: Beginner to Advanced
+**Level**: Introductory to Advanced
 **Environment**: AWS Cloud9
 
 ## Course Structure
@@ -99,7 +99,7 @@ terraform_v2/
 
 - **540 minutes** of hands-on Terraform experience (12 labs x 45 min)
 - **12 infrastructure deployments** across Docker, AWS, and Terraform Cloud
-- **Beginner to advanced** progression over 3 days
+- **Introductory to advanced** progression over 3 days
 - **HashiCorp Terraform Associate** certification alignment
 
 ---

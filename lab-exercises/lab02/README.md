@@ -1,6 +1,6 @@
 # Lab 2: AWS Infrastructure with Terraform
 **Duration:** 45 minutes
-**Difficulty:** Beginner
+**Difficulty:** Introductory
 **Day:** 1
 **Environment:** AWS Cloud9
 

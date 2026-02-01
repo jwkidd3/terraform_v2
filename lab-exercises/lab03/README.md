@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Duration** | 45 minutes |
-| **Difficulty** | Beginner-Intermediate |
+| **Difficulty** | Intermediate |
 | **Day** | 1 |
 | **Environment** | AWS Cloud9 |
 
