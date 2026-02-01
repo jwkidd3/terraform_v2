@@ -55,7 +55,7 @@ cat main.tf
 # main.tf - AWS Infrastructure Deployment
 
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.9"
 
   required_providers {
     aws = {
@@ -216,7 +216,7 @@ resource "aws_instance" "web_server" {
 
 #### Key Concepts in main.tf
 
-**Terraform Block:** Defines version constraints for Terraform itself (`>= 1.5.0`) and the required providers (`aws ~> 5.0`, `random ~> 3.4`). This ensures everyone on the team uses compatible versions.
+**Terraform Block:** Defines version constraints for Terraform itself (`>= 1.9`) and the required providers (`aws ~> 5.0`, `random ~> 3.4`). This ensures everyone on the team uses compatible versions.
 
 **Provider Configuration:** The `provider "aws"` block configures the AWS provider with a region from a variable. Providers are plugins that Terraform uses to interact with cloud APIs.
 

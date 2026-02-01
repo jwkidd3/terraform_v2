@@ -39,11 +39,11 @@ echo "Your username: $TF_VAR_username"
 ### Step 1: Install Terraform
 ```bash
 # Download Terraform
-wget https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
 
-# Install Terraform  
-sudo unzip terraform_1.6.6_linux_amd64.zip -d /usr/local/bin/
-rm terraform_1.6.6_linux_amd64.zip
+# Install Terraform
+sudo unzip terraform_1.9.8_linux_amd64.zip -d /usr/local/bin/
+rm terraform_1.9.8_linux_amd64.zip
 
 # Verify installation
 terraform version
@@ -79,7 +79,7 @@ Create your first Terraform file that manages Docker containers:
 # main.tf - Your first Infrastructure as Code!
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
   
   required_providers {
     docker = {

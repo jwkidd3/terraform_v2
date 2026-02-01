@@ -50,7 +50,7 @@ We'll use the popular VPC module from the Terraform Registry to create our netwo
 **main.tf:**
 ```hcl
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     aws = {

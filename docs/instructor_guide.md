@@ -25,7 +25,7 @@
 
 ### 1. Technical Environment
 - [ ] **Cloud Accounts**: AWS sandboxes with appropriate permissions, Terraform Cloud accounts
-- [ ] **Terraform Installation**: Latest stable version (1.5+) 
+- [ ] **Terraform Installation**: Latest stable version (1.9+) 
 - [ ] **Lab Environment**: Pre-provisioned infrastructure for exercises
 - [ ] **Backup Plans**: Alternative cloud accounts, offline scenarios
 - [ ] **Network Requirements**: Stable internet, backup connectivity

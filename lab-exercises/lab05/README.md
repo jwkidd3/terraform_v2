@@ -302,7 +302,7 @@ variable "aws_region" {
 **main.tf:**
 ```hcl
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     aws = {

@@ -1,7 +1,7 @@
 # main.tf - Resources that depend on each other
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
   
   required_providers {
     aws = {
