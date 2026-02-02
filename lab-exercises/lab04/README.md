@@ -34,11 +34,9 @@ echo "Your username: $TF_VAR_username"
 
 ## 🔗 **Exercise 4.1: Understanding Dependencies (15 minutes)**
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab4
-cd terraform-lab4
+cd ~/environment/terraform_v2/lab-exercises/lab04
 ```
 
 ### Step 2: Create main.tf with dependent resources

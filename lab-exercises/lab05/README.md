@@ -34,14 +34,9 @@ echo "Your username: $TF_VAR_username"
 
 ## 📦 **Exercise 5.1: Create a Web Application Module (25 minutes)**
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab5
-cd terraform-lab5
-
-# Create module directory
-mkdir -p modules/web-application
+cd ~/environment/terraform_v2/lab-exercises/lab05
 ```
 
 ### Step 2: Create a Web Application Module

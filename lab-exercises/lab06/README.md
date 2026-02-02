@@ -36,11 +36,9 @@ echo "Your username: $TF_VAR_username"
 
 ## 🔍 **Exercise 6.1: Understanding Terraform State (15 minutes)**
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab6
-cd terraform-lab6
+cd ~/environment/terraform_v2/lab-exercises/lab06
 ```
 
 ### Step 2: Create a Simple Infrastructure Configuration

@@ -34,7 +34,7 @@ echo "Your username: $TF_VAR_username"
 
 ### Navigate to the Lab Directory
 ```bash
-cd ~/environment/lab-exercises/lab02
+cd ~/environment/terraform_v2/lab-exercises/lab02
 ```
 
 ---

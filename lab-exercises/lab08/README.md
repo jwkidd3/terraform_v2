@@ -37,11 +37,9 @@ echo "Your username: $TF_VAR_username"
 
 ## 🏗️ **Exercise 8.1: Environment-Agnostic Infrastructure (20 minutes)**
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab8
-cd terraform-lab8
+cd ~/environment/terraform_v2/lab-exercises/lab08
 ```
 
 ### Step 2: Design Environment-Flexible Configuration

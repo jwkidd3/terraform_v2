@@ -36,11 +36,9 @@ echo "Your username: $TF_VAR_username"
 
 ## Exercise 9.1: Design 2-Tier VPC Architecture (20 minutes)
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab9
-cd terraform-lab9
+cd ~/environment/terraform_v2/lab-exercises/lab09
 ```
 
 ### Step 2: Create Production-Ready VPC Infrastructure

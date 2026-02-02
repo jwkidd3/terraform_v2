@@ -35,7 +35,7 @@ All configuration files for this lab have been pre-created. You will review each
 
 ```bash
 # Navigate to the lab directory
-cd ~/environment/lab03
+cd ~/environment/terraform_v2/lab-exercises/lab03
 
 # Set your username as an environment variable
 export TF_VAR_username="<your-assigned-username>"
