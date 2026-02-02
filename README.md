@@ -55,17 +55,13 @@ terraform_v2/
 │   ├── module1_fundamentals.html
 │   ├── module2_configuration.html
 │   └── module3_advanced.html
-└── docs/                              # Instructor materials
-    ├── instructor_guide.md
-    └── assessment_guide.md
 ```
 
 ## Getting Started
 
 ### For Instructors
-1. Read [`docs/instructor_guide.md`](docs/instructor_guide.md)
-2. Review presentations in [`presentations/`](presentations/)
-3. Review [`docs/assessment_guide.md`](docs/assessment_guide.md)
+1. Review presentations in [`presentations/`](presentations/)
+2. Review labs in [`lab-exercises/`](lab-exercises/)
 
 ### For Students
 1. Begin with [Lab 1 - Introduction to Terraform with Docker](lab-exercises/lab01/README.md)
@@ -104,4 +100,4 @@ terraform_v2/
 
 ---
 
-**Start learning**: [Lab 1](lab-exercises/lab01/README.md) | **Instructor guide**: [Teaching Materials](docs/instructor_guide.md)
+**Start learning**: [Lab 1](lab-exercises/lab01/README.md)
