@@ -1,17 +1,17 @@
 # Lab 4: Resource Dependencies and Lifecycle Management
-**Duration:** 45 minutes  
+**Duration:** 45 minutes
 **Difficulty:** Introductory
-**Day:** 1  
+**Day:** 1
 **Environment:** AWS Cloud9
 
 ---
 
-## 🎯 **Simple Learning Objectives**
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
 - Understand how Terraform manages resource dependencies
 - Use `count` to create multiple similar resources
 - Use `for_each` to create resources from a map
-- Understand basic lifecycle rules
+- Apply lifecycle rules to control resource behavior
 
 ---
 
@@ -47,7 +47,7 @@ cd terraform-lab4
 
 terraform {
   required_version = ">= 1.9"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -77,7 +77,7 @@ resource "aws_s3_bucket" "app_data" {
   force_destroy = true
 
   tags = {
-    Name = "${var.username} App Data"
+    Name  = "${var.username} App Data"
     Owner = var.username
   }
 }
@@ -85,7 +85,7 @@ resource "aws_s3_bucket" "app_data" {
 # Step 2: Create bucket versioning (depends on bucket)
 resource "aws_s3_bucket_versioning" "app_data" {
   bucket = aws_s3_bucket.app_data.id  # This creates a dependency!
-  
+
   versioning_configuration {
     status = "Disabled"
   }
@@ -100,10 +100,10 @@ resource "aws_s3_object" "config" {
     version  = "1.0"
     created  = timestamp()
   })
-  
+
   # This file will only be created AFTER the bucket and versioning exist
   depends_on = [aws_s3_bucket_versioning.app_data]
-  
+
   tags = {
     Owner = var.username
   }
@@ -123,7 +123,7 @@ terraform plan
 
 # Notice the order in the plan - Terraform automatically figures out:
 # 1. Create bucket first
-# 2. Then create versioning 
+# 2. Then create versioning
 # 3. Finally upload the file
 
 terraform apply
@@ -139,29 +139,15 @@ Add this to the end of your `main.tf`:
 ```hcl
 # Create multiple S3 objects using count
 resource "aws_s3_object" "data_files" {
-  count = 3
-  
-  bucket = aws_s3_bucket.app_data.id
-  key    = "data/file-${count.index + 1}.txt"
-  content = "This is data file number ${count.index + 1} for ${var.username}"
-  
-  tags = {
-    Owner = var.username
-    FileNumber = count.index + 1
-  }
-}
-
-# Create multiple folders using count
-resource "aws_s3_object" "folders" {
   count = 2
-  
-  bucket = aws_s3_bucket.app_data.id
-  key    = "${["logs", "backups"][count.index]}/"  # Creates logs/ and backups/ folders
-  content = ""  # Empty content creates a folder
-  
+
+  bucket  = aws_s3_bucket.app_data.id
+  key     = "data/file-${count.index + 1}.txt"
+  content = "This is data file number ${count.index + 1} for ${var.username}"
+
   tags = {
-    Owner = var.username
-    Type = "Folder"
+    Owner      = var.username
+    FileNumber = count.index + 1
   }
 }
 ```
@@ -169,7 +155,7 @@ resource "aws_s3_object" "folders" {
 ### Step 2: Apply the changes
 ```bash
 terraform plan
-# You should see 5 new objects to be created (3 files + 2 folders)
+# You should see 2 new objects to be created
 
 terraform apply
 ```
@@ -180,13 +166,12 @@ aws s3 ls s3://${TF_VAR_username}-app-data-bucket --recursive
 
 # You should see:
 # - config/app.json
-# - data/file-1.txt, file-2.txt, file-3.txt  
-# - logs/ and backups/ folders
+# - data/file-1.txt, file-2.txt
 ```
 
 ---
 
-## 🗺️ **Exercise 4.3: Using for_each (15 minutes)**
+## 🗺️ **Exercise 4.3: Using for_each (10 minutes)**
 
 ### Step 1: Add for_each resources to main.tf
 Add this to the end of your `main.tf`:
@@ -195,41 +180,18 @@ Add this to the end of your `main.tf`:
 # Create different file types using for_each
 resource "aws_s3_object" "app_files" {
   for_each = {
-    "readme"    = "README.md"
-    "config"    = "config.ini" 
-    "database"  = "schema.sql"
+    "readme"   = "README.md"
+    "config"   = "config.ini"
+    "database" = "schema.sql"
   }
-  
-  bucket = aws_s3_bucket.app_data.id
-  key    = "app/${each.value}"
-  content = "This is the ${each.key} file for ${var.username}'s application"
-  
-  tags = {
-    Owner = var.username
-    FileType = each.key
-  }
-}
 
-# Create environment-specific configurations
-resource "aws_s3_object" "env_configs" {
-  for_each = {
-    dev     = "development.json"
-    staging = "staging.json"
-    prod    = "production.json"
-  }
-  
-  bucket = aws_s3_bucket.app_data.id
-  key    = "environments/${each.value}"
-  content = jsonencode({
-    environment = each.key
-    username = var.username
-    debug = each.key == "dev" ? true : false
-    replicas = each.key == "prod" ? 3 : 1
-  })
-  
+  bucket  = aws_s3_bucket.app_data.id
+  key     = "app/${each.value}"
+  content = "This is the ${each.key} file for ${var.username}'s application"
+
   tags = {
-    Owner = var.username
-    Environment = each.key
+    Owner    = var.username
+    FileType = each.key
   }
 }
 ```
@@ -237,7 +199,7 @@ resource "aws_s3_object" "env_configs" {
 ### Step 2: Apply the changes
 ```bash
 terraform plan
-# You should see 6 new objects (3 app files + 3 environment configs)
+# You should see 3 new objects (one per map entry)
 
 terraform apply
 ```
@@ -245,9 +207,9 @@ terraform apply
 ### Step 3: Check the new files
 ```bash
 aws s3 ls s3://${TF_VAR_username}-app-data-bucket --recursive
-
-# You should now see a well-organized bucket structure!
 ```
+
+> **Key Difference:** Notice how `count` creates resources indexed by number (`data_files[0]`, `data_files[1]`) while `for_each` creates resources indexed by key (`app_files["readme"]`, `app_files["config"]`). This makes `for_each` safer for additions and removals — removing an item from the middle of a count list shifts all subsequent indices.
 
 ---
 
@@ -259,23 +221,23 @@ Add this resource to your `main.tf`:
 ```hcl
 # A resource with lifecycle rules
 resource "aws_s3_object" "important_file" {
-  bucket = aws_s3_bucket.app_data.id
-  key    = "important/critical-data.txt"
+  bucket  = aws_s3_bucket.app_data.id
+  key     = "important/critical-data.txt"
   content = "This file is very important for ${var.username}!"
-  
+
   tags = {
-    Owner = var.username
+    Owner    = var.username
     Critical = "true"
   }
-  
+
   # Lifecycle rules
   lifecycle {
     # Prevent accidental deletion
     prevent_destroy = false  # Set to true in production!
-    
+
     # Ignore changes to content (won't update if content changes)
     ignore_changes = [content]
-    
+
     # Create new one before destroying old one
     create_before_destroy = true
   }
@@ -286,8 +248,10 @@ resource "aws_s3_object" "important_file" {
 ```bash
 terraform apply
 
-# Now try to change the content in the file above and apply again
-# Terraform will ignore the content change due to ignore_changes
+# Now try changing the content string in the resource above and run:
+terraform plan
+
+# Terraform will report NO changes because ignore_changes = [content]
 ```
 
 ---
@@ -318,19 +282,12 @@ output "app_files" {
   value       = { for k, v in aws_s3_object.app_files : k => v.key }
 }
 
-output "env_configs" {
-  description = "Environment config files"
-  value       = { for k, v in aws_s3_object.env_configs : k => v.key }
-}
-
 output "total_objects" {
   description = "Total number of objects in bucket"
   value = (
     1 +  # config file
     length(aws_s3_object.data_files) +
-    length(aws_s3_object.folders) + 
     length(aws_s3_object.app_files) +
-    length(aws_s3_object.env_configs) +
     1    # important file
   )
 }
@@ -340,8 +297,8 @@ output "total_objects" {
 ```bash
 terraform output
 
-# See how count creates a list [file-1, file-2, file-3]
-# And for_each creates a map {readme => "README.md", ...}
+# See how count creates a list ["data/file-1.txt", "data/file-2.txt"]
+# And for_each creates a map {readme = "app/README.md", ...}
 ```
 
 ---
@@ -349,56 +306,41 @@ terraform output
 ## 🎉 **Lab Summary**
 
 ### What You Accomplished:
-✅ **Learned implicit dependencies**: S3 bucket → versioning → file upload  
-✅ **Used explicit dependencies**: `depends_on` to force creation order  
-✅ **Created multiple resources with count**: 3 data files, 2 folders  
-✅ **Created multiple resources with for_each**: App files and environment configs  
-✅ **Applied lifecycle rules**: Prevent destroy, ignore changes, create before destroy  
-✅ **Built a well-organized S3 structure**: 15+ objects in logical folders  
+✅ **Learned implicit dependencies**: S3 bucket → versioning → file upload
+✅ **Used explicit dependencies**: `depends_on` to force creation order
+✅ **Created multiple resources with count**: 2 data files
+✅ **Created resources with for_each**: 3 app files from a map
+✅ **Applied lifecycle rules**: prevent_destroy, ignore_changes, create_before_destroy
 
-### Key Concepts Learned:
+### Key Concepts:
 
-#### **Dependencies:**
-- **Implicit**: Terraform automatically detects when resources reference each other
-- **Explicit**: Use `depends_on` when Terraform can't detect the dependency
+| Concept | Purpose |
+|---------|---------|
+| **Implicit dependency** | Terraform detects when resources reference each other |
+| **Explicit dependency** | Use `depends_on` when Terraform can't detect the dependency |
+| **count** | Creates a numbered list of similar resources |
+| **for_each** | Creates a keyed map of resources (safer for additions/removals) |
+| **prevent_destroy** | Stops accidental deletion of critical resources |
+| **ignore_changes** | Ignores specific attribute changes during apply |
+| **create_before_destroy** | Creates replacement before destroying original |
 
-#### **Count vs for_each:**
-- **Count**: Creates a list of similar resources (good for simple multiples)  
-- **for_each**: Creates a map of resources (good for different variations)
-
-#### **Lifecycle Rules:**
-- **prevent_destroy**: Stops accidental deletion
-- **ignore_changes**: Ignores specific attribute changes
-- **create_before_destroy**: Creates replacement before destroying original
-
----
-
-## 🔍 **Understanding Your S3 Structure**
-
-Your bucket now contains:
+### Your S3 Structure:
 ```
 username-app-data-bucket/
 ├── config/
 │   └── app.json
 ├── data/
 │   ├── file-1.txt
-│   ├── file-2.txt
-│   └── file-3.txt
-├── logs/
-├── backups/
+│   └── file-2.txt
 ├── app/
 │   ├── README.md
 │   ├── config.ini
 │   └── schema.sql
-├── environments/
-│   ├── development.json
-│   ├── staging.json
-│   └── production.json
 └── important/
     └── critical-data.txt
 ```
 
-**15 objects total, all created with different Terraform techniques!**
+**8 objects total — each created with a different Terraform technique.**
 
 ---
 
@@ -418,19 +360,17 @@ terraform destroy
 ### Problem: "Cycle in dependency graph"
 **Solution**: You've created a circular dependency. Check your resource references.
 
-### Problem: "Resource already exists"  
+### Problem: "Resource already exists"
 **Solution**: Another user may have the same username. Choose a different one.
 
 ### Problem: "Objects must be deleted before bucket"
-**Solution**: Terraform handles this automatically due to dependencies.
+**Solution**: Terraform handles this automatically due to `force_destroy = true` on the bucket.
 
 ---
 
 ## 🎯 **Next Steps**
 
 In Lab 5, you'll learn:
-- How to create reusable modules  
+- How to create reusable modules
 - How to organize your code into separate files
 - How to share modules between different projects
-
-**Excellent work! You now understand how Terraform manages resource relationships! 🚀**

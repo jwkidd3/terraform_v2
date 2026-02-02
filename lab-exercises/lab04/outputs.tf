@@ -20,19 +20,12 @@ output "app_files" {
   value       = { for k, v in aws_s3_object.app_files : k => v.key }
 }
 
-output "env_configs" {
-  description = "Environment config files"
-  value       = { for k, v in aws_s3_object.env_configs : k => v.key }
-}
-
 output "total_objects" {
   description = "Total number of objects in bucket"
   value = (
     1 +  # config file
     length(aws_s3_object.data_files) +
-    length(aws_s3_object.folders) + 
     length(aws_s3_object.app_files) +
-    length(aws_s3_object.env_configs) +
     1    # important file
   )
 }
