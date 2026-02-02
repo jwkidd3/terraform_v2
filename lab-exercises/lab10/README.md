@@ -63,10 +63,10 @@ terraform {
   }
 
   cloud {
-    organization = "user1-terraform-training"  # Replace with your org name
+    organization = "YOUR_USERNAME-terraform-training"  # REPLACE: e.g., "user1-terraform-training"
 
     workspaces {
-      name = "user1-terraform-cloud-lab10"      # Replace with your username
+      name = "YOUR_USERNAME-terraform-cloud-lab10"    # REPLACE: e.g., "user1-terraform-cloud-lab10"
     }
   }
 }

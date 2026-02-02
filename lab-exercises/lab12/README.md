@@ -17,7 +17,7 @@ By the end of this lab, you will be able to:
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Labs 10-11 (Terraform Cloud fundamentals)
+- Completion of Labs 10-11 (Terraform Cloud essentials)
 - GitHub account with repository creation permissions
 - Terraform Cloud account and organization
 - Basic understanding of version control with Git
@@ -347,7 +347,7 @@ rm -rf terraform-vcs-lab12-{username}
 ## 🎓 **Course Conclusion**
 Congratulations! You've completed all 12 labs and now have expertise in:
 
-**✅ Terraform Fundamentals** (Labs 1-5)
+**✅ Terraform Core Concepts** (Labs 1-5)
 **✅ Advanced Configuration** (Labs 6-9)
 **✅ Terraform Cloud Integration** (Labs 10-11)
 **✅ VCS-Driven Infrastructure** (Lab 12)

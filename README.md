@@ -15,7 +15,7 @@
 
 ## Course Structure
 
-### **Day 1: Terraform Fundamentals** (5 Labs)
+### **Day 1: Terraform Core Concepts** (5 Labs)
 - **Lab 1**: Introduction to Terraform with Docker (45 min)
 - **Lab 2**: AWS Infrastructure with Terraform (45 min)
 - **Lab 3**: Advanced Variables and Configuration (45 min)
@@ -52,7 +52,7 @@ terraform_v2/
 │   ├── lab11/                         # Lab 11: Terraform Cloud Workspaces
 │   └── lab12/                         # Lab 12: VCS-Driven Terraform Cloud
 ├── presentations/                     # Theory presentations (Reveal.js)
-│   ├── module1_fundamentals.html
+│   ├── module1_core_concepts.html
 │   ├── module2_configuration.html
 │   └── module3_advanced.html
 ```

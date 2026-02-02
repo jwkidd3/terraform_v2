@@ -60,7 +60,7 @@ terraform {
   }
 
   cloud {
-    organization = "user1-terraform-training"  # Replace with your org name from Lab 10
+    organization = "YOUR_USERNAME-terraform-training"  # REPLACE: use your org name from Lab 10
 
     workspaces {
       tags = ["lab11"]  # Selects among all workspaces tagged "lab11"
