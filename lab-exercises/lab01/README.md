@@ -76,6 +76,20 @@ free -h
 git --version
 ```
 
+### Step 6: Clone the Course Repository
+
+```bash
+cd ~/environment
+git clone https://github.com/jwkidd3/terraform_v2.git
+```
+
+This repository contains all lab exercises and reference files for the course. You will work from this directory throughout the training.
+
+```bash
+# Verify the clone
+ls terraform_v2/lab-exercises/
+```
+
 ---
 
 ## 🛠️ **Exercise 1.2: Install Terraform and Docker**
