@@ -6,37 +6,89 @@
 
 ---
 
-## 🎯 **Simple Learning Objectives**
+## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Install and verify Terraform locally
-- Understand what Infrastructure as Code means in practice
-- Create your first Terraform configuration using Docker
-- Experience the complete Terraform workflow: init, plan, apply, destroy
-- Understand the relationship between code and infrastructure
+- Set up an AWS Cloud9 development environment
+- Install and verify Terraform in a Cloud9 environment
+- Create a Terraform configuration using the Docker provider
+- Execute the complete Terraform workflow: init, plan, apply, destroy
+- Interpret Terraform plan output and state files
 
 ---
 
 ## 📋 **Prerequisites**
-- AWS Cloud9 environment 
+- AWS Management Console access
+- Assigned username (user1, user2, user3, etc.)
 - Basic understanding of command line
-- No prior Terraform or Docker experience required!
 
 ---
 
-## 🛠️ **Lab Setup**
+## 🛠️ **Exercise 1.1: Create Your Cloud9 Environment**
 
-### Set Your Username
+### Step 1: Navigate to Cloud9
+
+1. Sign in to the **AWS Management Console**
+2. In the top navigation bar, set the region to **US East (N. Virginia) us-east-1**
+3. In the search bar, type **Cloud9** and select it from the results
+
+### Step 2: Create Environment
+
+1. Click **Create environment**
+2. Set the **Name** to your assigned username (e.g., `user1`, `user2`, `user3`)
+
+### Step 3: Configure EC2 Instance
+
+| Setting | Value |
+|---------|-------|
+| **Environment type** | New EC2 instance |
+| **Instance type** | m5.large (8 GiB RAM + 2 vCPU) |
+| **Platform** | Amazon Linux |
+| **Timeout** | 30 minutes |
+| **Connection** | **Secure Shell (SSH)** |
+
+> **IMPORTANT:** You must select **Secure Shell (SSH)** as the connection type. Do not use AWS Systems Manager (SSM).
+
+Leave **VPC** and **Subnet** at their default values.
+
+### Step 4: Launch
+
+1. Click **Create**
+2. Wait for the environment to provision (this may take 1-2 minutes)
+3. Once ready, click the **Open** link next to your environment name to launch the Cloud9 IDE
+
+> **IMPORTANT:** You must click **Open** to enter the Cloud9 IDE. All remaining commands in this lab are run inside the **Cloud9 terminal** (the shell panel at the bottom of the IDE).
+
+### Step 5: Verify Environment
+
+Run the following commands in the **Cloud9 terminal**:
+
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
-export TF_VAR_username="user1"
-echo "Your username: $TF_VAR_username"
+# Verify Amazon Linux
+cat /etc/os-release
+
+# Check available disk space
+df -h /
+
+# Check memory
+free -h
+
+# Verify git is installed
+git --version
 ```
 
 ---
 
-## 📝 **Exercise 1.1: Install Terraform (10 minutes)**
+## 🛠️ **Exercise 1.2: Install Terraform and Docker**
 
-### Step 1: Install Terraform
+### Step 1: Set Your Username
+```bash
+# IMPORTANT: Replace "user1" with your assigned username
+export TF_VAR_username="user1"
+echo "export TF_VAR_username=\"$TF_VAR_username\"" >> ~/.bashrc
+echo "Username set to: $TF_VAR_username"
+```
+
+### Step 2: Install Terraform
 ```bash
 # Download Terraform
 wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
@@ -49,7 +101,12 @@ rm terraform_1.9.8_linux_amd64.zip
 terraform version
 ```
 
-### Step 2: Install Docker (Already available in Cloud9)
+**Expected output:**
+```
+Terraform v1.9.8
+```
+
+### Step 3: Verify Docker
 ```bash
 # Check Docker is available
 docker version
@@ -63,7 +120,7 @@ docker ps
 
 ---
 
-## 🐳 **Exercise 1.2: Your First Infrastructure as Code (25 minutes)**
+## 🐳 **Exercise 1.3: Your First Infrastructure as Code**
 
 ### Step 1: Create Lab Directory
 ```bash
@@ -162,7 +219,7 @@ username = "user1"
 
 ---
 
-## ⚙️ **Exercise 1.3: Experience the Terraform Workflow (10 minutes)**
+## ⚙️ **Exercise 1.4: Experience the Terraform Workflow**
 
 ### Step 1: Initialize Terraform
 ```bash
@@ -245,7 +302,7 @@ terraform state list
 
 ---
 
-## 🧪 **Exercise 1.4: Experiment and Learn (Optional)**
+## 🧪 **Exercise 1.5: Experiment and Learn (Optional)**
 
 ### Try Making Changes:
 Edit your `terraform.tfvars` file to change the external port:
@@ -273,7 +330,7 @@ curl http://localhost:9090  # Test new port
 
 ---
 
-## 🧹 **Exercise 1.5: Clean Up Your Infrastructure**
+## 🧹 **Exercise 1.6: Clean Up Your Infrastructure**
 
 ### Destroy Everything:
 ```bash
@@ -333,6 +390,19 @@ docker ps | grep $TF_VAR_username
 ---
 
 ## ❓ **Troubleshooting**
+
+### Problem: Cloud9 IDE does not open
+**Solution**: Verify you are in the **us-east-1** region. Check that pop-ups are not blocked in your browser. Try refreshing the page.
+
+### Problem: "Unable to access your environment"
+**Solution**: Wait 1-2 minutes and try again. If the issue persists, delete the environment and recreate it.
+
+### Problem: Disk space warning
+**Solution**: Run:
+```bash
+sudo growpart /dev/xvda 1
+sudo resize2fs /dev/xvda1
+```
 
 ### Problem: "Docker daemon not running"
 **Solution**: Run `sudo service docker start`
