@@ -72,12 +72,18 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
 }
 
 variable "username" {
   description = "Your unique username"
   type        = string
+}
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "environment" {
@@ -168,11 +174,11 @@ output "terraform_cloud_workspace" {
 ### Step 2: Configure Workspace Variables
 In your Terraform Cloud workspace, add these environment variables:
 - `AWS_ACCESS_KEY_ID` (sensitive) - Your AWS access key
-- `AWS_SECRET_ACCESS_KEY` (sensitive) - Your AWS secret key  
-- `AWS_DEFAULT_REGION` - `us-east-2`
+- `AWS_SECRET_ACCESS_KEY` (sensitive) - Your AWS secret key
 
 Add these Terraform variables:
 - `username` - Your username (e.g., "user1")
+- `aws_region` - (Optional) AWS region, defaults to "us-east-1"
 
 ### Step 3: Execute Remote Plans and Applies
 ```bash

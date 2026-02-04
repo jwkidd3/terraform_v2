@@ -3,6 +3,7 @@
 # Basic configuration
 username    = "user1" # Replace with your assigned username
 environment = "dev"
+aws_region  = "us-east-1"  # Set to your AWS region
 
 # Application configuration
 application_config = {

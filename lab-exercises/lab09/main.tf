@@ -315,6 +315,9 @@ resource "aws_instance" "web" {
     environment = var.environment
   }))
 
+  # Ensure NAT Gateway route is ready before instances start
+  depends_on = [aws_route_table_association.private]
+
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-web-${count.index + 1}"
     Type = "WebServer"

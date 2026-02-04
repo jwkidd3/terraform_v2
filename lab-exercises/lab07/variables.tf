@@ -1,3 +1,5 @@
+# variables.tf - Lab 7 Variable Definitions
+
 variable "username" {
   description = "Your unique username"
   type        = string
@@ -8,13 +10,13 @@ variable "username" {
   }
 }
 
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+}
+
 variable "environment" {
   description = "Environment name"
   type        = string
   default     = "development"
-}
-
-variable "aws_region" {
-  description = "AWS region for resources"
-  type        = string
 }

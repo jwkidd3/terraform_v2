@@ -42,10 +42,34 @@ echo "Your username: $TF_VAR_username"
 cd ~/environment/terraform_v2/lab-exercises/lab07
 ```
 
-### Step 2: Basic VPC Infrastructure
-We'll use the popular VPC module from the Terraform Registry to create our networking foundation.
+### Step 2: Review Lab Files
+This lab uses a clean file structure with variables separated from main configuration.
 
-**main.tf:**
+**variables.tf** - All variable definitions:
+```hcl
+variable "username" {
+  description = "Your unique username"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
+  }
+}
+
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "development"
+}
+```
+
+**main.tf** - Provider, data sources, and locals:
 ```hcl
 terraform {
   required_version = ">= 1.9"
@@ -60,35 +84,10 @@ terraform {
       version = "~> 3.1"
     }
   }
-
-  # Using local backend for this lab
-  # Remote state configuration is covered in Lab 6
 }
 
 provider "aws" {
   region = var.aws_region
-}
-
-variable "username" {
-  description = "Your unique username"
-  type        = string
-
-  validation {
-    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
-    error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
-  }
-}
-
-variable "aws_region" {
-  description = "AWS region for resources"
-  type        = string
-  default     = "us-east-2"
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "development"
 }
 
 # Data sources
@@ -366,11 +365,12 @@ output "s3_bucket" {
 }
 ```
 
-### Step 3: Create Variable Values File
-**terraform.tfvars:**
+### Step 3: Update Variable Values
+**terraform.tfvars** - Update with your username:
 ```hcl
-username    = "user1"  # Replace with your username
+username    = "user1"      # Replace with your username
 environment = "development"
+aws_region  = "us-east-1"  # Set to your AWS region
 ```
 
 ### Step 4: Deploy the Infrastructure
