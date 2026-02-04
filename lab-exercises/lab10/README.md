@@ -43,12 +43,12 @@ echo "Your username: $TF_VAR_username"
 3. Create a new organization: `${username}-terraform-training`
 4. Note your organization name for later use
 
-### Step 2: Create Lab Directory and Configuration
+### Step 2: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab10
-cd terraform-lab10
+cd ~/environment/terraform_v2/lab-exercises/lab10
 ```
+
+Review the existing configuration files (`main.tf`, `variables.tf`, `outputs.tf`, `terraform.tfvars`) and update them as needed.
 
 **main.tf:**
 ```hcl

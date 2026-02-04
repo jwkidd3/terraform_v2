@@ -58,16 +58,18 @@ Copy the lab files from the lab12 directory to your repository:
 
 ```bash
 # Copy main infrastructure files
-cp ~/environment/lab-exercises/lab12/main.tf .
-cp ~/environment/lab-exercises/lab12/variables.tf .
-cp ~/environment/lab-exercises/lab12/outputs.tf .
-cp ~/environment/lab-exercises/lab12/user_data.sh .
-cp ~/environment/lab-exercises/lab12/terraform.tfvars .
+cp ~/environment/terraform_v2/lab-exercises/lab12/main.tf .
+cp ~/environment/terraform_v2/lab-exercises/lab12/variables.tf .
+cp ~/environment/terraform_v2/lab-exercises/lab12/outputs.tf .
+cp ~/environment/terraform_v2/lab-exercises/lab12/user_data.sh .
 
-# Update your username in terraform.tfvars
-echo 'username = "YOUR_USERNAME"' > terraform.tfvars
-echo 'environment = "gitops"' >> terraform.tfvars
-echo 'app_version = "v1.0.0"' >> terraform.tfvars
+# Create terraform.tfvars with your settings
+cat <<EOF > terraform.tfvars
+username    = "YOUR_USERNAME"  # Replace with your username
+environment = "gitops"
+app_version = "v1.0.0"
+aws_region  = "us-east-1"      # Set to your AWS region
+EOF
 ```
 
 ### Step 4: Prepare Repository for Terraform Cloud
@@ -132,7 +134,10 @@ Notice what Terraform Cloud automatically configured:
 Add these **Environment Variables** (for AWS access):
 - `AWS_ACCESS_KEY_ID` (mark as sensitive)
 - `AWS_SECRET_ACCESS_KEY` (mark as sensitive)
-- `AWS_DEFAULT_REGION` = `us-east-2`
+
+Add these **Terraform Variables**:
+- `username` = your username
+- `aws_region` = your AWS region (e.g., `us-east-1`)
 
 ### Step 5: Update Repository Configuration
 Now that you have your workspace name, update your repository:
@@ -186,10 +191,11 @@ Make a change to test the VCS integration:
 
 **Edit terraform.tfvars:**
 ```hcl
-username = "YOUR_USERNAME"  # Your actual username
-environment = "gitops"
-app_version = "v1.1.0"  # Bump version
-desired_instances = 3    # Scale up
+username          = "YOUR_USERNAME"  # Your actual username
+environment       = "gitops"
+app_version       = "v1.1.0"         # Bump version
+desired_instances = 3                 # Scale up
+aws_region        = "us-east-1"      # Your AWS region
 ```
 
 **Commit and push:**

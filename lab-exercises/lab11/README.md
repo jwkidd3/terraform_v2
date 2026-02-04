@@ -38,12 +38,12 @@ echo "Your username: $TF_VAR_username"
 
 In this exercise, you will create a single Terraform configuration that can be deployed to multiple Terraform Cloud workspaces. The key is the `cloud {}` block using `tags` instead of `name` — this allows you to switch between workspaces with `terraform workspace select`.
 
-### Step 1: Create Lab Directory
+### Step 1: Navigate to Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab11
-cd terraform-lab11
+cd ~/environment/terraform_v2/lab-exercises/lab11
 ```
+
+Review the existing configuration files and update them as needed.
 
 ### Step 2: Create Configuration Files
 
@@ -75,7 +75,6 @@ provider "aws" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-2"
 }
 
 variable "environment" {
@@ -211,7 +210,7 @@ Add **Terraform Variables** (different values from development):
 
 ### Step 1: Initialize and Select Development Workspace
 ```bash
-cd ~/environment/terraform-lab11
+cd ~/environment/terraform_v2/lab-exercises/lab11
 
 # Initialize — Terraform will find both workspaces tagged "lab11"
 terraform init
