@@ -37,7 +37,23 @@ echo "Your username: $TF_VAR_username"
 
 ## 🔗 **Exercise 12.1: Prepare Infrastructure Code in GitHub (10 minutes)**
 
-### Step 1: Create GitHub Repository
+### Step 1: Create GitHub Personal Access Token
+GitHub requires a Personal Access Token (PAT) for authentication (username/password is no longer supported).
+
+1. Go to GitHub: https://github.com/settings/tokens
+2. Click **Generate new token** → **Generate new token (classic)**
+3. Note: "Terraform Cloud Lab"
+4. Expiration: 7 days (or your preference)
+5. Select scopes: **repo** (full control of private repositories)
+6. Click **Generate token**
+7. **Copy the token immediately** — you won't see it again!
+
+Configure git to cache your credentials:
+```bash
+git config --global credential.helper store
+```
+
+### Step 2: Create GitHub Repository
 1. Go to GitHub: https://github.com
 2. Click **New Repository**
 3. Repository name: `terraform-vcs-lab12-{username}` (replace with your username)
@@ -46,14 +62,16 @@ echo "Your username: $TF_VAR_username"
 6. Initialize with README: **checked**
 7. Click **Create repository**
 
-### Step 2: Clone and Populate Repository
+### Step 3: Clone and Populate Repository
 ```bash
 cd ~/environment
-git clone https://github.com/YOUR_USERNAME/terraform-vcs-lab12-{username}.git
+git clone https://github.com/YOUR_GITHUB_USERNAME/terraform-vcs-lab12-{username}.git
 cd terraform-vcs-lab12-{username}
 ```
 
-### Step 3: Add Terraform Configuration Files
+> **Note:** When prompted for password, use your **Personal Access Token** (not your GitHub password).
+
+### Step 4: Add Terraform Configuration Files
 Copy the lab files from the lab12 directory to your repository:
 
 ```bash
@@ -72,7 +90,7 @@ aws_region  = "us-east-1"      # Set to your AWS region
 EOF
 ```
 
-### Step 4: Prepare Repository for Terraform Cloud
+### Step 5: Prepare Repository for Terraform Cloud
 Remove the placeholder values and prepare for VCS-driven workflow:
 
 **Edit main.tf** - Update the cloud block:
@@ -86,7 +104,7 @@ Remove the placeholder values and prepare for VCS-driven workflow:
   }
 ```
 
-### Step 5: Commit Initial Code
+### Step 6: Commit Initial Code
 ```bash
 git add .
 git commit -m "Initial Terraform configuration for VCS-driven workflow
@@ -97,6 +115,8 @@ git commit -m "Initial Terraform configuration for VCS-driven workflow
 
 git push origin main
 ```
+
+> **Authentication:** When prompted, enter your GitHub username and use your **Personal Access Token** as the password.
 
 ---
 
