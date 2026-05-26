@@ -52,7 +52,7 @@ variable "username" {
   type        = string
 
   validation {
-    condition     = can(regex("^[a-z0-9]{3,20}$", var.username))
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
     error_message = "Username must be 3-20 characters, lowercase letters and numbers only."
   }
 }

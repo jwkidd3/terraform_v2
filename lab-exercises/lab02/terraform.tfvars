@@ -1,6 +1,10 @@
-# terraform.tfvars - Variable value assignments
+# terraform.tfvars
+#
+# `username` is intentionally NOT set here. Provide it via the
+# TF_VAR_username environment variable so each student in the shared
+# classroom environment gets a unique value:
+#
+#     export TF_VAR_username="user1"   # replace with your assigned name
 
-# Replace "user1" with your assigned username
-username    = "user1"
 environment = "development"
-aws_region  = "us-east-1"  # Set to your AWS region
+aws_region  = "us-east-1"

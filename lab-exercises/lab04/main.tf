@@ -62,6 +62,12 @@ resource "aws_s3_object" "config" {
   tags = {
     Owner = var.username
   }
+
+  # timestamp() changes on every plan — without ignore_changes, every apply
+  # would re-upload this file.
+  lifecycle {
+    ignore_changes = [content]
+  }
 }
 
 # Create multiple S3 objects using count

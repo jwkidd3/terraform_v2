@@ -104,12 +104,13 @@ Open the **Variables** tab and add:
 
 **Terraform Variables**:
 
-| Key              | Value         |
-|------------------|---------------|
-| `environment`    | `development` |
-| `instance_count` | `1`           |
+| Key              | Value                                 |
+|------------------|---------------------------------------|
+| `username`       | *your assigned username (e.g. user1)* |
+| `environment`    | `development`                         |
+| `instance_count` | `1`                                   |
 
-> Note: `username` and `aws_region` come from your local `terraform.tfvars` and the default in `variables.tf` respectively. You only need to set workspace variables for values that should differ between workspaces.
+> Note: `aws_region` has a default in `variables.tf`, so you don't need to set it. `username` MUST be set as a workspace variable — TFC remote runs do not inherit your local `TF_VAR_username` env var. Both workspaces (development and staging) need their own `username` value, even though it's the same for you.
 
 ### Step 4: Set Apply Method
 1. In **Settings** → **General**, find **Apply Method**
@@ -135,12 +136,13 @@ Repeat the steps above for a staging environment:
 4. **Save settings**
 
 ### Step 3: Add Workspace Variables
-Same AWS credentials as development, but **different Terraform variables**:
+Same AWS credentials as development, plus `username` (TFC remote runs need it as a workspace variable), but **different `environment` and `instance_count`**:
 
-| Key              | Value     |
-|------------------|-----------|
-| `environment`    | `staging` |
-| `instance_count` | `2`       |
+| Key              | Value                                 |
+|------------------|---------------------------------------|
+| `username`       | *your assigned username (e.g. user1)* |
+| `environment`    | `staging`                             |
+| `instance_count` | `2`                                   |
 
 ### Step 4: Set Apply Method
 **Manual apply** again.

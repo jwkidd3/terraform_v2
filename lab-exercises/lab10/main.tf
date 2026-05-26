@@ -42,9 +42,34 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+resource "aws_security_group" "demo" {
+  name        = "${local.name_prefix}-demo-sg"
+  description = "Allow HTTP for Lab 10 demo"
+
+  ingress {
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-demo-sg"
+  })
+}
+
 resource "aws_instance" "demo" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  vpc_security_group_ids = [aws_security_group.demo.id]
 
   user_data = base64encode(<<-EOF
     #!/bin/bash

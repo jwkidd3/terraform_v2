@@ -75,9 +75,12 @@ cp ~/environment/terraform_v2/lab-exercises/lab12/user_data.sh .
 > When prompted for password during `git clone`, paste your **Personal Access Token**.
 
 ### Step 4: Create `terraform.tfvars` in the Repo
+The lab's source `terraform.tfvars` deliberately omits `username` — you'll
+provide it as a Terraform Cloud workspace variable in Exercise 12.2 (TFC
+remote runs do not inherit local `TF_VAR_*` env vars).
+
 ```bash
-cat > terraform.tfvars <<EOF
-username    = "${TF_VAR_username}"
+cat > terraform.tfvars <<'EOF'
 environment = "gitops"
 app_version = "v1.0.0"
 EOF
@@ -105,14 +108,23 @@ TFC installed a webhook on your repo automatically:
 ### Step 3: Add Workspace Variables
 **Variables** tab:
 
-**Environment Variables** (AWS credentials):
+**Environment Variables** (AWS credentials, plus the destroy guardrail):
 
 | Key                     | Value                        | Sensitive |
 |-------------------------|------------------------------|-----------|
 | `AWS_ACCESS_KEY_ID`     | *your AWS access key*        | ✅        |
 | `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key* | ✅        |
+| `CONFIRM_DESTROY`       | `1`                          |           |
 
-That's it for variables — `username`, `environment`, `app_version`, and `aws_region` all come from `terraform.tfvars` or the defaults in `variables.tf`.
+> **Why `CONFIRM_DESTROY`?** Terraform Cloud requires this environment variable on VCS-driven workspaces before it will run a destroy plan. Set it now so the cleanup step at the end of the lab works.
+
+**Terraform Variables**:
+
+| Key        | Value                                 |
+|------------|---------------------------------------|
+| `username` | *your assigned username (e.g. user1)* |
+
+> `username` lives in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique value, and you don't want it committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 
 ### Step 4: Fill In the `cloud {}` Block
 Open `main.tf` in your repo and replace the two placeholders:
@@ -148,10 +160,9 @@ In the TFC workspace:
 This is the main payoff: a code change → Git push → automatic TFC run.
 
 ### Step 1: Bump the App Version
-Edit `terraform.tfvars` in your repo:
+Edit `terraform.tfvars` in your repo and change `app_version` from `v1.0.0` to `v1.1.0`:
 
 ```hcl
-username    = "user1"
 environment = "gitops"
 app_version = "v1.1.0"      # ← was v1.0.0
 ```
@@ -186,7 +197,7 @@ git checkout -b feature/add-tags
 ```
 
 ### Step 2: Make a Trivial Change
-Edit `main.tf` and add one tag to the `common_tags` local:
+Edit `main.tf` and add **one new line** to the existing `common_tags` block — the `CostCenter` line. Do not retype the whole block; just insert the new entry alongside the existing tags so the block ends up like this:
 
 ```hcl
   common_tags = {
@@ -195,7 +206,7 @@ Edit `main.tf` and add one tag to the `common_tags` local:
     ManagedBy   = "TerraformCloud"
     Lab         = "12"
     Workflow    = "VCS-driven"
-    CostCenter  = "Training"   # ← new
+    CostCenter  = "Training"   # ← only this line is new
   }
 ```
 
@@ -254,6 +265,8 @@ From the TFC workspace UI:
 1. Open the workspace
 2. **Settings** → **Destruction and Deletion** → **Queue destroy plan**
 3. Confirm and approve the destroy run
+
+> If the destroy plan errors with *"Destroy is disabled..."*, the `CONFIRM_DESTROY=1` environment variable is missing from the workspace. Add it under **Variables** → **Environment Variables** and re-queue the destroy.
 
 ### Optional Local Cleanup
 ```bash

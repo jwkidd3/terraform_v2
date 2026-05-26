@@ -75,10 +75,13 @@ In the workspace, open the **Variables** tab and add:
 
 **Terraform Variables** (these map to `variable` blocks in your HCL):
 
-| Key         | Value                                |
-|-------------|--------------------------------------|
+| Key         | Value                                 |
+|-------------|---------------------------------------|
 | `username`  | *your assigned username (e.g. user1)* |
 
+> **Important — `TF_VAR_*` is local-only:**
+> The `TF_VAR_username` environment variable you exported in Cloud9 does NOT propagate to TFC's remote runners. You must set `username` here as a Terraform workspace variable, otherwise the remote plan will fail with "No value for required variable."
+>
 > **Why two kinds of variables?**
 > - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.
 > - **Terraform Variables** are bound to your `variable "..." {}` blocks in `main.tf` / `variables.tf`. This is where your application configuration goes.

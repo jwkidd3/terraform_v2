@@ -34,11 +34,31 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+resource "aws_security_group" "app" {
+  name        = "${var.username}-${var.environment}-app-sg"
+  description = "Lab 11 ${var.environment} workspace SG"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-app-sg"
+    Environment = var.environment
+    Owner       = var.username
+    Lab         = "11"
+  }
+}
+
 resource "aws_instance" "app" {
   count = var.instance_count
 
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  vpc_security_group_ids = [aws_security_group.app.id]
 
   tags = {
     Name        = "${var.username}-${var.environment}-instance-${count.index + 1}"
