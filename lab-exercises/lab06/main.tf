@@ -21,6 +21,7 @@ variable "username" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
+  default     = "us-east-1"
 }
 
 # S3 bucket for demonstration
@@ -54,7 +55,7 @@ resource "aws_s3_object" "demo_files" {
 
   tags = {
     Owner = var.username
-    Index = count.index + 1
+    Index = tostring(count.index + 1)
   }
 }
 

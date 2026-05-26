@@ -1,6 +1,6 @@
 # Lab 12: VCS-Driven Terraform Cloud with GitHub Integration
 **Duration:** 45 minutes
-**Difficulty:** Advanced
+**Difficulty:** Intermediate
 **Day:** 3
 **Environment:** GitHub + Terraform Cloud + AWS
 
@@ -8,19 +8,19 @@
 
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Connect a GitHub repository to Terraform Cloud for VCS-driven workflows
-- Configure Terraform Cloud to automatically pull and build from GitHub
-- Set up webhook-triggered runs when code is pushed to GitHub
-- Understand VCS-driven workspace configuration and best practices
-- Implement a pull-based deployment model with Terraform Cloud
+- Connect a GitHub repository to Terraform Cloud
+- Trigger Terraform Cloud runs automatically from `git push`
+- Observe speculative plans for non-default branches
+- Compare CLI-driven and VCS-driven workflows
+
+> **Note on scope:** This lab focuses on the *workflow* — Git push triggering a remote run — not on building production infrastructure. The Terraform code deploys a single EC2 instance so you can spend your time on the VCS integration, not on waiting for an ALB to provision. Lab 9 already covers production-grade architecture.
 
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Labs 10-11 (Terraform Cloud essentials)
-- GitHub account with repository creation permissions
-- Terraform Cloud account and organization
-- Basic understanding of version control with Git
+- Completion of Labs 10–11 (TFC organization created, `terraform login` done)
+- GitHub account with permission to create public repositories
+- Basic familiarity with `git` (`add`, `commit`, `push`)
 
 ---
 
@@ -28,366 +28,246 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
-export TF_VAR_username="user1"
+export TF_VAR_username="user1"   # Replace with your assigned username
 echo "Your username: $TF_VAR_username"
 ```
 
+> **Key idea:** In Labs 10–11 you ran `terraform apply` from your shell and TFC executed the run. In this lab `git push` becomes the trigger — you will never run `terraform` locally after the setup.
+
 ---
 
-## 🔗 **Exercise 12.1: Prepare Infrastructure Code in GitHub (10 minutes)**
+## 🔗 **Exercise 12.1: Prepare a GitHub Repository (10 minutes)**
 
-### Step 1: Create GitHub Personal Access Token
-GitHub requires a Personal Access Token (PAT) for authentication (username/password is no longer supported).
+### Step 1: Generate a GitHub Personal Access Token (PAT)
+GitHub requires a PAT for HTTPS git operations.
 
-1. Go to GitHub: https://github.com/settings/tokens
-2. Click **Generate new token** → **Generate new token (classic)**
+1. Go to https://github.com/settings/tokens
+2. **Generate new token** → **Generate new token (classic)**
 3. Note: "Terraform Cloud Lab"
-4. Expiration: 7 days (or your preference)
-5. Select scopes: **repo** (full control of private repositories)
-6. Click **Generate token**
-7. **Copy the token immediately** — you won't see it again!
+4. Expiration: 7 days
+5. Scopes: check **`repo`**
+6. **Generate token**, then **copy it immediately** (GitHub will not show it again)
 
-Configure git to cache your credentials:
+Cache the credential:
 ```bash
 git config --global credential.helper store
 ```
 
-### Step 2: Create GitHub Repository
-1. Go to GitHub: https://github.com
-2. Click **New Repository**
-3. Repository name: `terraform-vcs-lab12-{username}` (replace with your username)
-4. Description: "VCS-Driven Terraform Cloud Lab 12 - Infrastructure pulled and built from GitHub"
-5. Set to **Public** (required for Terraform Cloud free tier)
-6. Initialize with README: **checked**
-7. Click **Create repository**
+### Step 2: Create a Public GitHub Repository
+1. https://github.com → **New repository**
+2. Name: `terraform-vcs-lab12-<your-username>` *(e.g., `terraform-vcs-lab12-user1`)*
+3. **Public** (required for TFC free-tier VCS integration)
+4. Check **Initialize this repository with a README**
+5. **Create repository**
 
-### Step 3: Clone and Populate Repository
+### Step 3: Clone It and Copy the Lab Files In
 ```bash
 cd ~/environment
-git clone https://github.com/YOUR_GITHUB_USERNAME/terraform-vcs-lab12-{username}.git
-cd terraform-vcs-lab12-{username}
-```
+git clone https://github.com/<your-github-username>/terraform-vcs-lab12-<your-username>.git
+cd terraform-vcs-lab12-<your-username>
 
-> **Note:** When prompted for password, use your **Personal Access Token** (not your GitHub password).
-
-### Step 4: Add Terraform Configuration Files
-Copy the lab files from the lab12 directory to your repository:
-
-```bash
-# Copy main infrastructure files
 cp ~/environment/terraform_v2/lab-exercises/lab12/main.tf .
 cp ~/environment/terraform_v2/lab-exercises/lab12/variables.tf .
 cp ~/environment/terraform_v2/lab-exercises/lab12/outputs.tf .
 cp ~/environment/terraform_v2/lab-exercises/lab12/user_data.sh .
+```
 
-# Create terraform.tfvars with your settings
-cat <<EOF > terraform.tfvars
-username    = "YOUR_USERNAME"  # Replace with your username
+> When prompted for password during `git clone`, paste your **Personal Access Token**.
+
+### Step 4: Create `terraform.tfvars` in the Repo
+```bash
+cat > terraform.tfvars <<EOF
+username    = "${TF_VAR_username}"
 environment = "gitops"
 app_version = "v1.0.0"
-aws_region  = "us-east-1"      # Set to your AWS region
 EOF
 ```
 
-### Step 5: Prepare Repository for Terraform Cloud
-Remove the placeholder values and prepare for VCS-driven workflow:
+**Do not commit yet** — you'll fill in the `cloud {}` block in Exercise 12.2.
 
-**Edit main.tf** - Update the cloud block:
+---
+
+## ☁️ **Exercise 12.2: Create the VCS-Driven Workspace (15 minutes)**
+
+### Step 1: Create the Workspace
+1. https://app.terraform.io → your organization → **New** → **Workspace**
+2. Choose **Version control workflow** *(this is the key choice — different from Labs 10–11)*
+3. Connect to **GitHub** — authorize Terraform Cloud if this is your first time
+4. Select your `terraform-vcs-lab12-<your-username>` repository
+5. Workspace name: `vcs-lab12-<your-username>` *(e.g., `vcs-lab12-user1`)*
+6. **Create workspace**
+
+### Step 2: Verify the GitHub Webhook
+TFC installed a webhook on your repo automatically:
+- GitHub repo → **Settings** → **Webhooks** — you should see a `app.terraform.io` entry
+- TFC workspace → **Settings** → **Version Control** — shows the connected repo
+
+### Step 3: Add Workspace Variables
+**Variables** tab:
+
+**Environment Variables** (AWS credentials):
+
+| Key                     | Value                        | Sensitive |
+|-------------------------|------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *your AWS access key*        | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key* | ✅        |
+
+That's it for variables — `username`, `environment`, `app_version`, and `aws_region` all come from `terraform.tfvars` or the defaults in `variables.tf`.
+
+### Step 4: Fill In the `cloud {}` Block
+Open `main.tf` in your repo and replace the two placeholders:
+
 ```hcl
   cloud {
-    organization = "YOUR_TFC_ORG_NAME"  # You'll update this in the next exercise
-
+    organization = "user1-terraform-training"   # your org from Lab 10
     workspaces {
-      name = "vcs-lab12-YOUR_USERNAME"  # You'll update this in the next exercise
+      name = "vcs-lab12-user1"                  # the workspace you just created
     }
   }
 ```
 
-### Step 6: Commit Initial Code
+### Step 5: Commit and Push — Watch the First Run Trigger
 ```bash
 git add .
-git commit -m "Initial Terraform configuration for VCS-driven workflow
-
-- Add web application infrastructure with ALB and Auto Scaling
-- Configure for Terraform Cloud VCS integration
-- Prepare for automated GitHub pulls and builds"
-
+git commit -m "Initial VCS-driven Terraform Cloud configuration"
 git push origin main
 ```
 
-> **Authentication:** When prompted, enter your GitHub username and use your **Personal Access Token** as the password.
+> When prompted, use your **PAT** as the password.
+
+In the TFC workspace:
+1. A new run appears within a few seconds (source: GitHub)
+2. Open the run and watch the plan stream
+3. Review the plan — one EC2 instance
+4. **Confirm & Apply**
 
 ---
 
-## ☁️ **Exercise 12.2: Connect GitHub Repository to Terraform Cloud (15 minutes)**
+## 🚀 **Exercise 12.3: Trigger a Change via Git Push (10 minutes)**
 
-### Step 1: Create VCS-Driven Workspace
-1. Go to Terraform Cloud: https://app.terraform.io
-2. In your organization, click **New Workspace**
-3. Choose **Version control workflow** (this is key!)
-4. Connect to **GitHub**
-5. If first time: Click **Authorize** to allow Terraform Cloud to access GitHub
-6. Select your `terraform-vcs-lab12-{username}` repository from the list
-7. Workspace name: `vcs-lab12-{username}`
-8. Description: "VCS-driven workspace demonstrating GitHub integration"
-9. Click **Create workspace**
+This is the main payoff: a code change → Git push → automatic TFC run.
 
-### Step 2: Understand VCS Integration
-Notice what Terraform Cloud automatically configured:
-- **Repository Connection**: Direct link to your GitHub repo
-- **Webhook**: Automatic webhook created in GitHub (check Settings → Webhooks)
-- **Pull Access**: Terraform Cloud can pull code from your repository
-- **Build Triggers**: Runs will trigger on Git pushes automatically
+### Step 1: Bump the App Version
+Edit `terraform.tfvars` in your repo:
 
-### Step 3: Configure Workspace for VCS Operations
-1. Go to **Settings** → **General**
-2. **Execution Mode**: Remote (runs in Terraform Cloud)
-3. **Apply Method**: Manual apply (requires approval)
-4. **Terraform Working Directory**: Leave blank (uses repo root)
-5. **VCS Triggers**:
-   - **Automatic speculative plans**: Enabled
-   - **Auto apply**: Disabled (for safety)
-6. **VCS Branch**: `main` (pulls from main branch)
-
-### Step 4: Configure Environment Variables
-Add these **Environment Variables** (for AWS access):
-- `AWS_ACCESS_KEY_ID` (mark as sensitive)
-- `AWS_SECRET_ACCESS_KEY` (mark as sensitive)
-
-Add these **Terraform Variables**:
-- `username` = your username
-- `aws_region` = your AWS region (e.g., `us-east-1`)
-
-### Step 5: Update Repository Configuration
-Now that you have your workspace name, update your repository:
-
-1. Go back to your local repository
-2. Edit `main.tf` and update the cloud block:
 ```hcl
-  cloud {
-    organization = "YOUR_ACTUAL_ORG_NAME"  # Use your real org name
-
-    workspaces {
-      name = "vcs-lab12-YOUR_USERNAME"  # Use your real workspace name
-    }
-  }
+username    = "user1"
+environment = "gitops"
+app_version = "v1.1.0"      # ← was v1.0.0
 ```
 
-3. Commit and push the change:
-```bash
-git add main.tf
-git commit -m "Update Terraform Cloud configuration with actual workspace details"
-git push origin main
-```
-
----
-
-## 🚀 **Exercise 12.3: Test VCS-Driven Builds and Deployments (15 minutes)**
-
-### Step 1: Watch Initial Automatic Build
-1. After pushing your configuration update in the previous step, go to your Terraform Cloud workspace
-2. You should see a **new run triggered automatically** by the Git push
-3. Click on the run to observe:
-   - **Source**: Shows it was triggered by GitHub webhook
-   - **Plan Phase**: Terraform Cloud pulled your code and ran `terraform plan`
-   - **Configuration**: Code was fetched directly from your GitHub repository
-
-### Step 2: Approve and Deploy
-1. Review the **Plan** output showing your infrastructure
-2. Click **Confirm & Apply** to deploy
-3. Watch the **Apply** phase where Terraform Cloud builds your infrastructure
-4. Note that this is running remotely using code pulled from GitHub
-
-### Step 3: Verify VCS-Driven Deployment
-Check your deployment:
-1. Go to **States** → **Latest** → **Outputs** in Terraform Cloud
-2. Find the ALB DNS name
-3. Visit `http://[ALB-DNS-NAME]` to see your application
-4. The web page should show it was deployed via VCS-driven workflow
-
-### Step 4: Demonstrate Code-to-Infrastructure Pipeline
-Make a change to test the VCS integration:
-
-**Edit terraform.tfvars:**
-```hcl
-username          = "YOUR_USERNAME"  # Your actual username
-environment       = "gitops"
-app_version       = "v1.1.0"         # Bump version
-desired_instances = 3                 # Scale up
-aws_region        = "us-east-1"      # Your AWS region
-```
-
-**Commit and push:**
+### Step 2: Commit and Push
 ```bash
 git add terraform.tfvars
-git commit -m "Scale infrastructure and update app version via VCS
-
-- Increase desired_instances from 2 to 3 (auto scaling)
-- Update app_version to v1.1.0
-- Demonstrate VCS-triggered infrastructure changes"
-
+git commit -m "Bump app version to v1.1.0"
 git push origin main
 ```
 
-### Step 5: Watch Automatic VCS-Triggered Build
-1. **Immediately** go to your Terraform Cloud workspace
-2. Within seconds, you should see a **new run appear automatically**
-3. This demonstrates the webhook integration:
-   - GitHub detected your push
-   - Webhook notified Terraform Cloud
-   - Terraform Cloud pulled the latest code
-   - New plan/apply cycle initiated automatically
-4. Review the plan showing your scaling changes
-5. Approve the apply to see VCS-driven infrastructure changes
+### Step 3: Watch the Auto-Triggered Run
+1. Switch to the TFC UI immediately — a new run should appear within seconds
+2. The plan shows the `AppVersion` tag updating *and* the instance being replaced (because `user_data` changes force replacement)
+3. **Confirm & Apply**
+
+### Step 4: Verify the Change in the Browser
+1. Workspace → **States** → **Latest** → **Outputs** → copy `instance_url`
+2. Open it in your browser — the page should now read `App Version: v1.1.0`
+
+> **What just happened:** you changed one line of HCL, pushed to GitHub, and the cloud provider rebuilt the instance — no `terraform` command from your shell. This is the foundation of GitOps.
 
 ---
 
-## 🔄 **Exercise 12.4: Advanced VCS Features and Branch Workflows (5 minutes)**
+## 🔄 **Exercise 12.4: Speculative Plans on a Feature Branch (10 minutes)**
 
-### Step 1: Explore VCS Settings
-1. Go to **Settings** → **Version Control** in your workspace
-2. Review the VCS configuration:
-   - **Repository**: Shows your connected GitHub repo
-   - **Branch**: Currently building from `main`
-   - **Webhook URL**: The endpoint GitHub calls
-   - **Include submodules**: For complex repository structures
+VCS-driven workspaces run **speculative plans** for non-default branches — plans only, no apply. This is the foundation for PR-based review workflows.
 
-### Step 2: Test Branch-Based Planning
-Create a feature branch to see speculative plans:
+### Step 1: Create a Feature Branch
 ```bash
-# Create feature branch (won't trigger deployments)
-git checkout -b feature/add-monitoring
-
-# Add a monitoring resource to main.tf
+git checkout -b feature/add-tags
 ```
 
-**Add to the end of main.tf:**
+### Step 2: Make a Trivial Change
+Edit `main.tf` and add one tag to the `common_tags` local:
+
 ```hcl
-# CloudWatch Alarm for monitoring VCS-driven deployments
-resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  alarm_name          = "${local.name_prefix}-high-cpu"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_description   = "Monitors CPU for VCS-deployed instances"
-  alarm_actions       = []
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web.name
+  common_tags = {
+    Owner       = var.username
+    Environment = var.environment
+    ManagedBy   = "TerraformCloud"
+    Lab         = "12"
+    Workflow    = "VCS-driven"
+    CostCenter  = "Training"   # ← new
   }
-
-  tags = local.common_tags
-}
 ```
 
+### Step 3: Push the Branch
 ```bash
 git add main.tf
-git commit -m "Add monitoring for VCS-driven infrastructure
-
-- CloudWatch alarm for high CPU utilization
-- Demonstrates branch-based planning workflow
-- No deployment until merged to main"
-
-git push origin feature/add-monitoring
+git commit -m "Add CostCenter tag"
+git push origin feature/add-tags
 ```
 
-### Step 3: Observe Speculative Planning
-1. Go to your Terraform Cloud workspace
-2. You should see a **speculative plan** was created
-3. This shows what would happen if the branch were merged
-4. **Key Point**: No actual infrastructure changes because it's not the main branch
+### Step 4: Observe the Speculative Plan in TFC
+1. TFC workspace → **Runs** tab → new run with a **"Plan only (speculative)"** badge
+2. Open it — the plan shows what *would* change if this branch were merged
+3. **No apply happens** — that's the point of speculative plans
 
-### Step 4: Understand VCS-Driven vs CLI-Driven
-Compare the two approaches:
+### Step 5: (Optional) Merge via Pull Request
+1. GitHub → **Pull requests** → **New pull request**
+2. Base: `main` ← Compare: `feature/add-tags`
+3. Notice TFC posts the plan results to the PR (if your repo allows status checks)
+4. Merge — once merged into `main`, TFC triggers a real plan/apply
 
-**VCS-Driven (what you just learned):**
-- ✅ Code stored in GitHub
-- ✅ Terraform Cloud pulls and builds automatically
-- ✅ Webhook triggers on Git push
-- ✅ Team collaboration through Git workflows
-- ✅ Infrastructure versioned with application code
+---
 
-**CLI-Driven (Labs 10-11):**
-- Code on local machine
-- Manual terraform commands
-- Direct API calls to Terraform Cloud
-- Good for testing and development
+## 📊 **Summary: CLI-Driven vs VCS-Driven**
+
+| Aspect             | CLI-Driven (Labs 10–11)              | VCS-Driven (Lab 12)                   |
+|--------------------|---------------------------------------|---------------------------------------|
+| Trigger            | `terraform apply` from your shell    | `git push` to the connected branch    |
+| Source of truth    | Your local working directory         | GitHub repository                     |
+| Speculative plans  | Manual (`terraform plan`)            | Automatic on every branch push        |
+| Team collaboration | Each person runs locally             | Everyone collaborates through Git     |
+| Best for           | Iterative development, experiments   | Production change management          |
 
 ---
 
 ## 🎯 **Lab Summary**
 
 ### What You Accomplished
-✅ **VCS-Driven Workflow** - Connected GitHub repository to Terraform Cloud
-✅ **Automatic Code Pulling** - Terraform Cloud pulls and builds from GitHub automatically
-✅ **Webhook Integration** - GitHub webhooks trigger Terraform Cloud runs
-✅ **Production Infrastructure** - Web application with ALB and Auto Scaling deployed via VCS workflow
-✅ **Branch-Based Planning** - Speculative plans for feature branches
-✅ **Team Collaboration** - Infrastructure code shared through Git repository
+- ✅ Created a GitHub repository and connected it to a VCS-driven TFC workspace
+- ✅ Triggered an automatic plan/apply by pushing to `main`
+- ✅ Triggered an update by editing a variable and pushing again
+- ✅ Observed a speculative plan on a feature branch (plan only, no apply)
 
-### Key VCS-Driven Concepts Learned
-- **Repository Integration**: Terraform Cloud connects directly to GitHub
-- **Automatic Builds**: Git pushes trigger infrastructure builds automatically
-- **Code Pulling**: Terraform Cloud fetches code from repository for each run
-- **Webhook Automation**: GitHub notifies Terraform Cloud of code changes
-- **Branch Workflows**: Main branch deploys, feature branches create plans only
-
-### VCS-Driven Benefits Demonstrated
-- **Centralized Code**: All infrastructure code stored in version control
-- **Automatic Triggers**: No manual intervention needed for deployments
-- **Team Collaboration**: Multiple developers can work on infrastructure
-- **Change Tracking**: Git history provides complete audit trail
-- **Branch Protection**: Test changes in branches before merging
-
-### Technical Integration Points
-- GitHub repository containing Terraform configuration
-- Terraform Cloud workspace connected to specific repository
-- Webhook automatically created in GitHub settings
-- Automatic code pulling and building on every push
-- Speculative planning for non-main branches
+### Key Concepts
+- **VCS-driven workflow** — TFC pulls code from GitHub on push; you don't run `terraform` locally
+- **Webhook integration** — GitHub posts to TFC's webhook URL on every push
+- **Speculative plans** — non-default branches get plans only, perfect for PR review
+- **GitOps** — Git is the single source of truth for infrastructure state
 
 ---
 
 ## 🧹 **Cleanup**
+
+### Destroy the Infrastructure
+From the TFC workspace UI:
+1. Open the workspace
+2. **Settings** → **Destruction and Deletion** → **Queue destroy plan**
+3. Confirm and approve the destroy run
+
+### Optional Local Cleanup
 ```bash
-# Destroy infrastructure via Terraform Cloud UI
-# 1. Go to your workspace in Terraform Cloud
-# 2. Click "Actions" → "Start new run"
-# 3. Choose "Destroy" as the plan type
-# 4. Confirm the destroy
-
-# Clean up local repository (optional)
 cd ~/environment
-rm -rf terraform-vcs-lab12-{username}
-
-# Note: Keep GitHub repository to showcase VCS-driven workflow
+rm -rf terraform-vcs-lab12-<your-username>
 ```
+
+Keep the GitHub repository as a portfolio artifact, or delete it from GitHub when you're finished.
 
 ---
 
 ## 🎓 **Course Conclusion**
-Congratulations! You've completed all 12 labs and now have expertise in:
+Congratulations — you've completed all 12 labs.
 
-**✅ Terraform Core Concepts** (Labs 1-5)
-**✅ Advanced Configuration** (Labs 6-9)
-**✅ Terraform Cloud Integration** (Labs 10-11)
-**✅ VCS-Driven Infrastructure** (Lab 12)
-
-**Key Skills Mastered:**
-- Infrastructure as Code with Terraform
-- Multi-tier AWS architecture design
-- Remote state management with Terraform Cloud
-- VCS-driven workflows with GitHub integration
-- Production-ready infrastructure automation
-
-**Portfolio-Ready Projects:**
-- GitHub repository with production infrastructure code
-- VCS-driven Terraform Cloud workspace
-- Complete infrastructure automation pipeline
-
-You're now equipped to implement Infrastructure as Code in any organization using industry-standard VCS-driven workflows!
+- **Terraform Core** (Labs 1–5): HCL, providers, variables, dependencies, modules
+- **Configuration & State** (Labs 6–9): state management, registry modules, multi-environment patterns, VPC networking
+- **Terraform Cloud** (Labs 10–12): CLI-driven workspaces, tag-based multi-workspace setups, and full GitOps via VCS-driven workflows

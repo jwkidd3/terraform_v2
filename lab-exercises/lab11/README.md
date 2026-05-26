@@ -8,18 +8,17 @@
 
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Create and manage multiple Terraform Cloud workspaces
-- Use the `cloud {}` block with `tags` to select workspaces from the CLI
-- Configure workspace-specific variables for different environments
-- Organize workspaces with tags and naming conventions
-- Deploy the same configuration to multiple environments
+- Create multiple Terraform Cloud workspaces from a single configuration
+- Use `cloud { workspaces { tags = [...] } }` to enable workspace switching
+- Switch between workspaces with `terraform workspace select`
+- Configure workspace-specific variables to deploy different environments from the same code
+- Recognize the difference between **Terraform variables** and **environment variables** in TFC
 
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Lab 10 (Terraform Cloud Integration)
-- Terraform Cloud account with organization from Lab 10
-- Authenticated with `terraform login` (from Lab 10)
+- Completion of Lab 10 (you should already have a TFC organization and have run `terraform login`)
+- Your Terraform Cloud organization name from Lab 10 (e.g., `user1-terraform-training`)
 
 ---
 
@@ -27,280 +26,208 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
-export TF_VAR_username="user1"
+export TF_VAR_username="user1"   # Replace with your assigned username
 echo "Your username: $TF_VAR_username"
 ```
 
----
-
-## 🏗️ **Exercise 11.1: Create Shared Configuration (10 minutes)**
-
-In this exercise, you will create a single Terraform configuration that can be deployed to multiple Terraform Cloud workspaces. The key is the `cloud {}` block using `tags` instead of `name` — this allows you to switch between workspaces with `terraform workspace select`.
-
-### Step 1: Navigate to Lab Directory
+### Navigate to the lab directory
 ```bash
 cd ~/environment/terraform_v2/lab-exercises/lab11
+ls
 ```
 
-Review the existing configuration files and update them as needed.
+You should see `main.tf`, `variables.tf`, `outputs.tf`, and `terraform.tfvars`. Open `main.tf` and notice the `cloud {}` block uses **`tags`**, not **`name`**:
 
-### Step 2: Create Configuration Files
-
-**main.tf:**
 ```hcl
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-
   cloud {
-    organization = "YOUR_USERNAME-terraform-training"  # REPLACE: use your org name from Lab 10
-
+    organization = "REPLACE_WITH_YOUR_ORG"
     workspaces {
-      tags = ["lab11"]  # Selects among all workspaces tagged "lab11"
+      tags = ["lab11"]
     }
   }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "development"
-}
-
-variable "instance_count" {
-  description = "Number of instances"
-  type        = number
-  default     = 1
-}
-
-variable "username" {
-  description = "Your unique username"
-  type        = string
-}
-
-# EC2 instances
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_instance" "app" {
-  count = var.instance_count
-
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
-
-  tags = {
-    Name        = "${var.username}-${var.environment}-instance-${count.index + 1}"
-    Environment = var.environment
-    Owner       = var.username
-  }
-}
 ```
 
-**outputs.tf:**
-```hcl
-output "instance_ids" {
-  description = "EC2 instance IDs"
-  value       = aws_instance.app[*].id
-}
-
-output "environment" {
-  description = "Environment name"
-  value       = var.environment
-}
-```
-
-Create both files in your `terraform-lab11` directory with the content above.
-
-> **Key Concept — `tags` vs `name` in the `cloud {}` block:**
-> - Using `workspaces { name = "..." }` locks you to a single workspace.
-> - Using `workspaces { tags = ["..."] }` lets you select among any workspace that has that tag. This is what enables `terraform workspace select` to switch between workspaces.
+> **Why `tags` instead of `name`?**
+> - `workspaces { name = "..." }` locks the working directory to one workspace.
+> - `workspaces { tags = [...] }` lets the configuration target *any* workspace in your organization with that tag. This is what enables `terraform workspace list` and `terraform workspace select` to function.
 
 ---
 
-## ☁️ **Exercise 11.2: Create Development Workspace (10 minutes)**
+## ✏️ **Exercise 11.1: Point the Configuration at Your Organization (5 minutes)**
 
-### Step 1: Create Development Workspace in Terraform Cloud
-1. Go to Terraform Cloud: https://app.terraform.io
-2. In your organization, click **New Workspace**
+### Step 1: Edit `main.tf`
+Replace the organization placeholder with your TFC organization from Lab 10:
+
+```hcl
+  cloud {
+    organization = "user1-terraform-training"   # ← your org name
+    workspaces {
+      tags = ["lab11"]
+    }
+  }
+```
+
+Save the file. Do **not** add a `name = ...` here — the `tags` block selects workspaces dynamically.
+
+---
+
+## ☁️ **Exercise 11.2: Create the Development Workspace (10 minutes)**
+
+### Step 1: Create the Workspace in the TFC UI
+1. Open https://app.terraform.io and navigate to your organization
+2. Click **New** → **Workspace**
 3. Choose **CLI-driven workflow**
 4. Workspace name: `lab11-development`
 5. Description: "Development environment workspace"
 6. Click **Create workspace**
 
-### Step 2: Configure Workspace Variables
-In the workspace, go to the **Variables** tab.
+### Step 2: Tag the Workspace `lab11`
+This is the critical step that connects the workspace to your `cloud {}` block.
 
-Add these **Environment Variables** (needed for AWS access):
-- `AWS_ACCESS_KEY_ID` (mark as **sensitive**)
-- `AWS_SECRET_ACCESS_KEY` (mark as **sensitive**)
-- `AWS_DEFAULT_REGION` = `us-east-2`
+1. In the workspace, open **Settings** → **General**
+2. Scroll down to the **Tags** section
+3. Add a tag: `lab11`
+4. Add a second tag (for your own organization): `environment:development`
+5. Click **Save settings**
 
-Add these **Terraform Variables**:
-- `username` = your assigned username (e.g., `user1`)
-- `environment` = `development`
-- `instance_count` = `1`
+> Without the `lab11` tag, `terraform workspace select lab11-development` will fail with "workspace not found."
 
-> **Key Concept — Environment Variables vs Terraform Variables:**
-> - **Environment Variables** are passed to the execution environment (like `export` in a shell). AWS credentials go here.
-> - **Terraform Variables** map to your `variable` blocks in HCL. Configuration values go here.
+### Step 3: Add Workspace Variables
+Open the **Variables** tab and add:
 
-### Step 3: Tag the Workspace
-1. Go to **Settings** → **General**
-2. In the **Tags** section, add: `lab11`
-3. Also add: `environment:development`
-4. Set **Execution Mode**: Remote (default)
-5. Set **Apply Method**: Manual apply (safer for learning)
+**Environment Variables** (AWS credentials):
 
-> **Important:** The `lab11` tag is what connects this workspace to your `cloud {}` block. Without it, `terraform workspace select` won't find this workspace.
+| Key                     | Value                        | Sensitive |
+|-------------------------|------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *your AWS access key*        | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key* | ✅        |
 
----
+**Terraform Variables**:
 
-## 🚀 **Exercise 11.3: Create Staging Workspace (10 minutes)**
+| Key              | Value         |
+|------------------|---------------|
+| `environment`    | `development` |
+| `instance_count` | `1`           |
 
-### Step 1: Create Staging Workspace
-1. Click **New Workspace**
-2. Choose **CLI-driven workflow**
-3. Workspace name: `lab11-staging`
-4. Description: "Staging environment workspace"
-5. Click **Create workspace**
+> Note: `username` and `aws_region` come from your local `terraform.tfvars` and the default in `variables.tf` respectively. You only need to set workspace variables for values that should differ between workspaces.
 
-### Step 2: Configure Different Variables
-Add **Environment Variables** (same credentials as development):
-- `AWS_ACCESS_KEY_ID` (mark as **sensitive**)
-- `AWS_SECRET_ACCESS_KEY` (mark as **sensitive**)
-- `AWS_DEFAULT_REGION` = `us-east-2`
-
-Add **Terraform Variables** (different values from development):
-- `username` = your assigned username (e.g., `user1`)
-- `environment` = `staging`
-- `instance_count` = `2`
-
-### Step 3: Tag the Staging Workspace
-1. **Settings** → **General**
-2. Add tags: `lab11`, `environment:staging`
-
-> **Notice:** Both workspaces have the `lab11` tag — this is how Terraform knows they belong to the same configuration. The `environment:*` tags are for your own organization.
+### Step 4: Set Apply Method
+1. In **Settings** → **General**, find **Apply Method**
+2. Set it to **Manual apply** (safer while learning)
+3. Save
 
 ---
 
-## 🔧 **Exercise 11.4: Deploy and Compare Workspaces (15 minutes)**
+## 🚀 **Exercise 11.3: Create the Staging Workspace (10 minutes)**
 
-### Step 1: Initialize and Select Development Workspace
+Repeat the steps above for a staging environment:
+
+### Step 1: Create the Workspace
+1. **New** → **Workspace** → **CLI-driven workflow**
+2. Name: `lab11-staging`
+3. Description: "Staging environment workspace"
+4. **Create workspace**
+
+### Step 2: Tag It
+1. **Settings** → **General** → **Tags**
+2. Add: `lab11`
+3. Add: `environment:staging`
+4. **Save settings**
+
+### Step 3: Add Workspace Variables
+Same AWS credentials as development, but **different Terraform variables**:
+
+| Key              | Value     |
+|------------------|-----------|
+| `environment`    | `staging` |
+| `instance_count` | `2`       |
+
+### Step 4: Set Apply Method
+**Manual apply** again.
+
+---
+
+## 🔧 **Exercise 11.4: Deploy to Both Workspaces (15 minutes)**
+
+### Step 1: Initialize
 ```bash
 cd ~/environment/terraform_v2/lab-exercises/lab11
-
-# Initialize — Terraform will find both workspaces tagged "lab11"
 terraform init
+```
 
-# List available workspaces
+Terraform contacts TFC, discovers both workspaces tagged `lab11`, and configures the local working directory for workspace switching.
+
+### Step 2: List Available Workspaces
+```bash
 terraform workspace list
+```
 
-# Select the development workspace
+You should see both `lab11-development` and `lab11-staging` listed.
+
+### Step 3: Deploy to Development
+```bash
 terraform workspace select lab11-development
+terraform plan
 ```
 
-You should see both `lab11-development` and `lab11-staging` in the workspace list.
+The plan output should show **1 EC2 instance** (because `instance_count = 1` for this workspace). Apply it:
 
-### Step 2: Deploy to Development
 ```bash
-# Plan — runs remotely in Terraform Cloud
-terraform plan
-
-# Apply — runs remotely in Terraform Cloud
 terraform apply
 ```
 
-Review the plan output. You should see:
-- 1 EC2 instance (`instance_count = 1`)
+Approve when prompted. The run executes remotely in TFC.
 
-Approve the apply when prompted (or confirm in the Terraform Cloud UI).
-
-### Step 3: Deploy to Staging
+### Step 4: Deploy to Staging
 ```bash
-# Switch to the staging workspace
 terraform workspace select lab11-staging
-
-# Plan and apply
 terraform plan
+```
+
+The plan should show **2 EC2 instances** (different `instance_count`). Apply:
+
+```bash
 terraform apply
 ```
 
-Review the plan. You should see:
-- 2 EC2 instances (`instance_count = 2`)
-
-### Step 4: Compare Workspaces
-In the Terraform Cloud UI, compare the two workspaces:
-
-1. **Resources**: Development has 1 instance, staging has 2
-2. **Variables** tab: Different `environment` and `instance_count` values
-3. **State** tab: Each workspace has its own independent state file
-4. **Tags**: Both share `lab11`, but differ on `environment:*`
-5. **Runs** tab: Each workspace has its own run history
-
+### Step 5: Compare the Two Workspaces
 ```bash
-# Show current workspace
-terraform workspace show
-
-# Switch back and check outputs from each
 terraform workspace select lab11-development
 terraform output
 
 terraform workspace select lab11-staging
 terraform output
 ```
+
+Each workspace has its own independent state, run history, and outputs. In the TFC UI, open both workspaces side-by-side and compare:
+
+- **Resources** count: 1 vs 2
+- **Variables** tab: different `environment` and `instance_count`
+- **States** tab: separate state files
+- **Runs** tab: independent run histories
 
 ---
 
 ## 🎯 **Lab Summary**
 
 ### What You Accomplished
-✅ **Cloud Block with Tags** — Used `workspaces { tags = ["lab11"] }` for multi-workspace selection
-✅ **Multiple Workspaces** — Created development and staging workspaces
-✅ **Workspace Variables** — Configured environment-specific variables in each workspace
-✅ **Workspace Organization** — Used tags for workspace management
-✅ **Environment Separation** — Deployed different configurations per environment from the same code
+- ✅ Created two TFC workspaces (`lab11-development`, `lab11-staging`) from one configuration
+- ✅ Used `workspaces { tags = ["lab11"] }` to enable CLI-side workspace switching
+- ✅ Configured per-workspace variables (`environment`, `instance_count`) in the TFC UI
+- ✅ Deployed two distinct environments — 1 instance in dev, 2 in staging — from identical HCL
 
-### Key Concepts Learned
-- **Workspace Isolation**: Each workspace has its own state, variables, and run history
-- **Tag-Based Selection**: The `cloud { workspaces { tags } }` block lets you switch workspaces with `terraform workspace select`
-- **Variable Hierarchy**: Environment variables (AWS creds) vs Terraform variables (configuration)
-- **Same Code, Different Config**: One codebase deployed to multiple environments via workspace variables
-
-### Workspace Benefits
-- **State Isolation**: No risk of accidentally affecting other environments
-- **Variable Management**: Environment-specific configurations managed in the UI
-- **Audit Trail**: Complete run history per workspace
-- **Team Organization**: Clear separation by environment
-- **Access Control**: Fine-grained permissions per workspace (available in paid tiers)
+### Key Concepts
+- **Tag-based workspace selection**: `workspaces { tags = [...] }` lets one configuration manage many workspaces. `workspaces { name = "..." }` locks you to one.
+- **State isolation**: each workspace has its own state file; changes in one cannot affect another.
+- **Variable precedence in TFC**: workspace variables override values from auto-loaded `terraform.tfvars`. This is why we leave `environment` and `instance_count` out of `terraform.tfvars` — TFC supplies them per workspace.
+- **Environment vs Terraform variables**: credentials (Environment) vs HCL `variable` blocks (Terraform). Same `Variables` tab, different runtime behavior.
 
 ---
 
 ## 🧹 **Cleanup**
+Destroy resources in **both** workspaces:
+
 ```bash
-# Destroy resources in both workspaces
 terraform workspace select lab11-development
 terraform destroy
 
@@ -308,15 +235,9 @@ terraform workspace select lab11-staging
 terraform destroy
 ```
 
-Type `yes` when prompted to confirm destruction for each workspace.
+Approve each destroy in the TFC UI. You can keep the workspaces themselves for reference, or delete them via **Settings** → **Destruction and Deletion** → **Delete from Terraform Cloud**.
 
 ---
 
 ## 🎓 **Next Steps**
-In **Lab 12**, you will explore **VCS-driven workflows** — connecting a GitHub repository to Terraform Cloud so that Git pushes automatically trigger infrastructure deployments.
-
-**Key topics coming up:**
-- GitHub repository integration with Terraform Cloud
-- Webhook-triggered runs on Git push
-- Speculative plans on pull requests
-- GitOps patterns for infrastructure automation
+In **Lab 12** you'll switch from CLI-driven to **VCS-driven** workflow — pushing code to a GitHub repository will automatically trigger Terraform Cloud runs.

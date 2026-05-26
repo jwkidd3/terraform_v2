@@ -17,7 +17,8 @@ By the end of this lab, you will be able to:
 
 ## 📋 **Prerequisites**
 - Completion of Labs 2-4
-- Understanding of basic variables and resources
+- Understanding of variables and resources
+- An AWS account with a **default VPC** in your chosen region (the module deploys EC2 into the default VPC; if your account has no default VPC, you must add `vpc_id` and `subnet_id` wiring to the module)
 
 ---
 
@@ -100,7 +101,6 @@ locals {
     Environment = var.environment
     Application = var.app_name
     ManagedBy   = "Terraform"
-    CreatedAt   = timestamp()
   }
 }
 
@@ -290,7 +290,7 @@ variable "username" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 ```
 

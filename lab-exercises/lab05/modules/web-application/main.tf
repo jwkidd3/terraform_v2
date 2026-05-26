@@ -7,7 +7,6 @@ locals {
     Environment = var.environment
     Application = var.app_name
     ManagedBy   = "Terraform"
-    CreatedAt   = timestamp()
   }
 }
 

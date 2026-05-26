@@ -70,7 +70,7 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "instance_type" {
@@ -550,88 +550,28 @@ terraform apply -var-file=environments/dev.tfvars -auto-approve
 
 ---
 
-## 🔄 **Exercise 8.3: Environment Management Automation (15 minutes)**
+## 🔄 **Exercise 8.3: Compare Environments (5 minutes)**
 
-### Step 1: Test Environment Switching
+You don't need to deploy staging or prod to *see* what each environment would create — `terraform plan -var-file` shows the diff.
+
+### Step 1: Inspect Differences Without Applying
 ```bash
-# View current development deployment
+# What's currently deployed (dev)?
 terraform output
 
-# Compare what would change for staging (without applying)
-echo "\n=== Comparing staging environment ==="
-terraform plan -var-file=environments/staging.tfvars | grep -E "will be|must be"
+# What would change if you switched to staging?
+terraform plan -var-file=environments/staging.tfvars
 
-# View environment differences
-echo "\n=== Environment Resource Comparison ==="
-echo "Development:  t3.micro,  ASG desired=1, no HA,  spot instances"
-echo "Staging:      t3.small,  ASG desired=2, no HA,  on-demand"
-echo "Production:   t3.medium, ASG desired=3, with HA + ALB"
+# What would change for production?
+terraform plan -var-file=environments/prod.tfvars
 ```
 
-### Step 2: Create Environment Management Script
-**deploy.sh:**
-```bash
-#!/bin/bash
-# Simple deployment script for multi-environment management
+The plan output shows resource-by-resource differences. Look for:
+- **Instance type changes** (`t3.micro` → `t3.small` → `t3.medium`)
+- **ASG desired_capacity changes** (1 → 2 → 3)
+- **ALB resources** that appear only in production (HA enabled)
 
-ENVIRONMENT=$1
-USERNAME=$2
-
-if [ -z "$ENVIRONMENT" ] || [ -z "$USERNAME" ]; then
-    echo "Usage: ./deploy.sh <environment> <username>"
-    echo "Environments: dev, staging, prod"
-    exit 1
-fi
-
-# Validate environment
-if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then
-    echo "Error: Environment must be dev, staging, or prod"
-    exit 1
-fi
-
-# Set username
-export TF_VAR_username=$USERNAME
-
-# Select the appropriate tfvars file
-TFVARS_FILE="environments/${ENVIRONMENT}.tfvars"
-
-if [ ! -f "$TFVARS_FILE" ]; then
-    echo "Error: Configuration file $TFVARS_FILE not found"
-    exit 1
-fi
-
-echo "==================================="
-echo "Deploying to: $ENVIRONMENT"
-echo "Username: $USERNAME"
-echo "Configuration: $TFVARS_FILE"
-echo "==================================="
-
-# Initialize if needed
-if [ ! -d ".terraform" ]; then
-    terraform init
-fi
-
-# Plan the deployment
-terraform plan -var-file="$TFVARS_FILE" -out="${ENVIRONMENT}.tfplan"
-
-# Ask for confirmation
-read -p "Do you want to apply this plan? (yes/no): " confirm
-if [ "$confirm" == "yes" ]; then
-    terraform apply "${ENVIRONMENT}.tfplan"
-    echo "Deployment complete!"
-else
-    echo "Deployment cancelled"
-fi
-```
-
-### Step 3: Make Script Executable and Test
-```bash
-chmod +x deploy.sh
-
-# Test the deployment script
-./deploy.sh dev $TF_VAR_username
-# When prompted, type 'no' to skip the actual deployment
-```
+> **Why this matters:** the same Terraform code produces three different deployments. The only thing that varies is the variable file. This is the multi-environment pattern in its simplest form — no workspaces, no separate directories.
 
 ---
 

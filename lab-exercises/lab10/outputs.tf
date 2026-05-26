@@ -1,12 +1,14 @@
-# This is a placeholder file.
-# Lab 10 instructs students to create a new directory (~/environment/terraform-lab10)
-# and build the full configuration from the README instructions.
+output "instance_id" {
+  description = "ID of the EC2 instance"
+  value       = aws_instance.demo.id
+}
 
-output "lab_instructions" {
-  description = "Lab 10 setup instructions"
-  value = {
-    message   = "Lab 10: Terraform Cloud Integration and Remote Execution"
-    setup     = "Create ~/environment/terraform-lab10 and follow README.md"
-    workspace = "Create a CLI-driven workspace in Terraform Cloud"
-  }
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.demo.public_ip
+}
+
+output "instance_url" {
+  description = "URL of the demo web page"
+  value       = "http://${aws_instance.demo.public_ip}"
 }

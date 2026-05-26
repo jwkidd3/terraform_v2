@@ -8,14 +8,56 @@ terraform {
     }
   }
 
-  # Terraform Cloud backend configuration will be added during lab
-  # Students create a new directory and build configuration from README.md
+  cloud {
+    organization = "REPLACE_WITH_YOUR_ORG"   # e.g., "user1-terraform-training"
+
+    workspaces {
+      name = "REPLACE_WITH_WORKSPACE_NAME"   # e.g., "user1-terraform-cloud-lab10"
+    }
+  }
 }
 
 provider "aws" {
   region = var.aws_region
 }
 
-# This is a placeholder file.
-# Lab 10 instructs students to create a new directory (~/environment/terraform-lab10)
-# and build the full configuration from the README instructions.
+locals {
+  name_prefix = "${var.username}-${var.environment}"
+
+  common_tags = {
+    Owner       = var.username
+    Environment = var.environment
+    ManagedBy   = "TerraformCloud"
+    Lab         = "10"
+  }
+}
+
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_instance" "demo" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t3.micro"
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    systemctl start httpd
+    systemctl enable httpd
+    echo "<h1>Terraform Cloud Demo - ${var.username}</h1>" > /var/www/html/index.html
+    echo "<p>Managed by Terraform Cloud</p>" >> /var/www/html/index.html
+  EOF
+  )
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-demo-instance"
+  })
+}

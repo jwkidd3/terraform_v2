@@ -1,12 +1,14 @@
-# This is a placeholder file.
-# Lab 11 instructs students to create a new directory (~/environment/terraform-lab11)
-# and build the full configuration from the README instructions.
+output "environment" {
+  description = "Environment name for this workspace"
+  value       = var.environment
+}
 
-output "lab_instructions" {
-  description = "Lab 11 setup instructions"
-  value = {
-    message   = "Lab 11: Terraform Cloud Workspaces"
-    setup     = "Create ~/environment/terraform-lab11 and follow README.md"
-    workspace = "Use cloud {} block with tags to manage multiple workspaces"
-  }
+output "instance_count" {
+  description = "Number of instances deployed in this workspace"
+  value       = var.instance_count
+}
+
+output "instance_ids" {
+  description = "EC2 instance IDs"
+  value       = aws_instance.app[*].id
 }

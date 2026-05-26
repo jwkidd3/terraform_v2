@@ -61,7 +61,7 @@ provider "aws" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "username" {
@@ -145,7 +145,7 @@ resource "aws_s3_object" "data_files" {
 
   tags = {
     Owner      = var.username
-    FileNumber = count.index + 1
+    FileNumber = tostring(count.index + 1)
   }
 }
 ```
@@ -236,8 +236,12 @@ resource "aws_s3_object" "important_file" {
     # Ignore changes to content (won't update if content changes)
     ignore_changes = [content]
 
-    # Create new one before destroying old one
-    create_before_destroy = true
+    # Note: create_before_destroy is intentionally omitted here.
+    # An aws_s3_object uses bucket+key as its identity, so a replacement
+    # with the same key would collide with the existing object before
+    # the old one is destroyed. create_before_destroy is most useful on
+    # resources that generate unique IDs (e.g., aws_launch_template,
+    # aws_security_group with name_prefix).
   }
 }
 ```
@@ -308,7 +312,7 @@ terraform output
 ✅ **Used explicit dependencies**: `depends_on` to force creation order
 ✅ **Created multiple resources with count**: 2 data files
 ✅ **Created resources with for_each**: 3 app files from a map
-✅ **Applied lifecycle rules**: prevent_destroy, ignore_changes, create_before_destroy
+✅ **Applied lifecycle rules**: prevent_destroy, ignore_changes (and learned why `create_before_destroy` is wrong for S3 objects)
 
 ### Key Concepts:
 

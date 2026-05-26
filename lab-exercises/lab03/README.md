@@ -460,7 +460,7 @@ resource "aws_instance" "web" {
 >
 > The `key_pair_name` variable (defined in `variables.tf` with an empty default) allows optional SSH access.
 
-### Step 4: Review `versions.tf`
+### Step 3: Review `versions.tf`
 
 Note how the provider uses `default_tags` to automatically apply tags to all resources:
 

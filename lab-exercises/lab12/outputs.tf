@@ -1,40 +1,19 @@
-output "application_url" {
-  description = "URL to access the deployed application"
-  value       = "http://${aws_lb.main.dns_name}"
+output "instance_id" {
+  description = "ID of the EC2 instance"
+  value       = aws_instance.demo.id
 }
 
-output "vpc_info" {
-  description = "VPC configuration details"
-  value = {
-    vpc_id             = aws_vpc.main.id
-    vpc_cidr           = aws_vpc.main.cidr_block
-    public_subnet_ids  = aws_subnet.public[*].id
-    private_subnet_ids = aws_subnet.private[*].id
-  }
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.demo.public_ip
 }
 
-output "load_balancer_dns" {
-  description = "DNS name of the Application Load Balancer"
-  value       = aws_lb.main.dns_name
+output "instance_url" {
+  description = "URL of the demo web page"
+  value       = "http://${aws_instance.demo.public_ip}"
 }
 
-output "auto_scaling_group" {
-  description = "Auto Scaling Group information"
-  value = {
-    name         = aws_autoscaling_group.web.name
-    min_size     = aws_autoscaling_group.web.min_size
-    max_size     = aws_autoscaling_group.web.max_size
-    desired_size = aws_autoscaling_group.web.desired_capacity
-  }
-}
-
-output "deployment_info" {
-  description = "Deployment information for GitOps workflow"
-  value = {
-    environment    = var.environment
-    app_version    = var.app_version
-    deployed_by    = "TerraformCloud-GitHub"
-    git_repo       = "terraform-lab12"
-    workspace_type = "VCS-driven"
-  }
+output "app_version" {
+  description = "Application version currently deployed"
+  value       = var.app_version
 }

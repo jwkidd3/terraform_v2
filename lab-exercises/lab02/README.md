@@ -271,7 +271,7 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 ```
 
@@ -279,7 +279,7 @@ variable "aws_region" {
 
 - **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block enforces a length between 3 and 20 characters.
 - **`environment`** defaults to `"development"` and uses the `contains()` function to only accept `"development"`, `"staging"`, or `"production"`.
-- **`aws_region`** defaults to `"us-east-2"` with no additional validation.
+- **`aws_region`** defaults to `"us-east-1"` with no additional validation.
 - **Validation blocks** run during `terraform plan` and `terraform apply`, catching invalid input before any resources are created.
 
 ---

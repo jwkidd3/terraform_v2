@@ -1,26 +1,25 @@
 # Lab 10: Terraform Cloud Integration and Remote Execution
-**Duration:** 45 minutes  
-**Difficulty:** Intermediate  
-**Day:** 3  
+**Duration:** 45 minutes
+**Difficulty:** Intermediate
+**Day:** 3
 **Environment:** AWS Cloud9 + Terraform Cloud
 
 ---
 
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
-- Set up and configure Terraform Cloud for enterprise workflow management
-- Migrate existing infrastructure to Terraform Cloud with remote execution
-- Implement secure variable management and workspace configuration
-- Configure automated runs with VCS integration and approval workflows
-- Monitor infrastructure changes and collaborate effectively using Terraform Cloud
+- Create a Terraform Cloud organization and CLI-driven workspace
+- Migrate a local Terraform configuration to remote execution
+- Store AWS credentials securely as workspace environment variables
+- Run `terraform plan` and `terraform apply` remotely from your Cloud9 environment
+- Inspect runs, state versions, and outputs in the Terraform Cloud UI
 
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Labs 1-9
-- Terraform Cloud account (free tier sufficient)
+- Completion of Labs 1–9
+- Terraform Cloud account (free tier is sufficient): https://app.terraform.io
 - Understanding of state management from Lab 6
-- GitHub account for VCS integration
 
 ---
 
@@ -33,281 +32,208 @@ export TF_VAR_username="user1"
 echo "Your username: $TF_VAR_username"
 ```
 
----
-
-## ☁️ **Exercise 10.1: Terraform Cloud Organization Setup (15 minutes)**
-
-### Step 1: Create Terraform Cloud Organization
-1. Go to https://app.terraform.io/
-2. Sign up or sign in to your account
-3. Create a new organization: `${username}-terraform-training`
-4. Note your organization name for later use
-
-### Step 2: Navigate to Lab Directory
+### Navigate to the lab directory
 ```bash
 cd ~/environment/terraform_v2/lab-exercises/lab10
+ls
 ```
 
-Review the existing configuration files (`main.tf`, `variables.tf`, `outputs.tf`, `terraform.tfvars`) and update them as needed.
-
-**main.tf:**
-```hcl
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-
-  cloud {
-    organization = "YOUR_USERNAME-terraform-training"  # REPLACE: e.g., "user1-terraform-training"
-
-    workspaces {
-      name = "YOUR_USERNAME-terraform-cloud-lab10"    # REPLACE: e.g., "user1-terraform-cloud-lab10"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-variable "username" {
-  description = "Your unique username"
-  type        = string
-}
-
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "environment" {
-  description = "Environment identifier"
-  type        = string
-  default     = "terraform-cloud"
-}
-
-locals {
-  name_prefix = "${var.username}-${var.environment}"
-
-  common_tags = {
-    Owner       = var.username
-    Environment = var.environment
-    ManagedBy   = "TerraformCloud"
-    Lab         = "10"
-  }
-}
-
-# EC2 instance
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_instance" "demo" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
-
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<h1>Terraform Cloud Demo - ${var.username}</h1>" > /var/www/html/index.html
-    echo "<p>Managed by Terraform Cloud</p>" >> /var/www/html/index.html
-  EOF
-  )
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-demo-instance"
-  })
-}
-```
-
-### Step 3: Create Outputs File
-Create **outputs.tf:**
-
-```hcl
-output "instance_id" {
-  description = "ID of the EC2 instance"
-  value       = aws_instance.demo.id
-}
-
-output "instance_public_ip" {
-  description = "Public IP of the EC2 instance"
-  value       = aws_instance.demo.public_ip
-}
-
-output "terraform_cloud_workspace" {
-  description = "Terraform Cloud workspace information"
-  value = {
-    workspace_name = "${var.username}-terraform-cloud-lab10"   # Replace with your values
-    organization   = "${var.username}-terraform-training"      # Replace with your values
-    execution_mode = "remote"
-  }
-}
-```
+You should see four files: `main.tf`, `variables.tf`, `outputs.tf`, and `terraform.tfvars`.
+This is the same kind of EC2 configuration you've seen before — the new piece is the `cloud {}` block in `main.tf` that connects it to Terraform Cloud.
 
 ---
 
-## 🔧 **Exercise 10.2: Workspace Configuration and Remote Execution (20 minutes)**
+## ☁️ **Exercise 10.1: Create Your Terraform Cloud Organization (10 minutes)**
 
-### Step 1: Create Terraform Cloud Workspace
-1. In Terraform Cloud UI, go to your organization
-2. Click "New workspace"
-3. Choose "CLI-driven workflow"
-4. Name: `${username}-terraform-cloud-lab10`
-5. Description: "Lab 10 - Terraform Cloud Integration"
-6. Click "Create workspace"
+### Step 1: Sign in to Terraform Cloud
+1. Open https://app.terraform.io in your browser
+2. Sign up or sign in
+3. From the top-left menu, **Create an organization** (or **New Organization**)
+4. Organization name: `<your-username>-terraform-training`
+   *Example:* `user1-terraform-training`
+5. Use any email address you control
+6. Click **Create organization**
 
-### Step 2: Configure Workspace Variables
-In your Terraform Cloud workspace, add these environment variables:
-- `AWS_ACCESS_KEY_ID` (sensitive) - Your AWS access key
-- `AWS_SECRET_ACCESS_KEY` (sensitive) - Your AWS secret key
+> **Important — write your organization name down.** You will paste it into `main.tf` in Exercise 10.2 and reuse it in Labs 11 and 12.
 
-Add these Terraform variables:
-- `username` - Your username (e.g., "user1")
-- `aws_region` - (Optional) AWS region, defaults to "us-east-1"
+### Step 2: Create a CLI-Driven Workspace
+1. Click **New** → **Workspace**
+2. Choose **CLI-driven workflow** (not Version control, not API)
+3. Workspace name: `<your-username>-terraform-cloud-lab10`
+   *Example:* `user1-terraform-cloud-lab10`
+4. Click **Create workspace**
 
-### Step 3: Execute Remote Plans and Applies
+### Step 3: Configure Workspace Variables
+In the workspace, open the **Variables** tab and add:
+
+**Environment Variables** (these are exposed to the runner as shell environment variables — used by the AWS provider for credentials):
+
+| Key                     | Value                          | Sensitive |
+|-------------------------|--------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *your AWS access key*          | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key*   | ✅        |
+
+**Terraform Variables** (these map to `variable` blocks in your HCL):
+
+| Key         | Value                                |
+|-------------|--------------------------------------|
+| `username`  | *your assigned username (e.g. user1)* |
+
+> **Why two kinds of variables?**
+> - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.
+> - **Terraform Variables** are bound to your `variable "..." {}` blocks in `main.tf` / `variables.tf`. This is where your application configuration goes.
+> - `aws_region` already has a default in `variables.tf`, so you don't need to set it in the workspace.
+
+---
+
+## 🔧 **Exercise 10.2: Point the Configuration at Your Workspace (10 minutes)**
+
+### Step 1: Edit `main.tf`
+Open `main.tf` and find the `cloud {}` block at the top:
+
+```hcl
+  cloud {
+    organization = "REPLACE_WITH_YOUR_ORG"
+    workspaces {
+      name = "REPLACE_WITH_WORKSPACE_NAME"
+    }
+  }
+```
+
+Replace both placeholders with the values from Exercise 10.1:
+
+```hcl
+  cloud {
+    organization = "user1-terraform-training"          # your org name
+    workspaces {
+      name = "user1-terraform-cloud-lab10"             # your workspace name
+    }
+  }
+```
+
+Save the file.
+
+### Step 2: Authenticate the CLI with Terraform Cloud
 ```bash
-# Authenticate with Terraform Cloud
 terraform login
+```
 
-# Initialize with cloud backend
+When prompted, type `yes`. A browser tab opens — generate a token, copy it, and paste it back into the terminal. The CLI stores the token in `~/.terraform.d/credentials.tfrc.json`.
+
+### Step 3: Initialize and Run Remotely
+```bash
+# Connects the working directory to your TFC workspace
 terraform init
 
-# Create a plan (runs remotely in Terraform Cloud)
+# Validate the cloud connection
 terraform plan
-
-# Apply the changes (runs remotely in Terraform Cloud)
-terraform apply
-
-# Check outputs
-terraform output
 ```
 
-### Step 4: Monitor Remote Execution
-1. Go to your Terraform Cloud workspace
-2. Watch the run in progress
-3. Review execution logs in real-time
-4. Examine the plan details and resource changes
-5. Approve the apply when prompted
+The plan output streams from Terraform Cloud — notice the banner:
+
+```
+Running plan in Terraform Cloud. Output will stream here.
+```
+
+That tells you the run is happening on TFC's runners, not in your Cloud9 shell.
+
+### Step 4: Apply Remotely
+```bash
+terraform apply
+```
+
+Type `yes` when prompted. Watch the apply stream the same way the plan did.
 
 ---
 
-## 🚀 **Exercise 10.3: Explore Terraform Cloud Features (10 minutes)**
+## 🚀 **Exercise 10.3: Explore the Run in the UI (15 minutes)**
 
-### Step 1: Test Terraform Cloud Features
-1. **State Management**: View state versions in Terraform Cloud UI
-2. **Run Details**: Review plan output and apply status
-3. **Variable Management**: Update variables through the UI
-4. **Run History**: Review previous runs and changes
+### Step 1: Inspect the Run
+1. In Terraform Cloud, open your workspace
+2. Click the **Runs** tab — your apply should be at the top
+3. Click into the run and review:
+   - **Plan**: the resources Terraform proposed
+   - **Apply**: the execution log
+   - **Configuration**: confirmation that TFC received your code
 
-### Step 2: Test Your Resources
+### Step 2: Inspect State and Outputs
+1. Click the **States** tab — TFC has stored the state file remotely with a version number
+2. Click the **Outputs** tab (or the **Overview** page) — you should see `instance_id`, `instance_public_ip`, and `instance_url`
+3. From the terminal, fetch them locally:
+   ```bash
+   terraform output
+   ```
+
+### Step 3: Hit the EC2 Instance
 ```bash
-# Check outputs
-terraform output
-
-# Test the web server
 curl http://$(terraform output -raw instance_public_ip)
 ```
 
-### Step 3: Workspace Settings
-1. **General Settings**:
-   - Auto Apply: Keep manual for learning
-   - Terraform Version: Note the version used
-2. **Variables**:
-   - Review environment vs Terraform variables
-   - Update username variable if needed
+You should see the demo HTML page.
+
+### Step 4: Modify the Configuration via VCS-style Workflow (Local)
+1. Edit `main.tf` and change the heading in the `user_data` script (e.g., from "Terraform Cloud Demo" to "TFC Remote Execution Demo")
+2. Run:
+   ```bash
+   terraform apply
+   ```
+3. Approve the apply, then re-fetch the page:
+   ```bash
+   curl http://$(terraform output -raw instance_public_ip)
+   ```
+   *(Note: the EC2 instance only runs `user_data` on first boot; the change will only affect a **replacement** instance. You can force a replacement with `terraform apply -replace=aws_instance.demo`.)*
 
 ---
 
-## 🔍 **Exercise 10.4: Troubleshooting and Best Practices (5 minutes)**
+## 🔍 **Exercise 10.4: Best Practices Recap (5 minutes)**
 
-### Step 1: Common Terraform Cloud Issues
-Test these scenarios:
+You now have working infrastructure backed by Terraform Cloud. Take note of what is different from the local-state labs:
+
+| Concept | Local (Labs 1–9) | Terraform Cloud (Lab 10) |
+|---------|------------------|--------------------------|
+| State file location | `terraform.tfstate` in working dir | Encrypted in Terraform Cloud |
+| Plan/apply execution | Your laptop / Cloud9 | TFC runner |
+| AWS credentials | `~/.aws/credentials` or env vars | Workspace env vars (encrypted) |
+| State locking | None (local) or DynamoDB | Built-in, automatic |
+| Audit trail | Git history | Full run history in UI |
+
+### Best Practices Demonstrated
+- ✅ **Credential isolation**: AWS keys never leave the Terraform Cloud workspace
+- ✅ **Versioned state**: every apply produces a new state version you can roll back to
+- ✅ **Centralized execution**: every team member runs against the same Terraform version
+- ✅ **Audit log**: every plan and apply is recorded with timestamps and user identity
+
+---
+
+## 🧹 **Cleanup**
+Destroy the demo instance before moving on:
+
 ```bash
-# Trigger a plan with an intentional error
-# Add invalid configuration to main.tf temporarily
-terraform plan
-
-# Review error handling in Terraform Cloud UI
-# Fix the error and re-run
+terraform destroy
 ```
 
-### Step 2: Best Practices Demonstrated
-Review what you've implemented:
-- ✅ **Variable Security**: Sensitive variables marked as sensitive
-- ✅ **Resource Tagging**: Consistent tagging strategy
-- ✅ **Remote State**: Centralized state management
-- ✅ **Workspace Isolation**: Separate workspace for different purposes
-- ✅ **Version Pinning**: Terraform and provider versions specified
+Type `yes` to approve. Verify in the UI that the run shows the resource being destroyed and the state file is now empty.
+
+> **Keep the workspace** — you'll reference your organization name in Labs 11 and 12. You only need to delete the workspace if you want to remove it from your TFC account.
 
 ---
 
 ## 🎯 **Lab Summary**
 
-**What You've Accomplished:**
-- ✅ **Terraform Cloud Setup**: Created organization and configured remote execution workspace
-- ✅ **Remote Infrastructure Management**: Deployed EC2 instance via Terraform Cloud
-- ✅ **Secure Variable Management**: Implemented proper credential and variable storage
-- ✅ **Enterprise Workflow**: Established foundation for team collaboration and governance
-- ✅ **Advanced Features**: Explored run history, state management, and workspace features
+### What You Accomplished
+- ✅ Created a Terraform Cloud organization and a CLI-driven workspace
+- ✅ Wired a local Terraform configuration to TFC via the `cloud {}` block
+- ✅ Stored AWS credentials as workspace environment variables
+- ✅ Ran `terraform plan` and `terraform apply` remotely
+- ✅ Inspected runs, outputs, and remote state in the UI
 
-**Key Terraform Cloud Concepts:**
-- **Remote Execution**: All Terraform operations run in Terraform Cloud, not locally
-- **State Management**: Centralized, versioned state storage with automatic locking
-- **Workspace Isolation**: Separate execution environments for different infrastructure
-- **Variable Security**: Encrypted storage of sensitive variables and credentials
-- **Collaboration Foundation**: Team-ready configuration with proper access controls
-
-**Enterprise Features Demonstrated:**
-- Cloud-based execution environment with consistent Terraform versions
-- Automatic state versioning and backup
-- Remote plan and apply execution with detailed logs
-- Complete audit trail of all infrastructure modifications
-- Secure credential management
-- Workspace-based organization for team collaboration
-
-**Production-Ready Patterns:**
-- EC2 instance with user data configuration
-- Comprehensive resource tagging strategy
-- Remote state management via Terraform Cloud
-
-**Benefits Over Local Execution:**
-- Consistent execution environment across team members
-- Centralized state management eliminates state conflicts
-- Automatic backups and version history
-- Integrated security scanning and policy enforcement
-- Detailed plan output showing resource changes
-- Complete audit trail for compliance requirements
-
----
-
-## 🧹 **Cleanup**
-```bash
-# Destroy infrastructure via Terraform Cloud (runs remotely)
-terraform destroy
-
-# Confirm destruction in Terraform Cloud UI
-# Review the destroy plan before approving
-```
-
-This lab demonstrates the enterprise advantages of Terraform Cloud, providing centralized state management, remote execution, and the foundation for team collaboration while maintaining the same infrastructure-as-code principles you've learned throughout the course.
+### Key Concepts
+- **`cloud {}` block** — replaces the older `backend "remote"` configuration; binds a working directory to a Terraform Cloud workspace
+- **CLI-driven workflow** — you run `terraform` commands locally, but TFC executes the run on its own runners using uploaded files
+- **Environment Variables vs Terraform Variables** — credentials vs configuration; both live in the workspace's **Variables** tab
+- **Remote state** — TFC stores and locks state automatically; no S3+DynamoDB plumbing needed
 
 ---
 
 ## ➡️ **Next Steps**
-Continue to **Lab 11**, which covers Terraform Cloud workspaces in greater depth, including multi-environment management and workspace strategies for team collaboration.
+Continue to **Lab 11**, where you'll create **multiple workspaces** (development + staging) from the same configuration using `workspaces { tags = [...] }` and `terraform workspace select`.

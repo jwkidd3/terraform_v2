@@ -62,7 +62,7 @@ provider "aws" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "username" {
@@ -101,7 +101,7 @@ resource "aws_s3_object" "demo_files" {
 
   tags = {
     Owner = var.username
-    Index = count.index + 1
+    Index = tostring(count.index + 1)
   }
 }
 
