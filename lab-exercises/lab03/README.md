@@ -37,14 +37,15 @@ All configuration files for this lab have been pre-created. You will review each
 # Navigate to the lab directory
 cd ~/environment/terraform_v2/lab-exercises/lab03
 
-# Set your username as an environment variable
-export TF_VAR_username="<your-assigned-username>"
+# Set your username and region (use values assigned by your instructor)
+export TF_VAR_username="user1"
+export TF_VAR_aws_region="us-east-1"
 
 # Verify AWS access
 aws sts get-caller-identity
 ```
 
-> **Note:** Replace `<your-assigned-username>` with the username assigned to you by your instructor. You should also update the `username` value in `terraform.tfvars`.
+> **Note:** Replace `user1` and `us-east-1` with the values assigned to you by your instructor. `terraform.tfvars` no longer hardcodes these — the env vars are the single source of truth.
 
 ---
 

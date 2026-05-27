@@ -26,10 +26,12 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username
+### Set Your Username and Region
 ```bash
-export TF_VAR_username="user1"   # Replace with your assigned username
-echo "Your username: $TF_VAR_username"
+# IMPORTANT: Replace with your assigned values from the instructor
+export TF_VAR_username="user1"
+export TF_VAR_aws_region="us-east-1"
+echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
 > **Key idea:** In Labs 10–11 you ran `terraform apply` from your shell and TFC executed the run. In this lab `git push` becomes the trigger — you will never run `terraform` locally after the setup.
@@ -120,11 +122,12 @@ TFC installed a webhook on your repo automatically:
 
 **Terraform Variables**:
 
-| Key        | Value                                 |
-|------------|---------------------------------------|
-| `username` | *your assigned username (e.g. user1)* |
+| Key          | Value                                   |
+|--------------|-----------------------------------------|
+| `username`   | *your assigned username (e.g. user1)*   |
+| `aws_region` | *your assigned region (e.g. us-east-1)* |
 
-> `username` lives in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique value, and you don't want it committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
+> `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username and may be assigned a different region — you don't want either committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 
 ### Step 4: Fill In the `cloud {}` Block
 Open `main.tf` in your repo and replace the two placeholders:

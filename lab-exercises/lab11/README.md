@@ -24,10 +24,12 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username
+### Set Your Username and Region
 ```bash
-export TF_VAR_username="user1"   # Replace with your assigned username
-echo "Your username: $TF_VAR_username"
+# IMPORTANT: Replace with your assigned values from the instructor
+export TF_VAR_username="user1"
+export TF_VAR_aws_region="us-east-1"
+echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
 ### Navigate to the lab directory
@@ -104,13 +106,14 @@ Open the **Variables** tab and add:
 
 **Terraform Variables**:
 
-| Key              | Value                                 |
-|------------------|---------------------------------------|
-| `username`       | *your assigned username (e.g. user1)* |
-| `environment`    | `development`                         |
-| `instance_count` | `1`                                   |
+| Key              | Value                                   |
+|------------------|-----------------------------------------|
+| `username`       | *your assigned username (e.g. user1)*   |
+| `aws_region`     | *your assigned region (e.g. us-east-1)* |
+| `environment`    | `development`                           |
+| `instance_count` | `1`                                     |
 
-> Note: `aws_region` has a default in `variables.tf`, so you don't need to set it. `username` MUST be set as a workspace variable — TFC remote runs do not inherit your local `TF_VAR_username` env var. Both workspaces (development and staging) need their own `username` value, even though it's the same for you.
+> Note: `username` and `aws_region` MUST be set as workspace variables — TFC remote runs do not inherit your local `TF_VAR_*` env vars. Both workspaces (development and staging) need their own values for all four variables, even though `username` and `aws_region` are the same in both.
 
 ### Step 4: Set Apply Method
 1. In **Settings** → **General**, find **Apply Method**
@@ -136,13 +139,14 @@ Repeat the steps above for a staging environment:
 4. **Save settings**
 
 ### Step 3: Add Workspace Variables
-Same AWS credentials as development, plus `username` (TFC remote runs need it as a workspace variable), but **different `environment` and `instance_count`**:
+Same AWS credentials, same `username` and `aws_region` as development, but **different `environment` and `instance_count`**:
 
-| Key              | Value                                 |
-|------------------|---------------------------------------|
-| `username`       | *your assigned username (e.g. user1)* |
-| `environment`    | `staging`                             |
-| `instance_count` | `2`                                   |
+| Key              | Value                                   |
+|------------------|-----------------------------------------|
+| `username`       | *your assigned username (e.g. user1)*   |
+| `aws_region`     | *your assigned region (e.g. us-east-1)* |
+| `environment`    | `staging`                               |
+| `instance_count` | `2`                                     |
 
 ### Step 4: Set Apply Method
 **Manual apply** again.

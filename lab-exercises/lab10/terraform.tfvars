@@ -1,8 +1,7 @@
 # terraform.tfvars
 #
-# `username` is intentionally NOT set here. Provide it via the
-# TF_VAR_username environment variable (each student gets a unique name):
+# Nothing is set here. For Terraform Cloud labs, set BOTH `username` AND
+# `aws_region` as Terraform Variables in the workspace UI (TFC remote runs
+# do not inherit local TF_VAR_* env vars).
 #
-#     export TF_VAR_username="user1"   # replace with your assigned name
-#
-# aws_region defaults to "us-east-1" in variables.tf — override here if needed.
+# See Exercise 10.1 Step 3 for the full list of workspace variables.

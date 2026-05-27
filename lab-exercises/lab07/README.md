@@ -26,11 +26,12 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username
+### Set Your Username and Region
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
+# IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-echo "Your username: $TF_VAR_username"
+export TF_VAR_aws_region="us-east-1"
+echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
 ---

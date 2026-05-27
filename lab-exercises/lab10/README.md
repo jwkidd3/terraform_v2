@@ -25,11 +25,12 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username
+### Set Your Username and Region
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
+# IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-echo "Your username: $TF_VAR_username"
+export TF_VAR_aws_region="us-east-1"
+echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
 ### Navigate to the lab directory
@@ -75,17 +76,17 @@ In the workspace, open the **Variables** tab and add:
 
 **Terraform Variables** (these map to `variable` blocks in your HCL):
 
-| Key         | Value                                 |
-|-------------|---------------------------------------|
-| `username`  | *your assigned username (e.g. user1)* |
+| Key          | Value                                  |
+|--------------|----------------------------------------|
+| `username`   | *your assigned username (e.g. user1)*  |
+| `aws_region` | *your assigned region (e.g. us-east-1)* |
 
 > **Important — `TF_VAR_*` is local-only:**
-> The `TF_VAR_username` environment variable you exported in Cloud9 does NOT propagate to TFC's remote runners. You must set `username` here as a Terraform workspace variable, otherwise the remote plan will fail with "No value for required variable."
+> The `TF_VAR_username` and `TF_VAR_aws_region` environment variables you exported in Cloud9 do NOT propagate to TFC's remote runners. You must set both as Terraform workspace variables, otherwise the remote plan will use the default region (us-east-1) and fail on "No value for required variable" for `username`.
 >
 > **Why two kinds of variables?**
 > - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.
 > - **Terraform Variables** are bound to your `variable "..." {}` blocks in `main.tf` / `variables.tf`. This is where your application configuration goes.
-> - `aws_region` already has a default in `variables.tf`, so you don't need to set it in the workspace.
 
 ---
 
