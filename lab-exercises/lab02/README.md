@@ -29,7 +29,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -272,7 +272,7 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 ```
 
@@ -280,7 +280,7 @@ variable "aws_region" {
 
 - **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block enforces a length between 3 and 20 characters.
 - **`environment`** defaults to `"development"` and uses the `contains()` function to only accept `"development"`, `"staging"`, or `"production"`.
-- **`aws_region`** defaults to `"us-east-1"` with no additional validation.
+- **`aws_region`** defaults to `"us-east-2"` with no additional validation.
 - **Validation blocks** run during `terraform plan` and `terraform apply`, catching invalid input before any resources are created.
 
 ---

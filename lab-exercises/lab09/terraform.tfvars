@@ -4,6 +4,6 @@
 # are spread across multiple AWS regions. Provide them via environment vars:
 #
 #     export TF_VAR_username="user1"        # your assigned username
-#     export TF_VAR_aws_region="us-east-1"  # your assigned region
+#     export TF_VAR_aws_region="us-east-2"  # your assigned region
 
 environment = "development"

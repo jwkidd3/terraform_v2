@@ -28,7 +28,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -109,7 +109,7 @@ Open the **Variables** tab and add:
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
 | `username`       | *your assigned username (e.g. user1)*   |
-| `aws_region`     | *your assigned region (e.g. us-east-1)* |
+| `aws_region`     | *your assigned region (e.g. us-east-2)* |
 | `environment`    | `development`                           |
 | `instance_count` | `1`                                     |
 
@@ -144,7 +144,7 @@ Same AWS credentials, same `username` and `aws_region` as development, but **dif
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
 | `username`       | *your assigned username (e.g. user1)*   |
-| `aws_region`     | *your assigned region (e.g. us-east-1)* |
+| `aws_region`     | *your assigned region (e.g. us-east-2)* |
 | `environment`    | `staging`                               |
 | `instance_count` | `2`                                     |
 

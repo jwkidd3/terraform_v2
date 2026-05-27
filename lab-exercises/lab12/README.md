@@ -30,7 +30,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -125,7 +125,7 @@ TFC installed a webhook on your repo automatically:
 | Key          | Value                                   |
 |--------------|-----------------------------------------|
 | `username`   | *your assigned username (e.g. user1)*   |
-| `aws_region` | *your assigned region (e.g. us-east-1)* |
+| `aws_region` | *your assigned region (e.g. us-east-2)* |
 
 > `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username and may be assigned a different region — you don't want either committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 

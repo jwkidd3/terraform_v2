@@ -39,13 +39,13 @@ cd ~/environment/terraform_v2/lab-exercises/lab03
 
 # Set your username and region (use values assigned by your instructor)
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 
 # Verify AWS access
 aws sts get-caller-identity
 ```
 
-> **Note:** Replace `user1` and `us-east-1` with the values assigned to you by your instructor. `terraform.tfvars` no longer hardcodes these — the env vars are the single source of truth.
+> **Note:** Replace `user1` and `us-east-2` with the values assigned to you by your instructor. `terraform.tfvars` no longer hardcodes these — the env vars are the single source of truth.
 
 ---
 

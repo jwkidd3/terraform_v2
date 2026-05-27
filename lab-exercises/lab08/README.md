@@ -30,7 +30,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -71,7 +71,7 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "instance_type" {

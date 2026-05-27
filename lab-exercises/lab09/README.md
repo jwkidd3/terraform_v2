@@ -29,7 +29,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -69,11 +69,9 @@ variable "aws_region" {
 }
 ```
 
-**terraform.tfvars:**
+**terraform.tfvars** (only `environment` is set here; `username` and `aws_region` come from the env vars you exported in Lab Setup):
 ```hcl
-username    = "user1"      # Replace with your username
 environment = "development"
-aws_region  = "us-east-1"  # Set to your AWS region
 ```
 
 **main.tf:**

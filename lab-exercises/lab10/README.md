@@ -29,7 +29,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -79,10 +79,10 @@ In the workspace, open the **Variables** tab and add:
 | Key          | Value                                  |
 |--------------|----------------------------------------|
 | `username`   | *your assigned username (e.g. user1)*  |
-| `aws_region` | *your assigned region (e.g. us-east-1)* |
+| `aws_region` | *your assigned region (e.g. us-east-2)* |
 
 > **Important — `TF_VAR_*` is local-only:**
-> The `TF_VAR_username` and `TF_VAR_aws_region` environment variables you exported in Cloud9 do NOT propagate to TFC's remote runners. You must set both as Terraform workspace variables, otherwise the remote plan will use the default region (us-east-1) and fail on "No value for required variable" for `username`.
+> The `TF_VAR_username` and `TF_VAR_aws_region` environment variables you exported in Cloud9 do NOT propagate to TFC's remote runners. You must set both as Terraform workspace variables, otherwise the remote plan will use the default region (us-east-2) and fail on "No value for required variable" for `username`.
 >
 > **Why two kinds of variables?**
 > - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.

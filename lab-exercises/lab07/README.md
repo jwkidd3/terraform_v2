@@ -30,7 +30,7 @@ By the end of this lab, you will be able to:
 ```bash
 # IMPORTANT: Replace with your assigned values from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-1"
+export TF_VAR_aws_region="us-east-2"
 echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
@@ -366,12 +366,16 @@ output "s3_bucket" {
 }
 ```
 
-### Step 3: Update Variable Values
-**terraform.tfvars** - Update with your username:
+### Step 3: Confirm Your Environment Variables
+`terraform.tfvars` only sets `environment` for this lab — `username` and `aws_region` come from the env vars you set in Lab Setup:
+
 ```hcl
-username    = "user1"      # Replace with your username
 environment = "development"
-aws_region  = "us-east-1"  # Set to your AWS region
+```
+
+Verify:
+```bash
+echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 ```
 
 ### Step 4: Deploy the Infrastructure
