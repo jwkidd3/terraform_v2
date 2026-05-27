@@ -763,10 +763,366 @@
                 </div>
             </section>
 
-            <!-- Section 1: Advanced Variables and Outputs -->
+            <!-- Section 1: Data Sources & Integration -->
             <section>
                 <section class="section-divider">
-                    <h2>🔧 Section 1: Advanced Variables & Outputs</h2>
+                    <h2>📊 Section 1: Data Sources & Integration</h2>
+                    <p>Integrate existing infrastructure and discover resources dynamically</p>
+                </section>
+
+
+                <section>
+                    <h3>🔍 Advanced Data Sources</h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>🏗️ Dynamic AMI Selection</h4>
+                            <pre><code class="language-hcl">data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}</code></pre>
+                        </div>
+
+                        <div class="column">
+                            <h4>📊 Resource Discovery</h4>
+                            <pre><code class="language-hcl">data "aws_vpc" "existing" {
+  filter {
+    name   = "tag:Environment"
+    values = [var.environment]
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.existing.id]
+  }
+
+  filter {
+    name   = "tag:Type"
+    values = ["Private"]
+  }
+}</code></pre>
+
+                            <div class="success">
+                                <h4>Key Benefits</h4>
+                                <ul>
+                                    <li>Dynamic resource discovery</li>
+                                    <li>Environment-specific configuration</li>
+                                    <li>Latest AMI selection</li>
+                                    <li>Cross-stack integration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>                <section>
+                    <h3>Cross-Stack Integration Patterns</h3>
+                    <pre><code class="language-hcl"># Using outputs from modules
+module "vpc" {
+  source = "./modules/networking"
+  cidr   = "10.0.0.0/16"
+}
+
+module "application" {
+  source    = "./modules/app"
+  vpc_id    = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
+}
+
+# Or using data sources to discover existing resources
+data "aws_vpc" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.username}-vpc"]
+  }
+}
+
+resource "aws_instance" "app" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  subnet_id     = data.aws_subnets.private.ids[0]
+}</code></pre>
+                    <div class="info">
+                        <strong>Best Practice:</strong> Use module composition for infrastructure layers. Enterprise remote state patterns are covered in Terraform Cloud (Day 3).
+                    </div>
+                </section>
+
+                <section>
+                    <h3>State Management Concepts</h3>
+                    <pre><code class="language-bash"># Common state commands
+terraform state list                    # List all resources
+terraform state show aws_instance.app   # Show resource details
+terraform state rm aws_instance.old     # Remove from state
+terraform state mv aws_instance.a aws_instance.b  # Rename resource
+
+# State backup
+cp terraform.tfstate terraform.tfstate.backup</code></pre>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>State Best Practices</h4>
+                            <ul>
+                                <li>Always backup before operations</li>
+                                <li>Use unique resource naming</li>
+                                <li>Protect sensitive data</li>
+                                <li>Version control .gitignore</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>Enterprise Options</h4>
+                            <ul>
+                                <li>Terraform Cloud (Day 3)</li>
+                                <li>S3 + DynamoDB (AWS) — common for AWS teams</li>
+                                <li>Consul (HashiCorp)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 6 Callout -->
+            <section class="lab-callout" data-background-color="#17a2b8">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">☁️</span> State Management Challenge!</h1>
+                    <h2><span class="emoji">🗄️</span> Lab 6: Local State Management</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.1em; line-height: 1.6;">
+                            <li>✅ Understand Terraform state file structure and contents</li>
+                            <li>✅ Use state commands for inspection and manipulation</li>
+                            <li>✅ Practice state backup and recovery techniques</li>
+                            <li>✅ Apply best practices for shared environment workflows</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Master state management essentials for team collaboration!</p>
+                    </div>
+                    <h2 style="margin-top: 30px; font-size: 2em;">🌊 Master State Management!</h2>
+                </div>
+            </section>
+
+            <!-- Section 2: Introduction to Terraform Modules -->
+            <section>
+                <section>
+                    <h2>Section 2: Introduction to Terraform Modules</h2>
+                </section>
+
+                <section>
+                    <h3>What are Terraform Modules?</h3>
+                    <div class="success">
+                        <strong>Modules</strong> are containers for multiple resources that are used together. They enable you to create reusable components and organize your Terraform code.
+                    </div>
+                    <h4>Benefits:</h4>
+                    <ul>
+                        <li><strong>Reusability:</strong> Use the same module across environments</li>
+                        <li><strong>Organization:</strong> Logical grouping of resources</li>
+                        <li><strong>Abstraction:</strong> Hide complexity behind clean interfaces</li>
+                        <li><strong>Consistency:</strong> Standardize infrastructure patterns</li>
+                        <li><strong>Testing:</strong> Test modules independently</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>Module Structure</h3>
+                    <pre><code class="language-text">modules/
+├── networking/
+│   ├── main.tf          # Primary resource definitions
+│   ├── variables.tf     # Input variable declarations
+│   ├── outputs.tf       # Output value declarations
+│   ├── versions.tf      # Provider requirements
+│   └── README.md        # Module documentation
+├── security/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── versions.tf
+└── compute/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    └── versions.tf</code></pre>
+                </section>
+
+                <section>
+                    <h3>Creating a Simple Module</h3>
+                    <h4>modules/networking/variables.tf</h4>
+                    <pre><code class="language-hcl">variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "availability_zones" {
+  description = "List of AZs to use"
+  type        = list(string)
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+}
+
+variable "tags" {
+  description = "Common tags for all resources"
+  type        = map(string)
+  default     = {}
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Main Configuration</h3>
+                    <h4>modules/networking/main.tf</h4>
+                    <pre><code class="language-hcl">resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-vpc"
+  })
+}
+
+resource "aws_subnet" "private" {
+  count = length(var.availability_zones)
+  
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
+  availability_zone = var.availability_zones[count.index]
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-private-${count.index + 1}"
+    Type = "private"
+  })
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+  
+  tags = merge(var.tags, {
+    Name = "${var.environment}-igw"
+  })
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Outputs</h3>
+                    <h4>modules/networking/outputs.tf</h4>
+                    <pre><code class="language-hcl">output "vpc_id" {
+  description = "ID of the VPC"
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr_block" {
+  description = "CIDR block of the VPC"
+  value       = aws_vpc.main.cidr_block
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = aws_subnet.private[*].id
+}
+
+output "internet_gateway_id" {
+  description = "ID of the Internet Gateway"
+  value       = aws_internet_gateway.main.id
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Using Modules</h3>
+                    <pre><code class="language-hcl">module "networking" {
+  source = "./modules/networking"
+  
+  vpc_cidr           = "10.0.0.0/16"
+  availability_zones = ["us-east-2a", "us-east-2b", "us-east-2c"]
+  environment        = var.environment
+  
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "Terraform"
+  }
+}
+
+# Reference module outputs
+resource "aws_instance" "web" {
+  ami       = data.aws_ami.ubuntu.id
+  subnet_id = module.networking.private_subnet_ids[0]
+  
+  tags = {
+    Name = "${var.environment}-web-server"
+  }
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>Module Sources</h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Local Modules</h4>
+                            <pre><code class="language-hcl">module "networking" {
+  source = "./modules/networking"
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <h4>Remote Modules</h4>
+                            <pre><code class="language-hcl"># Git repository
+module "vpc" {
+  source = "git::https://github.com/company/terraform-modules.git//networking?ref=v1.0.0"
+}
+
+# Terraform Registry
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 3.0"
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="highlight">
+                        <strong>Best Practice:</strong> Always pin module versions in production to ensure consistency.
+                    </div>
+                </section>
+            </section>
+
+            <!-- Lab 7 Callout -->
+            <section class="lab-callout" data-background-color="#6610f2">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">📦</span> Module Composition!</h1>
+                    <h2><span class="emoji">🗂️</span> Lab 7: Working with Terraform Registry Modules</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Master:</h3>
+                        <ul style="font-size: 1.0em; line-height: 1.4;">
+                            <li>✅ Use community registry modules (VPC, security-group, S3)</li>
+                            <li>✅ Combine multiple modules to build infrastructure</li>
+                            <li>✅ Configure module inputs and consume outputs</li>
+                            <li>✅ Apply module versioning best practices</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+
+                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Build infrastructure with proven community modules!</p>
+                    </div>
+                    <h2 style="margin-top: 20px; font-size: 1.8em;">📦 Registry Module Patterns!</h2>
+                </div>
+            </section>
+
+            <!-- Section 3: Advanced Variables & Outputs -->
+            <section>
+                <section class="section-divider">
+                    <h2>🔧 Section 3: Advanced Variables & Outputs</h2>
                     <p>Master complex data structures and validation patterns</p>
                 </section>
 
@@ -1168,32 +1524,32 @@ output "application_endpoint" {
                 </section>
             </section>
 
-            <!-- Lab 6 Callout -->
-            <section class="lab-callout" data-background-color="#17a2b8">
+            <!-- Lab 8 Callout -->
+            <section class="lab-callout" data-background-color="#e83e8c">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">☁️</span> State Management Challenge!</h1>
-                    <h2><span class="emoji">🗄️</span> Lab 6: Local State Management</h2>
-                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                    <h1><span class="emoji">🚀</span> Sophisticated Environment Management!</h1>
+                    <h2><span class="emoji">⚙️</span> Lab 8: Multi-Environment Patterns</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin: 15px 0;">
                         <h3>🎯 What You'll Master:</h3>
-                        <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Understand Terraform state file structure and contents</li>
-                            <li>✅ Use state commands for inspection and manipulation</li>
-                            <li>✅ Practice state backup and recovery techniques</li>
-                            <li>✅ Apply best practices for shared environment workflows</li>
+                        <ul style="font-size: 1.0em; line-height: 1.4;">
+                            <li>✅ Sophisticated multi-environment architecture</li>
+                            <li>✅ Feature flags and cost optimization levels</li>
+                            <li>✅ Complex variable structures with validation</li>
+                            <li>✅ Automated environment validation scripts</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Master state management essentials for team collaboration!</p>
+                        
+                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Master enterprise environment patterns!</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🌊 Master State Management!</h2>
+                    <h2 style="margin-top: 20px; font-size: 1.8em;">🔧 Advanced Environment Control!</h2>
                 </div>
             </section>
 
-            <!-- Section 2: Resource Dependencies and Lifecycle -->
+            <!-- Section 4: Resource Dependencies & Lifecycle -->
             <section>
                 <section class="section-divider">
-                    <h2>🔗 Section 2: Resource Dependencies & Lifecycle</h2>
+                    <h2>🔗 Section 4: Resource Dependencies & Lifecycle</h2>
                     <p>Master resource orchestration and lifecycle management patterns</p>
                 </section>
 
@@ -1839,362 +2195,6 @@ terraform state rm aws_instance.old</code></pre>
                                 <p><strong>💡 Best Practice:</strong> Always run `terraform plan` after targeted operations to ensure state consistency.</p>
                             </div>
                         </div>
-                    </div>
-                </section>
-            </section>
-
-            <!-- Lab 7 Callout -->
-            <section class="lab-callout" data-background-color="#6610f2">
-                <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">📦</span> Module Composition!</h1>
-                    <h2><span class="emoji">🗂️</span> Lab 7: Working with Terraform Registry Modules</h2>
-                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
-                        <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Use community registry modules (VPC, security-group, S3)</li>
-                            <li>✅ Combine multiple modules to build infrastructure</li>
-                            <li>✅ Configure module inputs and consume outputs</li>
-                            <li>✅ Apply module versioning best practices</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-
-                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Build infrastructure with proven community modules!</p>
-                    </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">📦 Registry Module Patterns!</h2>
-                </div>
-            </section>
-
-            <!-- Section 3: Data Sources and Integration -->
-            <section>
-                <section class="section-divider">
-                    <h2>📊 Section 3: Data Sources & Integration</h2>
-                    <p>Integrate existing infrastructure and discover resources dynamically</p>
-                </section>
-
-
-                <section>
-                    <h3>🔍 Advanced Data Sources</h3>
-                    <div class="two-column">
-                        <div class="column">
-                            <h4>🏗️ Dynamic AMI Selection</h4>
-                            <pre><code class="language-hcl">data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}</code></pre>
-                        </div>
-
-                        <div class="column">
-                            <h4>📊 Resource Discovery</h4>
-                            <pre><code class="language-hcl">data "aws_vpc" "existing" {
-  filter {
-    name   = "tag:Environment"
-    values = [var.environment]
-  }
-}
-
-data "aws_subnets" "private" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.existing.id]
-  }
-
-  filter {
-    name   = "tag:Type"
-    values = ["Private"]
-  }
-}</code></pre>
-
-                            <div class="success">
-                                <h4>Key Benefits</h4>
-                                <ul>
-                                    <li>Dynamic resource discovery</li>
-                                    <li>Environment-specific configuration</li>
-                                    <li>Latest AMI selection</li>
-                                    <li>Cross-stack integration</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>                <section>
-                    <h3>Cross-Stack Integration Patterns</h3>
-                    <pre><code class="language-hcl"># Using outputs from modules
-module "vpc" {
-  source = "./modules/networking"
-  cidr   = "10.0.0.0/16"
-}
-
-module "application" {
-  source    = "./modules/app"
-  vpc_id    = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnet_ids
-}
-
-# Or using data sources to discover existing resources
-data "aws_vpc" "existing" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.username}-vpc"]
-  }
-}
-
-resource "aws_instance" "app" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
-  subnet_id     = data.aws_subnets.private.ids[0]
-}</code></pre>
-                    <div class="info">
-                        <strong>Best Practice:</strong> Use module composition for infrastructure layers. Enterprise remote state patterns are covered in Terraform Cloud (Day 3).
-                    </div>
-                </section>
-
-                <section>
-                    <h3>State Management Concepts</h3>
-                    <pre><code class="language-bash"># Common state commands
-terraform state list                    # List all resources
-terraform state show aws_instance.app   # Show resource details
-terraform state rm aws_instance.old     # Remove from state
-terraform state mv aws_instance.a aws_instance.b  # Rename resource
-
-# State backup
-cp terraform.tfstate terraform.tfstate.backup</code></pre>
-                    <div class="two-column">
-                        <div class="column">
-                            <h4>State Best Practices</h4>
-                            <ul>
-                                <li>Always backup before operations</li>
-                                <li>Use unique resource naming</li>
-                                <li>Protect sensitive data</li>
-                                <li>Version control .gitignore</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <h4>Enterprise Options</h4>
-                            <ul>
-                                <li>Terraform Cloud (Day 3)</li>
-                                <li>S3 + DynamoDB (AWS) — common for AWS teams</li>
-                                <li>Consul (HashiCorp)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-            </section>
-
-            <!-- Lab 8 Callout -->
-            <section class="lab-callout" data-background-color="#e83e8c">
-                <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🚀</span> Sophisticated Environment Management!</h1>
-                    <h2><span class="emoji">⚙️</span> Lab 8: Multi-Environment Patterns</h2>
-                    <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; margin: 15px 0;">
-                        <h3>🎯 What You'll Master:</h3>
-                        <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Sophisticated multi-environment architecture</li>
-                            <li>✅ Feature flags and cost optimization levels</li>
-                            <li>✅ Complex variable structures with validation</li>
-                            <li>✅ Automated environment validation scripts</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        
-                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Master enterprise environment patterns!</p>
-                    </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🔧 Advanced Environment Control!</h2>
-                </div>
-            </section>
-
-            <!-- Section 4: Introduction to Modules -->
-            <section>
-                <section>
-                    <h2>Section 4: Introduction to Terraform Modules</h2>
-                </section>
-
-                <section>
-                    <h3>What are Terraform Modules?</h3>
-                    <div class="success">
-                        <strong>Modules</strong> are containers for multiple resources that are used together. They enable you to create reusable components and organize your Terraform code.
-                    </div>
-                    <h4>Benefits:</h4>
-                    <ul>
-                        <li><strong>Reusability:</strong> Use the same module across environments</li>
-                        <li><strong>Organization:</strong> Logical grouping of resources</li>
-                        <li><strong>Abstraction:</strong> Hide complexity behind clean interfaces</li>
-                        <li><strong>Consistency:</strong> Standardize infrastructure patterns</li>
-                        <li><strong>Testing:</strong> Test modules independently</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h3>Module Structure</h3>
-                    <pre><code class="language-text">modules/
-├── networking/
-│   ├── main.tf          # Primary resource definitions
-│   ├── variables.tf     # Input variable declarations
-│   ├── outputs.tf       # Output value declarations
-│   ├── versions.tf      # Provider requirements
-│   └── README.md        # Module documentation
-├── security/
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── versions.tf
-└── compute/
-    ├── main.tf
-    ├── variables.tf
-    ├── outputs.tf
-    └── versions.tf</code></pre>
-                </section>
-
-                <section>
-                    <h3>Creating a Simple Module</h3>
-                    <h4>modules/networking/variables.tf</h4>
-                    <pre><code class="language-hcl">variable "vpc_cidr" {
-  description = "CIDR block for VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "availability_zones" {
-  description = "List of AZs to use"
-  type        = list(string)
-}
-
-variable "environment" {
-  description = "Environment name"
-  type        = string
-}
-
-variable "tags" {
-  description = "Common tags for all resources"
-  type        = map(string)
-  default     = {}
-}</code></pre>
-                </section>
-
-                <section>
-                    <h3>Module Main Configuration</h3>
-                    <h4>modules/networking/main.tf</h4>
-                    <pre><code class="language-hcl">resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-  
-  tags = merge(var.tags, {
-    Name = "${var.environment}-vpc"
-  })
-}
-
-resource "aws_subnet" "private" {
-  count = length(var.availability_zones)
-  
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
-  availability_zone = var.availability_zones[count.index]
-  
-  tags = merge(var.tags, {
-    Name = "${var.environment}-private-${count.index + 1}"
-    Type = "private"
-  })
-}
-
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-  
-  tags = merge(var.tags, {
-    Name = "${var.environment}-igw"
-  })
-}</code></pre>
-                </section>
-
-                <section>
-                    <h3>Module Outputs</h3>
-                    <h4>modules/networking/outputs.tf</h4>
-                    <pre><code class="language-hcl">output "vpc_id" {
-  description = "ID of the VPC"
-  value       = aws_vpc.main.id
-}
-
-output "vpc_cidr_block" {
-  description = "CIDR block of the VPC"
-  value       = aws_vpc.main.cidr_block
-}
-
-output "private_subnet_ids" {
-  description = "List of private subnet IDs"
-  value       = aws_subnet.private[*].id
-}
-
-output "internet_gateway_id" {
-  description = "ID of the Internet Gateway"
-  value       = aws_internet_gateway.main.id
-}</code></pre>
-                </section>
-
-                <section>
-                    <h3>Using Modules</h3>
-                    <pre><code class="language-hcl">module "networking" {
-  source = "./modules/networking"
-  
-  vpc_cidr           = "10.0.0.0/16"
-  availability_zones = ["us-east-2a", "us-east-2b", "us-east-2c"]
-  environment        = var.environment
-  
-  tags = {
-    Environment = var.environment
-    Project     = var.project_name
-    ManagedBy   = "Terraform"
-  }
-}
-
-# Reference module outputs
-resource "aws_instance" "web" {
-  ami       = data.aws_ami.ubuntu.id
-  subnet_id = module.networking.private_subnet_ids[0]
-  
-  tags = {
-    Name = "${var.environment}-web-server"
-  }
-}</code></pre>
-                </section>
-
-                <section>
-                    <h3>Module Sources</h3>
-                    <div class="two-column">
-                        <div class="column">
-                            <h4>Local Modules</h4>
-                            <pre><code class="language-hcl">module "networking" {
-  source = "./modules/networking"
-}</code></pre>
-                        </div>
-                        <div class="column">
-                            <h4>Remote Modules</h4>
-                            <pre><code class="language-hcl"># Git repository
-module "vpc" {
-  source = "git::https://github.com/company/terraform-modules.git//networking?ref=v1.0.0"
-}
-
-# Terraform Registry
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
-}</code></pre>
-                        </div>
-                    </div>
-                    <div class="highlight">
-                        <strong>Best Practice:</strong> Always pin module versions in production to ensure consistency.
                     </div>
                 </section>
             </section>
