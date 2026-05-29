@@ -89,6 +89,10 @@ For Lab 12 specifically, also add `CONFIRM_DESTROY=1` (env var, not sensitive) s
 
 **GitHub PAT (Lab 12):** walk through token creation live — first-time users miss the "copy the token NOW" step.
 
+**GitHub VCS Provider in TFC (Lab 12):** each student must configure GitHub.com as a VCS Provider at the **organization level** in TFC *before* they create a VCS-driven workspace. Without it, the per-workspace "Connect to GitHub" button completes but no webhook gets installed and pushes never trigger runs. Lab 12 Exercise 12.2 Step 1 walks through this; allow extra time (5–10 min) the first time students do it. Two paths:
+- **GitHub App** (preferred): Organization Settings → Providers → Add → GitHub.com (GitHub App) → install the HCP Terraform GitHub App on their account.
+- **OAuth App** (custom): students create a GitHub OAuth App, paste its Client ID + Client Secret into TFC. More moving parts; only use if the GitHub App path isn't available.
+
 ---
 
 ## ☁️ Cloud9 Environment Prep

@@ -92,22 +92,60 @@ EOF
 
 ---
 
-## ☁️ **Exercise 12.2: Create the VCS-Driven Workspace (15 minutes)**
+## ☁️ **Exercise 12.2: Create the VCS-Driven Workspace (20 minutes)**
 
-### Step 1: Create the Workspace
+### Step 1: Configure GitHub as a VCS Provider (one-time per organization)
+
+Before TFC can install webhooks on your GitHub repos, your TFC organization needs GitHub.com registered as a **VCS Provider**. This is a one-time setup per organization — if you already did this for another lab, skip to Step 2.
+
+> The PAT you created in Exercise 12.1 is for command-line git operations only. TFC's webhook-driven runs use a separate **OAuth handshake** between TFC and GitHub.
+
+**Pick one path:**
+
+#### Path A (recommended): GitHub App
+1. TFC → **Organization Settings** → **Providers** (or **VCS Providers**) → **Add a VCS Provider**
+2. Choose **GitHub.com (GitHub App)** if shown
+3. Click **Install the Terraform Cloud GitHub App on GitHub**
+4. On GitHub, install the app on **your account** and grant it access to **All repositories** (or at minimum the `terraform-vcs-lab12-<your-username>` repo)
+5. You're redirected back to TFC — GitHub.com is now listed as a connected provider
+
+#### Path B: GitHub OAuth App (custom)
+Use this if Path A isn't available in your TFC plan.
+
+1. TFC → **Organization Settings** → **Providers** → **Add a VCS Provider** → **GitHub.com (Custom)**
+2. TFC displays a **Callback URL** like `https://app.terraform.io/auth/<id>/callback` — copy it
+3. In a new tab, GitHub → click your avatar → **Settings** → scroll to **Developer settings** (bottom of the left sidebar) → **OAuth Apps** → **New OAuth App**
+4. Fill in:
+
+   | Field | Value |
+   |-------|-------|
+   | Application name | `Terraform Cloud` |
+   | Homepage URL | `https://app.terraform.io` |
+   | Authorization callback URL | *paste the Callback URL from TFC* |
+
+5. Click **Register application**
+6. Copy the **Client ID** that GitHub shows
+7. Click **Generate a new client secret**, copy it **immediately** (GitHub only shows it once)
+8. Switch back to TFC, paste **Client ID** and **Client Secret**, then **Create VCS Provider**
+9. TFC redirects you to GitHub to authorize the OAuth app → click **Authorize**
+10. You're back in TFC with `GitHub.com` listed as a connected provider
+
+### Step 2: Create the Workspace
 1. https://app.terraform.io → your organization → **New** → **Workspace**
 2. Choose **Version control workflow** *(this is the key choice — different from Labs 10–11)*
-3. Connect to **GitHub** — authorize Terraform Cloud if this is your first time
-4. Select your `terraform-vcs-lab12-<your-username>` repository
+3. Select **GitHub.com** (now available because of Step 1)
+4. Pick your `terraform-vcs-lab12-<your-username>` repository
 5. Workspace name: `vcs-lab12-<your-username>` *(e.g., `vcs-lab12-user1`)*
 6. **Create workspace**
 
-### Step 2: Verify the GitHub Webhook
+### Step 3: Verify the GitHub Webhook
 TFC installed a webhook on your repo automatically:
-- GitHub repo → **Settings** → **Webhooks** — you should see a `app.terraform.io` entry
-- TFC workspace → **Settings** → **Version Control** — shows the connected repo
+- GitHub repo → **Settings** → **Webhooks** — you should see an `app.terraform.io` entry (or the GitHub App, depending on Path A vs B)
+- TFC workspace → **Settings** → **Version Control** — shows the connected repo and webhook status
 
-### Step 3: Add Workspace Variables
+> **If no webhook appears:** the VCS provider in Step 1 wasn't installed correctly. Go back to **Organization Settings → Providers**, verify GitHub.com is listed and shows a green "connected" indicator. If using Path B, the most common gotcha is the Callback URL not matching exactly between GitHub and TFC.
+
+### Step 4: Add Workspace Variables
 **Variables** tab:
 
 **Environment Variables** (AWS credentials, plus the destroy guardrail):
@@ -129,7 +167,7 @@ TFC installed a webhook on your repo automatically:
 
 > `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username and may be assigned a different region — you don't want either committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 
-### Step 4: Fill In the `cloud {}` Block
+### Step 5: Fill In the `cloud {}` Block
 Open `main.tf` in your repo and replace the two placeholders:
 
 ```hcl
@@ -141,7 +179,7 @@ Open `main.tf` in your repo and replace the two placeholders:
   }
 ```
 
-### Step 5: Commit and Push — Watch the First Run Trigger
+### Step 6: Commit and Push — Watch the First Run Trigger
 ```bash
 git add .
 git commit -m "Initial VCS-driven Terraform Cloud configuration"
