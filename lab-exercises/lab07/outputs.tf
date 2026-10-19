@@ -1,11 +1,11 @@
 output "vpc_info" {
   description = "VPC information from registry module"
   value = {
-    vpc_id             = module.vpc.vpc_id
-    vpc_cidr_block     = module.vpc.vpc_cidr_block
-    private_subnet_ids = module.vpc.private_subnets
-    public_subnet_ids  = module.vpc.public_subnets
-    nat_gateway_ids    = module.vpc.natgw_ids
+    vpc_id              = module.vpc.vpc_id
+    vpc_cidr_block      = module.vpc.vpc_cidr_block
+    private_subnet_ids  = module.vpc.private_subnets
+    public_subnet_ids   = module.vpc.public_subnets
+    nat_gateway_ids     = module.vpc.natgw_ids
     internet_gateway_id = module.vpc.igw_id
   }
 }
@@ -20,7 +20,7 @@ output "security_groups" {
 
 output "application_endpoint" {
   description = "Application load balancer DNS name"
-  value = "http://${aws_lb.main.dns_name}"
+  value       = "http://${aws_lb.main.dns_name}"
 }
 
 output "web_servers" {
@@ -37,9 +37,9 @@ output "web_servers" {
 output "s3_bucket" {
   description = "S3 bucket information from registry module"
   value = {
-    bucket_id                 = module.s3_logs.s3_bucket_id
-    bucket_arn               = module.s3_logs.s3_bucket_arn
-    bucket_domain_name       = module.s3_logs.s3_bucket_bucket_domain_name
+    bucket_id                   = module.s3_logs.s3_bucket_id
+    bucket_arn                  = module.s3_logs.s3_bucket_arn
+    bucket_domain_name          = module.s3_logs.s3_bucket_bucket_domain_name
     bucket_regional_domain_name = module.s3_logs.s3_bucket_bucket_regional_domain_name
   }
 }

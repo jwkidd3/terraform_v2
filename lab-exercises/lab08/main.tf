@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.9"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -11,7 +11,7 @@ terraform {
       version = "~> 3.1"
     }
   }
-  
+
   # Using local backend for this lab
   # In production, you would use remote state per environment
 }
@@ -23,14 +23,14 @@ provider "aws" {
 # Local values for environment-specific logic
 locals {
   name_prefix = "${var.username}-${var.environment}"
-  
+
   # Environment-specific settings
   availability_zones = var.enable_high_availability ? slice(data.aws_availability_zones.available.names, 0, 2) : slice(data.aws_availability_zones.available.names, 0, 1)
-    
+
   backup_retention = var.environment == "prod" ? 30 : (var.environment == "staging" ? 7 : 1)
-  
+
   use_private_subnets = var.environment != "dev"
-  
+
   common_tags = {
     Owner       = var.username
     Environment = var.environment
@@ -48,10 +48,10 @@ data "aws_availability_zones" "available" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
@@ -64,20 +64,25 @@ module "vpc" {
   cidr = "10.0.0.0/16"
 
   azs = local.availability_zones
-  
+
   # Environment-specific subnet configuration
   private_subnets = local.use_private_subnets ? [
     for i, az in local.availability_zones : "10.0.${i + 1}.0/24"
   ] : []
-  
+
   public_subnets = [
     for i, az in local.availability_zones : "10.0.${i + 101}.0/24"
   ]
 
+  # dev runs its instances in the public subnets (no NAT gateway), so they
+  # need a public IP to reach the internet for the user_data package install.
+  # VPC module v5 defaults this to false.
+  map_public_ip_on_launch = true
+
   # NAT Gateway only for non-dev environments
   enable_nat_gateway = local.use_private_subnets
-  single_nat_gateway = var.environment != "prod"  # Multiple NAT gateways only in prod
-  
+  single_nat_gateway = var.environment != "prod" # Multiple NAT gateways only in prod
+
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -124,9 +129,9 @@ resource "aws_launch_template" "app" {
   name_prefix   = "${local.name_prefix}-"
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
-  
+
   vpc_security_group_ids = [aws_security_group.app.id]
-  
+
   # Use spot instances if configured
   dynamic "instance_market_options" {
     for_each = var.cost_optimization.use_spot_instances ? [1] : []
@@ -137,11 +142,11 @@ resource "aws_launch_template" "app" {
       }
     }
   }
-  
+
   monitoring {
     enabled = var.enable_monitoring
   }
-  
+
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     environment = var.environment
     username    = var.username
@@ -162,26 +167,26 @@ resource "aws_autoscaling_group" "app" {
   name                = "${local.name_prefix}-asg"
   vpc_zone_identifier = local.use_private_subnets ? module.vpc.private_subnets : module.vpc.public_subnets
   target_group_arns   = var.enable_high_availability ? [aws_lb_target_group.app[0].arn] : []
-  
+
   min_size         = 1
   max_size         = var.enable_high_availability ? var.instance_count * 2 : var.instance_count
   desired_capacity = var.instance_count
-  
+
   launch_template {
     id      = aws_launch_template.app.id
     version = "$Latest"
   }
-  
+
   # Health checks
   health_check_type         = var.enable_high_availability ? "ELB" : "EC2"
   health_check_grace_period = 300
-  
+
   tag {
     key                 = "Name"
     value               = "${local.name_prefix}-asg"
     propagate_at_launch = false
   }
-  
+
   dynamic "tag" {
     for_each = local.common_tags
     content {
@@ -195,7 +200,7 @@ resource "aws_autoscaling_group" "app" {
 # Load Balancer for high availability environments
 resource "aws_lb" "app" {
   count = var.enable_high_availability ? 1 : 0
-  
+
   name               = "${local.name_prefix}-alb"
   internal           = false
   load_balancer_type = "application"
@@ -207,7 +212,7 @@ resource "aws_lb" "app" {
 
 resource "aws_lb_target_group" "app" {
   count = var.enable_high_availability ? 1 : 0
-  
+
   name     = "${local.name_prefix}-tg"
   port     = 80
   protocol = "HTTP"
@@ -227,7 +232,7 @@ resource "aws_lb_target_group" "app" {
 
 resource "aws_lb_listener" "app" {
   count = var.enable_high_availability ? 1 : 0
-  
+
   load_balancer_arn = aws_lb.app[0].arn
   port              = "80"
   protocol          = "HTTP"

@@ -24,13 +24,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`. As in Lab 10, your username must also be entered as a workspace variable in each workspace.
 
 ### Navigate to the lab directory
 ```bash
@@ -84,36 +85,37 @@ Save the file. Do **not** add a `name = ...` here — the `tags` block selects w
 6. Click **Create workspace**
 
 ### Step 2: Tag the Workspace `lab11`
-This is the critical step that connects the workspace to your `cloud {}` block.
+This is the critical step that connects the workspace to your `cloud {}` block, which selects workspaces with `tags = ["lab11"]`.
 
-1. In the workspace, open **Settings** → **General**
-2. Scroll down to the **Tags** section
-3. Add a tag: `lab11`
-4. Add a second tag (for your own organization): `environment:development`
-5. Click **Save settings**
+1. Open the workspace's **Overview** page (the page you land on after creating it)
+2. In the right sidebar, find the **Tags** area and click **Manage Tags**
+3. In the **Manage workspace tags** drawer, click **+ Add tag**
+4. Enter `lab11` as the tag **key** and leave the value **empty** — a key-only tag is what the list form `tags = ["lab11"]` matches
+5. *(Optional, for your own organization)* add a second tag with key `environment` and value `development`
+6. Click **Save**
 
-> Without the `lab11` tag, `terraform workspace select lab11-development` will fail with "workspace not found."
+> Without the `lab11` tag, `terraform workspace select lab11-development` will fail with "workspace not found." The tag must be exactly `lab11` (lowercase, no value).
 
 ### Step 3: Add Workspace Variables
 Open the **Variables** tab and add:
 
 **Environment Variables** (AWS credentials):
 
-| Key                     | Value                        | Sensitive |
-|-------------------------|------------------------------|-----------|
-| `AWS_ACCESS_KEY_ID`     | *your AWS access key*        | ✅        |
-| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key* | ✅        |
+| Key                     | Value                                                | Sensitive |
+|-------------------------|------------------------------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *the access key ID provided by your instructor*      | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *the secret access key provided by your instructor*  | ✅        |
 
 **Terraform Variables**:
 
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
 | `username`       | *your assigned username (e.g. user1)*   |
-| `aws_region`     | *your assigned region (e.g. us-east-2)* |
+| `aws_region`     | `us-east-2`                             |
 | `environment`    | `development`                           |
 | `instance_count` | `1`                                     |
 
-> Note: `username` and `aws_region` MUST be set as workspace variables — TFC remote runs do not inherit your local `TF_VAR_*` env vars. Both workspaces (development and staging) need their own values for all four variables, even though `username` and `aws_region` are the same in both.
+> Note: `username` MUST be set as a workspace variable — TFC remote runs do not inherit your local `TF_VAR_*` env vars. `aws_region` would fall back to its `us-east-2` default, but setting it explicitly keeps each workspace self-describing. Each workspace (development and staging) has its own variables, so set all four in both, even though `username` and `aws_region` are the same in each.
 
 ### Step 4: Set Apply Method
 1. In **Settings** → **General**, find **Apply Method**
@@ -133,10 +135,10 @@ Repeat the steps above for a staging environment:
 4. **Create workspace**
 
 ### Step 2: Tag It
-1. **Settings** → **General** → **Tags**
-2. Add: `lab11`
-3. Add: `environment:staging`
-4. **Save settings**
+1. Workspace **Overview** → **Tags** area in the right sidebar → **Manage Tags**
+2. **+ Add tag** → key `lab11`, value left empty
+3. *(Optional)* **+ Add tag** → key `environment`, value `staging`
+4. **Save**
 
 ### Step 3: Add Workspace Variables
 Same AWS credentials, same `username` and `aws_region` as development, but **different `environment` and `instance_count`**:
@@ -144,7 +146,7 @@ Same AWS credentials, same `username` and `aws_region` as development, but **dif
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
 | `username`       | *your assigned username (e.g. user1)*   |
-| `aws_region`     | *your assigned region (e.g. us-east-2)* |
+| `aws_region`     | `us-east-2`                             |
 | `environment`    | `staging`                               |
 | `instance_count` | `2`                                     |
 
@@ -162,6 +164,10 @@ terraform init
 ```
 
 Terraform contacts TFC, discovers both workspaces tagged `lab11`, and configures the local working directory for workspace switching.
+
+Because **more than one** workspace matches the tag, `terraform init` prompts you to choose which one to use first — a numbered list of `lab11-development` and `lab11-staging`. Enter the number for `lab11-development`. (You'll switch between them with `terraform workspace select` below.)
+
+> **If `init` reports no matching workspaces** (or one of them is missing from the list): re-check Step 2 of Exercises 11.2 / 11.3 — the `lab11` tag must exist on both workspaces, spelled exactly, with no value.
 
 ### Step 2: List Available Workspaces
 ```bash

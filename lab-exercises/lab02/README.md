@@ -25,13 +25,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace with your assigned username from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> **Note:** All lab resources deploy to **us-east-2** — the default of the `aws_region` variable — so there is no region to set. (Your Cloud9 IDE runs in us-east-1; that does not affect where Terraform deploys.)
 
 ### Navigate to the Lab Directory
 ```bash
@@ -93,7 +94,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
@@ -225,7 +226,7 @@ resource "aws_instance" "web_server" {
 - `aws_caller_identity` -- Gets your AWS account ID
 - `aws_region` -- Gets the current region name
 - `aws_availability_zones` -- Lists available AZs in the region
-- `aws_ami` -- Finds the latest Amazon Linux 2 AMI using filters
+- `aws_ami` -- Finds the latest Amazon Linux 2023 AMI using filters
 - `aws_vpc` / `aws_subnets` -- Discovers the default VPC and its subnets
 
 **Resources:** These create and manage actual infrastructure:
@@ -253,8 +254,8 @@ variable "username" {
   type        = string
 
   validation {
-    condition     = length(var.username) >= 3 && length(var.username) <= 20
-    error_message = "Username must be between 3 and 20 characters."
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
   }
 }
 
@@ -278,9 +279,9 @@ variable "aws_region" {
 
 #### Key Concepts in variables.tf
 
-- **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block enforces a length between 3 and 20 characters.
+- **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block uses `can(regex(...))` to require 3-20 lowercase letters, numbers, or hyphens — the username becomes part of S3 bucket and security group names, so it must be safe for both.
 - **`environment`** defaults to `"development"` and uses the `contains()` function to only accept `"development"`, `"staging"`, or `"production"`.
-- **`aws_region`** defaults to `"us-east-2"` with no additional validation.
+- **`aws_region`** defaults to `"us-east-2"`, the class deployment region, so you never need to set it.
 - **Validation blocks** run during `terraform plan` and `terraform apply`, catching invalid input before any resources are created.
 
 ---
@@ -449,9 +450,14 @@ terraform plan -var="environment=staging"
 ```
 
 Review the plan output carefully. Notice how many resources Terraform wants to change. Resources that include the environment name in their configuration will be affected:
-- The **S3 bucket** name includes the environment, so it will be **destroyed and recreated** (replacement)
-- The **security group** name includes the environment, so it will be **destroyed and recreated** (replacement)
-- The **EC2 instance** user data and tags include the environment, so it will be **destroyed and recreated** (replacement)
+- The **S3 bucket** name includes the environment, and a bucket name cannot be changed, so it will be **destroyed and recreated** (`-/+` replacement)
+- The **public access block** points at the bucket, so it is **replaced** along with it
+- The **security group** name includes the environment, so it will be **destroyed and recreated** (`-/+` replacement)
+- The **EC2 instance** user data, tags, and security group ID change, but none of these force a new instance, so it is **updated in-place** (`~`). AWS provider v5 stops the instance, swaps the user data, and starts it again — and the new script does **not** re-run, because cloud-init runs user data only on first boot.
+
+You should see `Plan: 3 to add, 1 to change, 3 to destroy.` (The `random_id` suffix is unchanged.)
+
+> **Tip:** If you want a user data change to rebuild the instance so the new script actually runs, set `user_data_replace_on_change = true` on the `aws_instance`. The instance would then show as a replacement (`-/+`) as well.
 
 > **Important:** Do NOT apply this change. This exercise is to observe how variable changes cascade through your infrastructure. Simply review the plan output.
 
@@ -471,7 +477,13 @@ Try providing a username that is too short:
 terraform plan -var="username=ab"
 ```
 
-You should see: `Username must be between 3 and 20 characters.`
+You should see: `Username must be 3-20 characters: lowercase letters, numbers, and hyphens.`
+
+The same rule rejects uppercase letters and other characters:
+
+```bash
+terraform plan -var="username=User_1"
+```
 
 ### Step 3: Inspect Resources in Detail
 
@@ -496,7 +508,7 @@ terraform state show aws_s3_bucket.app_storage
 In this lab, you accomplished the following:
 
 - **Provider Configuration:** Configured the AWS provider with version constraints and a region variable
-- **Data Sources:** Used five data sources to dynamically query AWS for account info, AMIs, VPCs, and subnets -- no hardcoded IDs
+- **Data Sources:** Used six data sources to dynamically query AWS for account info, AMIs, VPCs, and subnets -- no hardcoded IDs
 - **S3 Bucket:** Created a private S3 bucket with a globally unique name using `random_id` and blocked all public access
 - **Security Group:** Defined a security group with HTTP and SSH ingress rules and unrestricted egress
 - **EC2 Instance:** Launched a web server with an inline user data script that installs Apache HTTPD and serves a custom page

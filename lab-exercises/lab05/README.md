@@ -18,19 +18,20 @@ By the end of this lab, you will be able to:
 ## 📋 **Prerequisites**
 - Completion of Labs 2-4
 - Understanding of variables and resources
-- An AWS account with a **default VPC** in your chosen region (the module deploys EC2 into the default VPC; if your account has no default VPC, you must add `vpc_id` and `subnet_id` wiring to the module)
+- An AWS account with a **default VPC** in us-east-2, the class deployment region (the module deploys EC2 into the default VPC; if your account has no default VPC, you must add `vpc_id` and `subnet_id` wiring to the module)
 
 ---
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace with your assigned username from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> **Note:** `username` comes **only** from `TF_VAR_username` — do not add it to `terraform.tfvars` (a value there would override the environment variable). All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
 ---
 
@@ -41,8 +42,8 @@ echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 cd ~/environment/terraform_v2/lab-exercises/lab05
 ```
 
-### Step 2: Create a Web Application Module
-Create the module files:
+### Step 2: Review the Web Application Module
+The module files are already provided in `modules/web-application/`. Review each one:
 
 **modules/web-application/variables.tf:**
 ```hcl
@@ -112,7 +113,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
@@ -204,6 +205,11 @@ yum install -y httpd
 systemctl start httpd
 systemctl enable httpd
 
+# Look up the instance ID from the instance metadata service.
+# Amazon Linux 2023 requires IMDSv2, so first request a session token.
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+
 # Create a dynamic web page
 cat <<EOF > /var/www/html/index.html
 <!DOCTYPE html>
@@ -227,7 +233,7 @@ cat <<EOF > /var/www/html/index.html
             <h3>Application Details</h3>
             <p><strong>Owner:</strong> ${username}</p>
             <p><strong>Server launched:</strong> $(date)</p>
-            <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
+            <p><strong>Instance ID:</strong> $INSTANCE_ID</p>
         </div>
         <div class="info-box">
             <h3>Module Features Demonstrated</h3>
@@ -278,18 +284,23 @@ output "security_group_id" {
 
 ## 🏗️ **Exercise 5.2: Use Your Module Multiple Times (15 minutes)**
 
-### Step 1: Create main configuration
-Create your main Terraform files:
+### Step 1: Review the root configuration
+The root configuration files are already provided in the lab directory. Review each one:
 
 **variables.tf:**
 ```hcl
 variable "username" {
   description = "Your unique username"
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
+  }
 }
 
 variable "aws_region" {
-  description = "AWS region"
+  description = "AWS region for resources"
   type        = string
   default     = "us-east-2"
 }

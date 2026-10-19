@@ -6,6 +6,12 @@ yum install -y httpd
 systemctl start httpd
 systemctl enable httpd
 
+# Amazon Linux 2023 requires IMDSv2: fetch a session token first, then pass it
+# on every instance metadata request
+TOKEN=$(curl -sX PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+
 # Create environment-specific content
 cat <<EOF > /var/www/html/index.html
 <!DOCTYPE html>
@@ -29,8 +35,8 @@ cat <<EOF > /var/www/html/index.html
             <h3>Server Information</h3>
             <p><strong>Owner:</strong> ${username}</p>
             <p><strong>Environment:</strong> ${environment}</p>
-            <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
-            <p><strong>Availability Zone:</strong> $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)</p>
+            <p><strong>Instance ID:</strong> $INSTANCE_ID</p>
+            <p><strong>Availability Zone:</strong> $AZ</p>
             <p><strong>Server Time:</strong> $(date)</p>
         </div>
     </div>

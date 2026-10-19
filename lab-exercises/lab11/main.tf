@@ -9,7 +9,7 @@ terraform {
   }
 
   cloud {
-    organization = "REPLACE_WITH_YOUR_ORG"   # e.g., "user1-terraform-training"
+    organization = "REPLACE_WITH_YOUR_ORG" # e.g., "user1-terraform-training"
 
     # Using `tags` (not `name`) is what lets one configuration target
     # multiple workspaces. Every workspace tagged "lab11" becomes
@@ -30,7 +30,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 

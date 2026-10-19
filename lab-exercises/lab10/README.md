@@ -25,13 +25,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`. Keep your username handy: in this lab it must also be entered as a workspace variable (see Exercise 10.1 Step 3).
 
 ### Navigate to the lab directory
 ```bash
@@ -69,20 +70,20 @@ In the workspace, open the **Variables** tab and add:
 
 **Environment Variables** (these are exposed to the runner as shell environment variables — used by the AWS provider for credentials):
 
-| Key                     | Value                          | Sensitive |
-|-------------------------|--------------------------------|-----------|
-| `AWS_ACCESS_KEY_ID`     | *your AWS access key*          | ✅        |
-| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key*   | ✅        |
+| Key                     | Value                                                    | Sensitive |
+|-------------------------|----------------------------------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *the access key ID provided by your instructor*          | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *the secret access key provided by your instructor*      | ✅        |
 
 **Terraform Variables** (these map to `variable` blocks in your HCL):
 
-| Key          | Value                                  |
-|--------------|----------------------------------------|
-| `username`   | *your assigned username (e.g. user1)*  |
-| `aws_region` | *your assigned region (e.g. us-east-2)* |
+| Key          | Value                                                  |
+|--------------|--------------------------------------------------------|
+| `username`   | *your assigned username (e.g. user1)*                  |
+| `aws_region` | `us-east-2` *(recommended — makes the region explicit)* |
 
 > **Important — `TF_VAR_*` is local-only:**
-> The `TF_VAR_username` and `TF_VAR_aws_region` environment variables you exported in Cloud9 do NOT propagate to TFC's remote runners. You must set both as Terraform workspace variables, otherwise the remote plan will use the default region (us-east-2) and fail on "No value for required variable" for `username`.
+> The `TF_VAR_username` environment variable you exported in Cloud9 does NOT propagate to TFC's remote runners. You **must** set `username` as a Terraform workspace variable, otherwise the remote plan fails with "No value for required variable". Setting `aws_region` is recommended but optional — if you omit it, the remote run uses the `us-east-2` default from `variables.tf`, which is the correct region for this course.
 >
 > **Why two kinds of variables?**
 > - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.

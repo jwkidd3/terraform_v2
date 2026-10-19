@@ -119,10 +119,10 @@
             background-color: transparent;
             border: none;
             padding: 8px;
-            font-size: 0.7em;
+            font-size: 0.9em;
             line-height: 1.3;
             color: #f8f8f2;
-            max-height: 400px;
+            max-height: 780px;
             overflow-y: auto;
             display: block;
             word-wrap: break-word;
@@ -630,6 +630,86 @@
             margin: 0 10px;
             color: var(--terraform-dark);
         }
+        /* Inline code in dense slides: no vertical padding so lines don't overlap */
+        .reveal .dense-content code {
+            padding: 0 4px;
+        }
+
+        /* Headings inside purple brand boxes must stay readable */
+        .reveal .terraform-brand h3,
+        .reveal .terraform-brand h4 {
+            color: white;
+            text-shadow: none;
+        }
+
+        /* Lab callout slides (matches module 1/2 style) */
+        .reveal .lab-callout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .reveal .lab-callout h1,
+        .reveal .lab-callout h2,
+        .reveal .lab-callout h3 {
+            color: white;
+            text-shadow: none;
+        }
+
+        .reveal .lab-callout h1 {
+            font-size: 1.3em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
+        }
+
+        .reveal .lab-callout h2 {
+            font-size: 1.0em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
+        }
+
+        .reveal .lab-callout h3 {
+            font-size: 0.9em;
+            margin-bottom: 0.1em;
+            line-height: 1.2;
+        }
+
+        .reveal .lab-callout ul {
+            font-size: 0.7em;
+            line-height: 1.2;
+            margin: 0.2em 0;
+        }
+
+        .reveal .lab-callout li {
+            margin: 0.1em 0;
+        }
+
+        .reveal .lab-callout code {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .reveal .lab-callout > div {
+            padding: 8px;
+            max-width: 95%;
+        }
+
+        .reveal .lab-callout div[style*="background: rgba(255,255,255,0.1)"] {
+            padding: 12px !important;
+        }
+
+        .reveal .lab-callout div[style*="background: rgba(255,193,7,0.2)"] {
+            padding: 10px !important;
+        }
+
+        .reveal .lab-callout p {
+            margin: 0.2em 0;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -639,94 +719,104 @@
             <section class="title-slide">
                 <div class="terraform-logo"></div>
                 <h1>Module 3: Terraform Cloud Enterprise Mastery</h1>
-                <h2>From Basics to Enterprise-Grade Infrastructure Management</h2>
+                <h2>Remote Execution, Workspaces, and VCS-Driven Workflows</h2>
                 <div class="progress-bar" style="width: 300px; margin: 30px auto;">
                     <div class="progress-fill" style="width: 100%;"></div>
                 </div>
                 <p><strong>Course Structure:</strong> Day 3 of 3 - Terraform Cloud Focus</p>
-                <p><strong>Focus:</strong> Complete Terraform Cloud Enterprise Journey</p>
-                <p><strong>📊 70% Hands-on | 30% Theory</strong></p>
-                <div class="terraform-brand" style="margin: 20px auto; max-width: 700px;">
-                    <p>🏆 <strong>Learning Journey:</strong> Introduction → Teams & Workspaces → Policies & Registry → Enterprise Integration</p>
+                <p><strong>Labs:</strong> 10, 11, 12 &mdash; 3 hands-on labs, 45 minutes each</p>
+                <div class="terraform-brand" style="margin: 20px auto; max-width: 900px;">
+                    <p>🏆 <strong>Learning Journey:</strong> Remote Execution → Multiple Workspaces → VCS-Driven Workflows → Governance</p>
+                </div>
+                <div class="highlight" style="margin: 10px auto; max-width: 900px; text-align: left;">
+                    <p>📛 <strong>Name change:</strong> Terraform Cloud has been renamed <strong>HCP Terraform</strong>. The web UI and current docs say &ldquo;HCP Terraform&rdquo; &mdash; same product, same URL (<code>app.terraform.io</code>). Lab titles keep the original &ldquo;Terraform Cloud&rdquo; name.</p>
+                </div>
+            </section>
+
+            <!-- Naming note -->
+            <section>
+                <h2>📛 Terraform Cloud = HCP Terraform</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <h4>🔤 What changed</h4>
+                        <ul>
+                            <li>HashiCorp renamed <strong>Terraform Cloud</strong> to <strong>HCP Terraform</strong></li>
+                            <li>The UI, the docs, and newer CLI messages say &ldquo;HCP Terraform&rdquo;</li>
+                            <li>Self-hosted edition: <strong>Terraform Enterprise</strong> (unchanged)</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h4>✅ What did not change</h4>
+                        <ul>
+                            <li>Sign-in URL: <code>https://app.terraform.io</code></li>
+                            <li>The <code>cloud {}</code> block and <code>terraform login</code></li>
+                            <li>Organizations, workspaces, runs, variables</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="info">
+                    <strong>In this module:</strong> slides and lab titles say &ldquo;Terraform Cloud&rdquo;; when a lab step says &ldquo;Terraform Cloud&rdquo;, look for &ldquo;HCP Terraform&rdquo; on screen.
                 </div>
             </section>
 
             <!-- Day 3 Complete Schedule Overview -->
             <section class="dense-content">
                 <div class="section-divider">
-                    <h2>🗓️ Day 3: Complete Terraform Cloud Enterprise Schedule</h2>
+                    <h2>🗓️ Day 3: Terraform Cloud Schedule</h2>
                 </div>
                 <div class="terraform-brand">
-                    <h3>☁️ Terraform Cloud Enterprise Mastery - 7 Hours Total Journey</h3>
-                    <p><strong>70% Hands-on (5 hours labs) | 30% Theory (2 hours presentations)</strong></p>
-                    <p><strong>🎯 Focus:</strong> Transform from foundational Terraform knowledge to enterprise-grade Terraform Cloud governance, policies, and team collaboration patterns</p>
+                    <h3>☁️ Terraform Cloud (HCP Terraform) - Day 3 at a Glance</h3>
+                    <p><strong>Hands-on: 3 labs × 45 minutes = 2 h 15 min</strong> | Teaching sections come before each lab</p>
+                    <p><strong>🎯 Focus:</strong> Move from local Terraform to remote state and remote execution, manage multiple workspaces, and drive runs from Git</p>
                 </div>
                 <div class="enterprise">
-                    <h4>🏆 Day 3 Career Impact - Enterprise Cloud Leadership</h4>
-                    <p><strong>Executive Summary:</strong> Complete your transformation from Terraform user to enterprise cloud infrastructure leader. Master Terraform Cloud's advanced governance, policy automation, and team collaboration features that drive multi-million dollar cloud transformations at Fortune 500 companies.</p>
+                    <h4>🧭 Delivery Environment</h4>
+                    <ul>
+                        <li><strong>Workstation:</strong> AWS Cloud9 in <code>us-east-1</code></li>
+                        <li><strong>Deploy region:</strong> <code>us-east-2</code> for every lab</li>
+                        <li><strong>One shared AWS account:</strong> every resource name is prefixed with your username</li>
+                        <li><strong>Username:</strong> <code>TF_VAR_username</code> locally &mdash; and a <code>username</code> workspace variable for remote runs</li>
+                        <li><strong>Terraform:</strong> <code>&gt;= 1.9</code></li>
+                    </ul>
                 </div>
             </section>
 
             <!-- Comprehensive Learning Objectives -->
             <section class="dense-content">
                 <div class="section-divider">
-                    <h2>🎯 Terraform Cloud Enterprise Mastery - Complete Learning Path</h2>
+                    <h2>🎯 Terraform Cloud - Day 3 Learning Path</h2>
                 </div>
                 <div class="terraform-brand">
-                    <h3>🚀 Complete Enterprise Cloud Journey - Skills That Command Premium Salaries</h3>
-                    <p>Master the most advanced Terraform Cloud enterprise features through 4 progressive labs, building expertise in governance, policies, team collaboration, and enterprise integration patterns used by industry leaders</p>
+                    <h3>🚀 From Local Runs to Team Workflows</h3>
+                    <p>Build Terraform Cloud skills through 3 progressive labs (Labs 10&ndash;12), then survey the governance and automation features used at enterprise scale</p>
                 </div>
-                
+
                 <!-- Technical Competencies Matrix -->
                 <div class="two-column">
                     <div class="column">
-                        <h4>☁️ Terraform Cloud Mastery Track</h4>
+                        <h4>☁️ Hands-On in the Labs</h4>
                         <ul style="font-size: 0.8em; line-height: 1.2;">
-                            <li><strong>Organization Architecture:</strong> Multi-team structures, workspace hierarchies, permission models</li>
-                            <li><strong>Remote State Excellence:</strong> State management, locking, backup strategies, disaster recovery</li>
-                            <li><strong>Variable Management:</strong> Variable sets, environment promotion, secret management integration</li>
-                            <li><strong>Workspace Automation:</strong> Run triggers, API-driven workflows, notification systems</li>
-                            <li><strong>VCS Integration:</strong> GitHub/GitLab integration, branch-based workflows, pull request automation</li>
-                            <li><strong>Cost Estimation:</strong> Pre-apply cost analysis, budget controls, cost optimization recommendations</li>
-                            <li><strong>Run Management:</strong> Plan reviews, approval workflows, automated testing integration</li>
-                            <li><strong>API & CLI Mastery:</strong> Terraform Cloud API, automation scripts, custom integrations</li>
-                        </ul>
-                        
-                        <h4>🔒 Enterprise Governance & Compliance</h4>
-                        <ul style="font-size: 0.8em; line-height: 1.2;">
-                            <li><strong>Sentinel Policy Engine:</strong> Policy as code, compliance automation, custom rule development</li>
-                            <li><strong>OPA Integration:</strong> Open Policy Agent rules, multi-cloud compliance frameworks</li>
-                            <li><strong>Security Frameworks:</strong> SOC 2, PCI DSS, HIPAA, FedRAMP compliance patterns</li>
-                            <li><strong>Audit & Logging:</strong> Comprehensive audit trails, compliance reporting, security monitoring</li>
+                            <li><strong>Organizations &amp; Workspaces:</strong> CLI-driven and VCS-driven workspaces</li>
+                            <li><strong>The <code>cloud {}</code> Block:</strong> <code>name</code> vs <code>tags</code> workspace selection</li>
+                            <li><strong>Remote Execution:</strong> Plans and applies on Terraform Cloud runners</li>
+                            <li><strong>Remote State:</strong> Versioned, locked, encrypted state per workspace</li>
+                            <li><strong>Variables:</strong> Environment variables (credentials) vs Terraform variables</li>
+                            <li><strong>Workspace Switching:</strong> <code>terraform workspace list</code> / <code>select</code></li>
+                            <li><strong>VCS Integration:</strong> GitHub-triggered runs and speculative plans on pull requests</li>
                         </ul>
                     </div>
                     <div class="column">
-                        <h4>👥 Team Leadership & Collaboration</h4>
+                        <h4>🔒 Survey Topics (after the labs)</h4>
                         <ul style="font-size: 0.8em; line-height: 1.2;">
-                            <li><strong>RBAC Architecture:</strong> Role-based access control, team permissions, workspace access patterns</li>
-                            <li><strong>Multi-Environment Strategy:</strong> Development → staging → production workflow orchestration</li>
-                            <li><strong>Cross-Team Collaboration:</strong> Shared modules, variable sets, dependency management</li>
-                            <li><strong>Approval Workflows:</strong> Multi-stage approvals, environment gates, business stakeholder integration</li>
-                            <li><strong>Training & Onboarding:</strong> Team education, best practice documentation, knowledge sharing</li>
-                        </ul>
-                        
-                        <h4>🛡️ Advanced Governance Excellence</h4>
-                        <ul style="font-size: 0.8em; line-height: 1.2;">
-                            <li><strong>Module Architecture:</strong> Reusable infrastructure components, versioning strategies</li>
-                            <li><strong>Registry Management:</strong> Private module publishing, discovery, documentation standards</li>
-                            <li><strong>Module Composition:</strong> Complex module relationships, dependency management</li>
-                            <li><strong>Quality Assurance:</strong> Module testing, validation pipelines, automated quality checks</li>
-                        </ul>
-                        
-                        <h4>🔧 DevOps Integration & Automation</h4>
-                        <ul style="font-size: 0.8em; line-height: 1.2;">
-                            <li><strong>CI/CD Pipelines:</strong> GitHub Actions, GitLab CI, Azure DevOps integration patterns</li>
-                            <li><strong>GitOps Workflows:</strong> Infrastructure as Code workflows, automated deployments</li>
-                            <li><strong>Testing Integration:</strong> Automated validation, security scanning, compliance checking</li>
+                            <li><strong>CI/CD Alternatives:</strong> GitHub Actions, <code>terraform test</code>, Trivy, conftest</li>
+                            <li><strong>Policy as Code:</strong> Sentinel and OPA policy sets</li>
+                            <li><strong>Registry:</strong> Public and private module registries</li>
+                            <li><strong>Governance:</strong> Tagging, cost controls, compliance modules</li>
+                            <li><strong>Scale:</strong> State splitting, module composition, team structure</li>
                         </ul>
                     </div>
                 </div>
-                
+
                 <!-- Career Impact -->
                 <div class="enterprise" style="margin: 15px 0;">
                     <h4>📈 Career Impact</h4>
@@ -737,13 +827,12 @@
                                 <li>Terraform Cloud administration</li>
                                 <li>Remote state and workspace management</li>
                                 <li>VCS-driven deployment workflows</li>
-                                <li>Team collaboration patterns</li>
                             </ul>
                         </div>
                         <div class="column">
                             <h5>🏢 Enterprise Relevance</h5>
                             <ul style="font-size: 0.7em;">
-                                <li>Terraform Cloud is widely adopted in enterprise</li>
+                                <li>Widely adopted in enterprise</li>
                                 <li>Key skill for DevOps and Cloud roles</li>
                                 <li>Foundation for HashiCorp certification</li>
                             </ul>
@@ -752,8 +841,7 @@
                             <h5>🚀 Next Steps</h5>
                             <ul style="font-size: 0.7em;">
                                 <li>Explore Sentinel policy as code</li>
-                                <li>Set up private module registries</li>
-                                <li>Implement advanced RBAC patterns</li>
+                                <li>Set up a private module registry</li>
                                 <li>Pursue Terraform Associate certification</li>
                             </ul>
                         </div>
@@ -767,116 +855,67 @@
                     <h2>🧪 Day 3 Laboratory Exercises - 3 Labs</h2>
                 </div>
                 <div class="terraform-brand">
-                    <h3>📊 Progressive Enterprise Skills Development - 3 Hours Total</h3>
-                    <p>Each lab represents a complete enterprise capability, building toward full Terraform Cloud mastery</p>
+                    <h3>📊 3 Labs × 45 Minutes = 2 h 15 min Hands-On</h3>
+                    <p>Each lab builds on the previous one: CLI-driven → multiple workspaces → VCS-driven</p>
                 </div>
-                
+
                 <!-- Labs 10-11 Detailed Breakdown -->
                 <div class="two-column">
                     <div class="column">
                         <div class="info" style="padding: 15px;">
-                            <h4>☁️ Lab 10: Terraform Cloud Integration</h4>
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Foundation-level Terraform Cloud implementation</p>
-                            <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>Account Setup:</strong> Organization creation, team invitation, initial configuration</li>
-                                <li><strong>Workspace Creation:</strong> Multiple workspaces for dev/staging/prod environments</li>
-                                <li><strong>State Migration:</strong> Move existing infrastructure to Terraform Cloud remote state</li>
-                                <li><strong>Variable Configuration:</strong> Environment variables, Terraform variables, sensitive data</li>
-                                <li><strong>VCS Integration:</strong> GitHub repository connection, trigger configuration</li>
-                                <li><strong>Remote Runs:</strong> Plan and apply operations via web interface and CLI</li>
-                                <li><strong>Application Stack:</strong> Complete multi-tier architecture deployment</li>
+                            <h4>☁️ Lab 10: Terraform Cloud Integration and Remote Execution</h4>
+                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
+                                <li><strong>Organization:</strong> Create <code>&lt;username&gt;-terraform-training</code></li>
+                                <li><strong>CLI-Driven Workspace:</strong> One workspace for this configuration</li>
+                                <li><strong>Connect:</strong> <code>cloud {}</code> block + <code>terraform login</code> from Cloud9</li>
+                                <li><strong>Variables:</strong> AWS credentials (environment, sensitive); <code>username</code>, <code>aws_region</code> (Terraform)</li>
+                                <li><strong>Remote Runs:</strong> <code>terraform plan</code> / <code>apply</code> stream from Terraform Cloud</li>
+                                <li><strong>Infrastructure:</strong> One EC2 instance + security group; inspect Runs, States, Outputs; destroy</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Master core Terraform Cloud functionality and remote state management for team collaboration</p>
+                                <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Move a local configuration to remote state and remote execution</p>
                             </div>
                         </div>
                     </div>
                     <div class="column">
                         <div class="success" style="padding: 15px;">
                             <h4>👥 Lab 11: Terraform Cloud Workspaces</h4>
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Multi-workspace management and environment separation</p>
-                            <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>Multiple Workspaces:</strong> Create development and staging workspaces</li>
-                                <li><strong>Workspace Variables:</strong> Environment-specific variable configuration</li>
-                                <li><strong>Workspace Organization:</strong> Tags and naming conventions</li>
-                                <li><strong>CLI Integration:</strong> Connect local Terraform to cloud workspaces</li>
-                                <li><strong>Environment Separation:</strong> Deploy different configs per environment</li>
-                                <li><strong>State Isolation:</strong> Separate state files per workspace</li>
-                                <li><strong>Workspace Settings:</strong> Execution mode, apply method configuration</li>
+                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
+                                <li><strong>Tag-Based Selection:</strong> <code>cloud { workspaces { tags = ["lab11"] } }</code></li>
+                                <li><strong>Multiple Workspaces:</strong> <code>lab11-development</code> and <code>lab11-staging</code></li>
+                                <li><strong>Workspace Variables:</strong> Different <code>environment</code> / <code>instance_count</code> per workspace</li>
+                                <li><strong>Switching:</strong> <code>terraform workspace list</code> / <code>select</code></li>
+                                <li><strong>State Isolation:</strong> Separate state and run history per workspace</li>
+                                <li><strong>Settings:</strong> Manual apply method</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Design and implement enterprise-grade team collaboration patterns with automated governance</p>
+                                <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Deploy 1 instance to development and 2 to staging from identical HCL</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Lab 12 Detailed Breakdown -->
-                <div class="two-column" style="margin-top: 15px;">
-                    <div class="column">
-                        <div class="highlight" style="padding: 15px;">
-                            <h4>🔗 Lab 12: VCS Integration and GitOps Workflows</h4>
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> GitHub integration and automated deployments</p>
-                            <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>VCS-Driven Workflows:</strong> GitHub repository to Terraform Cloud integration</li>
-                                <li><strong>Branch-Based Environments:</strong> Automatic environment creation from branches</li>
-                                <li><strong>Pull Request Automation:</strong> Automatic plan generation and commenting</li>
-                                <li><strong>Approval Gates:</strong> Required reviews, status checks, merge protection</li>
-                                <li><strong>Automated Testing:</strong> Pre-plan validation, security scanning</li>
-                                <li><strong>Deployment Pipelines:</strong> Multi-stage promotion workflows</li>
-                                <li><strong>Rollback Strategies:</strong> Safe rollback procedures</li>
+                <div class="highlight" style="padding: 15px; margin-top: 15px;">
+                    <h4>🔗 Lab 12: VCS-Driven Terraform Cloud with GitHub Integration</h4>
+                    <div class="two-column" style="margin: 5px 0;">
+                        <div class="column">
+                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
+                                <li><strong>VCS Provider:</strong> GitHub App, or OAuth &ldquo;GitHub.com (Custom)&rdquo;</li>
+                                <li><strong>VCS-Driven Workspace:</strong> Connected to your GitHub repo</li>
+                                <li><strong>Push to <code>main</code>:</strong> Automatic plan, then Confirm &amp; Apply</li>
                             </ul>
-                            <div style="background: rgba(255, 152, 0, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Implement enterprise governance frameworks with automated policy enforcement and private module ecosystem</p>
-                            </div>
+                        </div>
+                        <div class="column">
+                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
+                                <li><strong>Update via Git:</strong> Bump <code>app_version</code> and push again</li>
+                                <li><strong>Speculative Plans:</strong> Plan-only runs for pull requests against <code>main</code></li>
+                                <li><strong>Cleanup:</strong> <code>CONFIRM_DESTROY=1</code> + queue destroy plan</li>
+                            </ul>
                         </div>
                     </div>
-                    <div class="column">
-                        <div class="enterprise" style="padding: 15px;">
-                            <p style="font-size: 0.8em; margin: 5px 0;"><strong>Focus:</strong> Complete GitOps workflow automation</p>
-                            <ul style="font-size: 0.7em; line-height: 1.2; margin: 10px 0;">
-                                <li><strong>VCS-Driven Workflows:</strong> GitHub repository to Terraform Cloud integration</li>
-                                <li><strong>Branch-Based Environments:</strong> Automatic environment creation from branches</li>
-                                <li><strong>Pull Request Automation:</strong> Automatic plan generation and commenting</li>
-                                <li><strong>Approval Gates:</strong> Required reviews, status checks, merge protection</li>
-                                <li><strong>Automated Testing:</strong> Pre-plan validation, security scanning</li>
-                                <li><strong>Deployment Pipelines:</strong> Multi-stage promotion workflows</li>
-                                <li><strong>Rollback Strategies:</strong> Safe rollback procedures and automation</li>
-                            </ul>
-                            <div style="background: rgba(98, 60, 228, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.7em; margin: 0;"><strong>Outcomes:</strong> Build production-ready GitOps workflows that automate infrastructure deployment from code commits to production</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Skills Progression Summary -->
-                <div class="danger" style="margin-top: 15px; padding: 15px;">
-                    <h4>🚀 Progressive Enterprise Mastery Path</h4>
-                    <div class="three-column" style="margin-top: 10px;">
-                        <div class="column">
-                            <p style="font-size: 0.8em; margin: 0;"><strong>Foundation → Integration:</strong></p>
-                            <ul style="font-size: 0.7em; margin: 8px 0;">
-                                <li><strong>Lab 10:</strong> Enterprise Terraform Cloud setup and remote operations</li>
-                                <li><strong>Lab 11:</strong> Advanced workspace management and team collaboration</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <p style="font-size: 0.8em; margin: 0;"><strong>Governance → Automation:</strong></p>
-                            <ul style="font-size: 0.7em; margin: 8px 0;">
-                                <li><strong>Lab 12:</strong> VCS integration and GitOps deployment workflows</li>
-                                <li><strong>Day 3 Focus:</strong> Complete Terraform Cloud mastery with VCS automation</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <p style="font-size: 0.8em; margin: 0;"><strong>Enterprise Leadership:</strong></p>
-                            <ul style="font-size: 0.7em; margin: 8px 0;">
-                                <li>Design cloud governance strategies</li>
-                                <li>Lead platform engineering initiatives</li>
-                                <li>Architect enterprise cloud transformations</li>
-                                <li>Drive policy and compliance automation</li>
-                            </ul>
-                        </div>
+                    <div style="background: rgba(255, 152, 0, 0.1); padding: 8px; border-radius: 4px; margin-top: 5px;">
+                        <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Drive infrastructure changes entirely through Git and compare CLI-driven with VCS-driven workflows</p>
                     </div>
                 </div>
             </section>
@@ -884,8 +923,8 @@
             <!-- Section 1: Introduction to Terraform Cloud -->
             <section>
                 <section class="section-divider">
-                    <h2>☁️ Section 1: Introduction to Terraform Cloud</h2>
-                    <p>Understand the benefits and get started with remote state and execution</p>
+                    <h2>☁️ Section 1: Terraform Cloud and Remote Execution</h2>
+                    <p>Why remote state and remote runs, and how to connect a configuration</p>
                 </section>
 
                 <section>
@@ -926,7 +965,7 @@
                     <div class="danger" style="padding: 15px;">
                         <h4>⚠️ Critical Business Risks</h4>
                         <ul>
-                            <li><strong>State File Loss:</strong> $500k average incident cost</li>
+                            <li><strong>State File Loss:</strong> Lost or corrupted state means Terraform no longer knows what it manages</li>
                             <li><strong>Security Breaches:</strong> Credentials in local files</li>
                             <li><strong>Compliance Failures:</strong> No audit trails or governance</li>
                             <li><strong>Team Bottlenecks:</strong> Single points of failure</li>
@@ -949,59 +988,26 @@
                     <div class="success" style="padding: 15px;">
                         <h4>🏆 Business Value Drivers</h4>
                         <ul>
-                            <li><strong>Productivity:</strong> 3× faster infrastructure deployment</li>
-                            <li><strong>Risk Reduction:</strong> 90% fewer production incidents</li>
-                            <li><strong>Compliance:</strong> Automated SOC 2, PCI DSS adherence</li>
-                            <li><strong>Scale:</strong> Support 1000+ team members</li>
+                            <li><strong>Productivity:</strong> Shared runners, no local setup to keep in sync</li>
+                            <li><strong>Risk Reduction:</strong> Locked, versioned state and reviewed plans</li>
+                            <li><strong>Compliance:</strong> Run history and policy checks support audits</li>
+                            <li><strong>Scale:</strong> Organizations, projects, and teams for many workspaces</li>
                         </ul>
                     </div>
                     <div class="success" style="padding: 15px; margin-top: 15px;">
                         <h4>✅ Enterprise Capabilities</h4>
                         <ul>
                             <li><strong>Remote State:</strong> Automatic locking, versioning, encryption at rest</li>
-                            <li><strong>Secure Variables:</strong> Vault integration, secret rotation</li>
+                            <li><strong>Secure Variables:</strong> Sensitive, write-only workspace variables and variable sets</li>
                             <li><strong>Team Workflows:</strong> RBAC, approval processes</li>
-                            <li><strong>Complete Audit:</strong> Full history, compliance reporting</li>
-                            <li><strong>Policy Enforcement:</strong> Sentinel, OPA, automated compliance</li>
+                            <li><strong>Complete Audit:</strong> Full run history</li>
+                            <li><strong>Policy Enforcement:</strong> Sentinel and OPA policy sets</li>
                         </ul>
                     </div>
                 </section>
 
                 <section>
-                    <h3>🏢 Enterprise Transformation Impact</h3>
-                    <div class="three-column">
-                        <div class="column">
-                            <h4>📈 Operational</h4>
-                            <ul>
-                                <li><strong>Deploy Speed:</strong> Hours → Minutes</li>
-                                <li><strong>Error Rate:</strong> 85% reduction</li>
-                                <li><strong>Productivity:</strong> 3–5× improvement</li>
-                                <li><strong>Compliance:</strong> 100% automated</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <h4>💰 Financial</h4>
-                            <ul>
-                                <li>Reduced over-provisioning</li>
-                                <li>Fewer manual operations</li>
-                                <li>Consistent, repeatable deploys</li>
-                                <li>Automated policy enforcement</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <h4>🎯 Strategic</h4>
-                            <ul>
-                                <li>Cloud-ready AWS automation</li>
-                                <li>Enterprise-grade scale</li>
-                                <li>Zero-trust architecture</li>
-                                <li>Rapid feature delivery</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <section>
-                    <h3>Terraform Cloud Architecture</h3>
+                    <h3>🏛️ Terraform Cloud Architecture</h3>
                     <div class="architecture-diagram">
                         <h4>🏢 Organization Structure</h4>
                         <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
@@ -1018,10 +1024,10 @@
                         <div class="column">
                             <h4>🏗️ Core Components</h4>
                             <ul>
-                                <li><strong>Organization:</strong> Top-level container for your infrastructure</li>
-                                <li><strong>Workspaces:</strong> Individual infrastructure configurations</li>
+                                <li><strong>Organization:</strong> Top-level container (Lab 10: <code>&lt;username&gt;-terraform-training</code>)</li>
+                                <li><strong>Workspace:</strong> One configuration + its state, variables, and runs</li>
                                 <li><strong>Teams:</strong> Groups of users with specific permissions</li>
-                                <li><strong>Variables:</strong> Environment and Terraform variables</li>
+                                <li><strong>Variables:</strong> Environment and Terraform variables, per workspace</li>
                             </ul>
                         </div>
                         <div class="column">
@@ -1036,102 +1042,260 @@
                     </div>
                 </section>
 
+                <section>
+                    <h3>🔀 Three Workspace Workflows</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Workflow</th><th>What starts a run</th><th>Where it runs</th><th>In this course</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>CLI-driven</strong></td><td><code>terraform plan</code> / <code>apply</code> in your shell</td><td>Terraform Cloud runner</td><td>Labs 10 and 11</td></tr>
+                            <tr><td><strong>VCS-driven</strong></td><td><code>git push</code> / pull request on a connected repo</td><td>Terraform Cloud runner</td><td>Lab 12</td></tr>
+                            <tr><td><strong>API-driven</strong></td><td>Your own tooling calls the API</td><td>Terraform Cloud runner</td><td>Not covered</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="info">
+                        <strong>You pick the workflow when you create the workspace.</strong> In Lab 10 you choose <em>CLI-driven workflow</em>: you keep typing <code>terraform</code> commands in Cloud9, but the plan and apply execute remotely and the state lives in the workspace.
+                    </div>
+                    <div class="highlight">
+                        <strong>Execution mode:</strong> the default is <em>Remote</em> (runs on Terraform Cloud runners). <em>Local</em> mode stores state remotely but runs on your machine &mdash; not used in these labs.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔌 Connecting a Configuration: the <code>cloud {}</code> Block</h3>
+                    <div class="two-column">
+                        <div class="column" style="flex: 1.2;">
+                            <pre><code class="language-hcl">terraform {
+  required_version = "&gt;= 1.9"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~&gt; 5.0"
+    }
+  }
+
+  cloud {
+    organization = "user1-terraform-training"
+
+    workspaces {
+      name = "user1-terraform-cloud-lab10"
+    }
+  }
+}</code></pre>
+                        </div>
+                        <div class="column">
+                            <ul>
+                                <li><code>cloud {}</code> lives inside the <code>terraform {}</code> block</li>
+                                <li>It replaces <code>backend "remote"</code> &mdash; do not declare a <code>backend</code> block as well</li>
+                                <li><code>organization</code> = the org you created in the UI</li>
+                                <li><code>workspaces { name = ... }</code> pins this directory to <strong>exactly one</strong> workspace</li>
+                                <li><code>terraform init</code> makes the connection (and offers to migrate any existing local state)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info">
+                        <strong>Lab 10:</strong> replace the two placeholders in <code>main.tf</code> with your organization and workspace names.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔑 Authenticating the CLI: <code>terraform login</code></h3>
+                    <pre><code class="language-bash">terraform login
+# Terraform will request an API token for app.terraform.io ...
+# Do you want to proceed?  Enter a value: yes
+#
+# Cloud9 cannot open a browser for you, so Terraform PRINTS A URL:
+#   https://app.terraform.io/app/settings/tokens?source=terraform-login
+#
+# 1. Open that URL in a new browser tab (you are already signed in)
+# 2. Create the API token and copy it
+# 3. Paste it at the "Token for app.terraform.io:" prompt (input is hidden)
+
+ls ~/.terraform.d/credentials.tfrc.json   # token is saved here</code></pre>
+                    <div class="danger">
+                        <strong>Treat the token like a password:</strong> never commit it, never paste it into a <code>.tf</code> file. Automation alternative: the <code>TF_TOKEN_app_terraform_io</code> environment variable.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔐 Workspace Variables: Environment vs Terraform</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Category</th><th>Key</th><th>Sensitive</th><th>How it is used</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Environment</td><td><code>AWS_ACCESS_KEY_ID</code></td><td>✅</td><td>Exported in the runner's shell; read by the AWS provider</td></tr>
+                            <tr><td>Environment</td><td><code>AWS_SECRET_ACCESS_KEY</code></td><td>✅</td><td>Exported in the runner's shell; read by the AWS provider</td></tr>
+                            <tr><td>Terraform</td><td><code>username</code></td><td></td><td>Binds to <code>variable "username"</code> (e.g. <code>user1</code>)</td></tr>
+                            <tr><td>Terraform</td><td><code>aws_region</code></td><td></td><td>Binds to <code>variable "aws_region"</code> (<code>us-east-2</code>)</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="danger">
+                        <strong>Remote runs do not see your Cloud9 shell.</strong> <code>TF_VAR_username</code> and <code>TF_VAR_aws_region</code> exported locally are <em>not</em> sent to Terraform Cloud. Set <code>username</code> and <code>aws_region</code> as Terraform variables in the workspace, or the run fails with &ldquo;No value for required variable&rdquo;.
+                    </div>
+                    <div class="info">
+                        <strong>Shared AWS account:</strong> everyone deploys into the same account in <code>us-east-2</code> &mdash; your <code>username</code> prefix keeps resource names unique.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>▶️ Remote Execution: Running Plan and Apply</h3>
+                    <div style="text-align: center; margin: 10px 0;">
+                        <div class="workflow-step step-1">terraform plan (Cloud9)</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-2">Upload config</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-3">Remote runner</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-4">Output streams back</div>
+                    </div>
+                    <pre><code class="language-bash">cd ~/environment/terraform_v2/lab-exercises/lab10
+terraform init      # connects this directory to the workspace
+terraform plan      # "Running plan in HCP Terraform. Output will stream here."
+                    #   (older CLIs print "Terraform Cloud" instead)
+terraform apply     # executes remotely; type "yes" to confirm
+terraform output    # read outputs from the remote state
+terraform destroy   # clean up at the end of the lab</code></pre>
+                    <ul>
+                        <li><strong>Runs</strong> tab: every plan/apply with its log &nbsp;|&nbsp; <strong>States</strong> tab: a new state version per apply</li>
+                        <li>State locking is automatic &mdash; no S3 bucket or DynamoDB table to manage</li>
+                    </ul>
+                </section>
             </section>
 
             <!-- Lab 10 Callout -->
             <section class="lab-callout" data-background-color="#623ce4">
-                <h2><span class="emoji">🗂️</span> Lab 10: Terraform Cloud Integration and Remote Execution</h2>
-                <div class="lab-info">
-                    <h3>🎯 What You'll Learn</h3>
-                    <ul>
-                        <li>Deploy complete application stack with Terraform Cloud</li>
-                        <li>Configure advanced workspace settings and variables</li>
-                        <li>Implement remote execution with VCS integration</li>
-                        <li>Use enterprise features: workspace automation, collaboration</li>
-                        <li>Master production-ready Terraform Cloud workflows</li>
-                    </ul>
-                    <div class="lab-highlight">
-                        
-                        <p><strong>Focus:</strong> Get hands-on experience with Terraform Cloud essentials</p>
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">☁️</span> Time for Remote Execution!</h1>
+                    <h2><span class="emoji">🗂️</span> Lab 10: Terraform Cloud Integration and Remote Execution</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Do:</h3>
+                        <ul style="font-size: 1.0em; line-height: 1.4;">
+                            <li>✅ Create an organization and a CLI-driven workspace</li>
+                            <li>✅ Add AWS credentials (environment) and <code>username</code> / <code>aws_region</code> (Terraform) variables</li>
+                            <li>✅ Fill in the <code>cloud {}</code> block and run <code>terraform login</code> from Cloud9</li>
+                            <li>✅ Plan and apply one EC2 instance + security group remotely, inspect it, then destroy</li>
+                        </ul>
                     </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; Cloud9 (us-east-1) deploys to us-east-2 &middot; the UI says &ldquo;HCP Terraform&rdquo;</p>
+                    </div>
+                    <h2 style="margin-top: 20px; font-size: 1.8em;">🚀 Run It Remotely!</h2>
                 </div>
             </section>
 
-            <!-- Section 2: Teams and Workspace Management -->
+            <!-- Section 2: Multiple Workspaces -->
             <section>
                 <section class="section-divider">
-                    <h2>👥 Section 2: Teams and Workspace Management</h2>
-                    <p>Master collaboration, RBAC, and multi-environment strategies</p>
+                    <h2>👥 Section 2: Multiple Workspaces and Environments</h2>
+                    <p>One configuration, many workspaces &mdash; each with its own state and variables</p>
                 </section>
 
                 <section>
-                    <h3>Multi-Region AWS Configuration</h3>
-                    <pre><code class="language-hcl"># Multi-region AWS configuration
-provider "aws" {
-  alias  = "us_east"
-  region = "us-east-2"
-}
+                    <h3>🏷️ Selecting Workspaces: <code>name</code> vs <code>tags</code></h3>
+                    <div class="two-column">
+                        <div class="column">
+                            <h4>Lab 10 &mdash; exactly one workspace</h4>
+                            <pre><code class="language-hcl">cloud {
+  organization = "user1-terraform-training"
 
-provider "aws" {
-  alias  = "eu_west"
-  region = "eu-west-1"
-}
-
-# Primary S3 bucket in US East
-resource "aws_s3_bucket" "primary" {
-  provider = aws.us_east
-  bucket   = "${var.project_name}-primary-${random_id.suffix.hex}"
-}
-
-# Replica S3 bucket in EU West
-resource "aws_s3_bucket" "replica" {
-  provider = aws.eu_west
-  bucket   = "${var.project_name}-replica-${random_id.suffix.hex}"
+  workspaces {
+    name = "user1-terraform-cloud-lab10"
+  }
 }</code></pre>
-                    <div class="info">
-                        <strong>Best Practice:</strong> Use provider aliases for multi-region deployments and separate authentication contexts.
+                        </div>
+                        <div class="column">
+                            <h4>Lab 11 &mdash; every workspace tagged <code>lab11</code></h4>
+                            <pre><code class="language-hcl">cloud {
+  organization = "user1-terraform-training"
+
+  workspaces {
+    tags = ["lab11"]
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                    <ul>
+                        <li><code>name</code> locks the directory to one workspace &mdash; <code>terraform workspace select</code> has nothing to switch to</li>
+                        <li><code>tags</code> makes every workspace with <strong>all</strong> listed tags selectable from this directory</li>
+                        <li>Tag the workspace in the UI (Lab 11: <strong>Settings → General → Tags</strong>); untagged workspaces stay invisible (&ldquo;workspace not found&rdquo;)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>🔁 Switching Workspaces from the CLI</h3>
+                    <pre><code class="language-bash">terraform init                               # finds workspaces tagged lab11
+
+terraform workspace list
+#   lab11-development
+#   lab11-staging
+
+terraform workspace select lab11-development
+terraform plan                               # 1 instance (instance_count = 1)
+terraform apply
+
+terraform workspace select lab11-staging
+terraform plan                               # 2 instances (instance_count = 2)
+terraform apply
+
+terraform workspace show                     # which workspace am I on?</code></pre>
+                    <div class="highlight">
+                        <strong>Habit:</strong> run <code>terraform workspace show</code> before every apply or destroy &mdash; the command targets whichever workspace is selected.
                     </div>
                 </section>
 
                 <section>
-                    <h3>Workspace Variable Management</h3>
-                    <pre><code class="language-hcl"># Environment-specific workspace configuration
-locals {
-  workspace_config = {
-    development = {
-      instance_type  = "t3.micro"
-      instance_count = 1
-      enable_logging = false
-    }
-    staging = {
-      instance_type  = "t3.small"
-      instance_count = 2
-      enable_logging = true
-    }
-    production = {
-      instance_type  = "t3.medium"
-      instance_count = 3
-      enable_logging = true
-    }
-  }
-
-  config = local.workspace_config[var.environment]
-}
-
-resource "aws_instance" "app" {
-  count         = local.config.instance_count
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = local.config.instance_type
-
-  tags = {
-    Name        = "${var.environment}-app-${count.index + 1}"
-    Environment = var.environment
-  }
-}</code></pre>
+                    <h3>⚙️ Per-Workspace Variables</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Category</th><th>Key</th><th><code>lab11-development</code></th><th><code>lab11-staging</code></th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Environment</td><td><code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code></td><td>sensitive</td><td>sensitive</td></tr>
+                            <tr><td>Terraform</td><td><code>username</code></td><td><code>user1</code></td><td><code>user1</code></td></tr>
+                            <tr><td>Terraform</td><td><code>aws_region</code></td><td><code>us-east-2</code></td><td><code>us-east-2</code></td></tr>
+                            <tr><td>Terraform</td><td><code>environment</code></td><td><code>development</code></td><td><code>staging</code></td></tr>
+                            <tr><td>Terraform</td><td><code>instance_count</code></td><td><code>1</code></td><td><code>2</code></td></tr>
+                        </tbody>
+                    </table>
+                    <ul>
+                        <li><strong>Environment variables</strong> are exported into the run's shell (credentials); <strong>Terraform variables</strong> bind to <code>variable</code> blocks</li>
+                        <li>Every workspace needs its own values &mdash; including <code>username</code> and <code>aws_region</code></li>
+                        <li>Workspace variables override <code>terraform.tfvars</code>, so Lab 11 leaves <code>environment</code> and <code>instance_count</code> out of it</li>
+                        <li><strong>Variable sets</strong> (org level) can share credentials across many workspaces</li>
+                    </ul>
                 </section>
 
                 <section>
-                    <h3>Workspace Organization Strategies</h3>
+                    <h3>🧩 One Configuration, Workspace-Specific Values</h3>
+                    <pre><code class="language-hcl">variable "environment" {
+  type = string # per workspace: "development" or "staging"
+}
+
+variable "instance_count" {
+  type = number # per workspace: 1 or 2
+}
+
+resource "aws_instance" "app" {
+  count         = var.instance_count
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t3.micro"
+
+  tags = {
+    Name        = "${var.username}-${var.environment}-instance-${count.index + 1}"
+    Environment = var.environment
+    Owner       = var.username
+  }
+}</code></pre>
+                    <div class="info">
+                        <strong>Best Practice:</strong> drive differences with explicit workspace variables rather than branching on <code>terraform.workspace</code> &mdash; the values are visible and auditable in each workspace's Variables tab.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🗂️ Workspace Organization Strategies</h3>
                     <div class="two-column">
                         <div class="column">
                             <h4>By Environment</h4>
@@ -1151,162 +1315,181 @@ resource "aws_instance" "app" {
                         </div>
                     </div>
                     <div class="info">
-                        <strong>Best Practice:</strong> Use workspace tags in Terraform Cloud to organize and filter workspaces by team, environment, or project.
+                        <strong>Best Practice:</strong> name workspaces <code>&lt;component&gt;-&lt;environment&gt;</code> and use tags (e.g. <code>lab11</code>, <code>environment:staging</code>) to group and filter them.
+                    </div>
+                    <div class="enterprise">
+                        <strong>State isolation:</strong> each workspace has its own state file and run history &mdash; an apply in <code>lab11-staging</code> cannot touch <code>lab11-development</code>.
                     </div>
                 </section>
             </section>
 
             <!-- Lab 11 Callout -->
-            <section class="lab-callout" data-background-color="#623ce4">
+            <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🏢</span> Enterprise Workspace Management!</h1>
+                    <h1><span class="emoji">🏢</span> Next Challenge: One Configuration, Many Workspaces!</h1>
                     <h2><span class="emoji">☁️</span> Lab 11: Terraform Cloud Workspaces</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
+                        <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Multi-environment workspace architecture</li>
-                            <li>✅ Workspace variable management per environment</li>
-                            <li>✅ Workspace tags and organization</li>
-                            <li>✅ CLI-driven workspace workflows</li>
+                            <li>✅ Point <code>cloud { workspaces { tags = ["lab11"] } }</code> at your organization</li>
+                            <li>✅ Create <code>lab11-development</code> and <code>lab11-staging</code> (CLI-driven, tagged <code>lab11</code>)</li>
+                            <li>✅ Set per-workspace Terraform variables and environment-variable credentials</li>
+                            <li>✅ <code>terraform workspace select</code> each one, deploy 1 vs 2 instances, destroy both</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        
-                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">Build enterprise workspace management!</p>
+                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; Same HCL, different variables per workspace</p>
                     </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🏢 Master Enterprise Workspaces!</h2>
+                    <h2 style="margin-top: 20px; font-size: 1.8em;">🏢 Master Workspaces!</h2>
                 </div>
             </section>
 
-            <!-- Section 2: Advanced State Management -->
+            <!-- Section 3: VCS-Driven Workflows -->
             <section>
-                <section>
-                    <h2>Section 2: Advanced State Management</h2>
+                <section class="section-divider">
+                    <h2>🔗 Section 3: VCS-Driven Workflows</h2>
+                    <p>Make <code>git push</code> the trigger for Terraform Cloud runs</p>
                 </section>
 
                 <section>
-                    <h3>State Isolation Strategies</h3>
+                    <h3>🔀 CLI-Driven vs VCS-Driven</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Aspect</th><th>CLI-driven (Labs 10&ndash;11)</th><th>VCS-driven (Lab 12)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>What starts a run</td><td><code>terraform plan</code> / <code>apply</code> in your shell</td><td><code>git push</code> to the tracked branch</td></tr>
+                            <tr><td>Source of truth</td><td>Your working directory</td><td>The GitHub repository</td></tr>
+                            <tr><td>How code arrives</td><td>CLI uploads your local files</td><td>Terraform Cloud fetches the commit</td></tr>
+                            <tr><td>Change review</td><td>You run <code>terraform plan</code></td><td>Speculative plan on each pull request</td></tr>
+                            <tr><td><code>terraform apply</code> from CLI</td><td>Allowed</td><td>Rejected &mdash; changes go through Git</td></tr>
+                            <tr><td>Best for</td><td>Iteration, experiments</td><td>Team change management</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="info">
+                        <strong>Lab 12:</strong> after the initial setup you will not run <code>terraform</code> locally at all &mdash; every change is a commit.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔌 Connecting GitHub to Terraform Cloud</h3>
                     <div class="two-column">
                         <div class="column">
-                            <h4>By Environment</h4>
-                            <pre><code class="language-text">state/
-├── dev/
-│   └── terraform.tfstate
-├── staging/
-│   └── terraform.tfstate
-└── production/
-    └── terraform.tfstate</code></pre>
+                            <h4>⭐ GitHub App (recommended)</h4>
+                            <ul>
+                                <li>Create a workspace → <strong>Version control workflow</strong> → <strong>GitHub.com</strong></li>
+                                <li>Install the Terraform Cloud GitHub App on your GitHub account when prompted</li>
+                                <li>Grant it access to your lab repo (or all repos)</li>
+                                <li>No OAuth app or client secret to manage</li>
+                            </ul>
                         </div>
                         <div class="column">
-                            <h4>By Component</h4>
-                            <pre><code class="language-text">state/
-├── network/
-│   └── terraform.tfstate
-├── security/
-│   └── terraform.tfstate
-└── applications/
-    └── terraform.tfstate</code></pre>
+                            <h4>🔑 OAuth: &ldquo;GitHub.com (Custom)&rdquo;</h4>
+                            <ul>
+                                <li><strong>Organization Settings → Providers → Add a VCS provider</strong></li>
+                                <li>Copy the <strong>Callback URL</strong> Terraform Cloud shows</li>
+                                <li>GitHub → Developer settings → <strong>OAuth Apps</strong> → register an app with that callback</li>
+                                <li>Paste <strong>Client ID</strong> + <strong>Client Secret</strong> back, then authorize</li>
+                                <li>One-time setup per organization</li>
+                            </ul>
                         </div>
                     </div>
-                    <div class="enterprise">
-                        <strong>Enterprise Pattern:</strong> Combine both strategies - separate by component AND environment for maximum isolation and parallel development.
+                    <div class="highlight">
+                        <strong>Two different credentials:</strong> your GitHub Personal Access Token is only for <code>git clone</code> / <code>git push</code> from Cloud9. Terraform Cloud reads the repo through the GitHub App or OAuth connection.
                     </div>
                 </section>
 
                 <section>
-                    <h3>Terraform Workspaces Advanced Usage</h3>
-                    <pre><code class="language-hcl"># Workspace-aware configuration
-locals {
-  workspace_config = {
-    dev = {
-      instance_type = "t2.micro"
-      min_size      = 1
-      max_size      = 2
-    }
-    staging = {
-      instance_type = "t3.small"
-      min_size      = 2
-      max_size      = 4
-    }
-    production = {
-      instance_type = "t3.large"
-      min_size      = 3
-      max_size      = 10
-    }
-  }
-  
-  current_config = local.workspace_config[terraform.workspace]
-}
-
-resource "aws_instance" "web" {
-  count         = local.current_config.min_size
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = local.current_config.instance_type
-  
-  tags = {
-    Name        = "${terraform.workspace}-web-${count.index + 1}"
-    Environment = terraform.workspace
-  }
-}</code></pre>
-                </section>
-
-                <section>
-                    <h3>Terraform Cloud Remote State</h3>
-                    <pre><code class="language-hcl"># Terraform Cloud backend
-terraform {
-  cloud {
-    organization = "my-organization"
-
-    workspaces {
-      name = "production-infrastructure"
-    }
-  }
-}
-
-# Benefits of Terraform Cloud state:
-# - Automatic state locking
-# - State versioning and backup
-# - Encryption at rest and in transit
-# - Team collaboration features
-# - Cost estimation
-# - Policy enforcement
-# - No infrastructure to manage</code></pre>
-                    <div class="success">
-                        <strong>Best Practice:</strong> Terraform Cloud provides enterprise-grade state management without requiring S3/DynamoDB infrastructure setup.
+                    <h3>🪝 Webhooks: Push → Run</h3>
+                    <div style="text-align: center; margin: 10px 0;">
+                        <div class="workflow-step step-1">git push origin main</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-2">GitHub webhook</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-3">Plan</div>
+                        <span class="workflow-arrow">→</span>
+                        <div class="workflow-step step-4">Confirm &amp; Apply</div>
+                    </div>
+                    <ul>
+                        <li>A VCS-driven workspace tracks <strong>one branch</strong> &mdash; the repo's default branch (<code>main</code>) unless you choose another</li>
+                        <li>A push to the tracked branch queues a full run: plan, then apply after you click <strong>Confirm &amp; Apply</strong> (or automatically with auto-apply)</li>
+                        <li>Check the connection: workspace <strong>Settings → Version Control</strong>; GitHub repo <strong>Settings → Webhooks</strong> (OAuth) or the app's installation (GitHub App)</li>
+                        <li>Variables still live in the workspace: credentials, <code>username</code>, <code>aws_region</code> are <strong>not</strong> committed; <code>environment</code> and <code>app_version</code> come from the committed <code>terraform.tfvars</code></li>
+                    </ul>
+                    <div class="info">
+                        <strong>Lab 12 payoff:</strong> change <code>app_version</code> to <code>v1.1.0</code>, push, and watch the run replace the instance &mdash; no <code>terraform</code> command typed.
                     </div>
                 </section>
 
                 <section>
-                    <h3>State Import and Migration</h3>
-                    <pre><code class="language-bash"># Import existing resources
-terraform import aws_instance.web i-1234567890abcdef0
-terraform import aws_security_group.web sg-12345678
+                    <h3>🔍 Speculative Plans on Pull Requests</h3>
+                    <pre><code class="language-bash">git checkout -b feature/add-tags
+# edit main.tf: add  CostCenter = "Training"  to common_tags
+git add main.tf
+git commit -m "Add CostCenter tag"
+git push origin feature/add-tags     # push to a non-tracked branch: no run
 
-# State manipulation commands
-terraform state list
-terraform state show aws_instance.web
-terraform state mv aws_instance.web aws_instance.web_server
-terraform state rm aws_instance.deprecated
+# On GitHub: open a pull request  feature/add-tags → main
+#   → Terraform Cloud runs a SPECULATIVE plan (plan only)
+#   → the result appears as a status check on the pull request
+# Merge the pull request → push to main → normal plan + apply</code></pre>
+                    <ul>
+                        <li><strong>Speculative plan:</strong> shows what <em>would</em> change; it can never be applied and does not lock state</li>
+                        <li>Triggered by <strong>pull requests against the tracked branch</strong> &mdash; not by plain pushes to other branches</li>
+                    </ul>
+                </section>
 
-# Migrate state between backends
-terraform init -migrate-state
-
-# Force unlock state (use with caution)
-terraform force-unlock LOCK_ID</code></pre>
-                    <div class="danger">
-                        <strong>Warning:</strong> State manipulation should only be performed by experienced operators with proper backups.
-                    </div>
+                <section>
+                    <h3>🧹 VCS-Driven Workspace Setup and Cleanup</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Where</th><th>Key</th><th>Value</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Environment variable</td><td><code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code></td><td>sensitive</td></tr>
+                            <tr><td>Environment variable</td><td><code>CONFIRM_DESTROY</code></td><td><code>1</code></td></tr>
+                            <tr><td>Terraform variable</td><td><code>username</code> / <code>aws_region</code></td><td><code>user1</code> / <code>us-east-2</code></td></tr>
+                            <tr><td>Committed <code>terraform.tfvars</code></td><td><code>environment</code> / <code>app_version</code></td><td><code>gitops</code> / <code>v1.0.0</code></td></tr>
+                        </tbody>
+                    </table>
+                    <ul>
+                        <li><code>CONFIRM_DESTROY=1</code> must be set before Terraform Cloud will queue a destroy plan</li>
+                        <li>Cleanup: workspace <strong>Settings → Destruction and Deletion → Queue destroy plan</strong>, then confirm and apply</li>
+                        <li>Deleting a workspace does <strong>not</strong> destroy its resources &mdash; destroy first</li>
+                    </ul>
                 </section>
             </section>
 
-            <!-- Section 3: CI/CD Integration -->
+            <!-- Lab 12 Callout -->
+            <section class="lab-callout" data-background-color="#dc3545">
+                <div style="text-align: center; color: white;">
+                    <h1><span class="emoji">🔗</span> Final Challenge: Git Push Becomes the Trigger!</h1>
+                    <h2><span class="emoji">📋</span> Lab 12: VCS-Driven Terraform Cloud with GitHub Integration</h2>
+                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
+                        <h3>🎯 What You'll Do:</h3>
+                        <ul style="font-size: 1.0em; line-height: 1.4;">
+                            <li>✅ Create a GitHub repo and connect it (GitHub App, or OAuth &ldquo;GitHub.com (Custom)&rdquo;)</li>
+                            <li>✅ Create a VCS-driven workspace with credentials, <code>username</code>, <code>aws_region</code>, <code>CONFIRM_DESTROY</code></li>
+                            <li>✅ Push to <code>main</code> → automatic plan → Confirm &amp; Apply; push again to update</li>
+                            <li>✅ Open a pull request → speculative plan; queue a destroy plan to clean up</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
+                        <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; GitHub + Terraform Cloud + AWS (us-east-2)</p>
+                    </div>
+                    <h2 style="margin-top: 20px; font-size: 1.8em;">🚀 Automate Deployments!</h2>
+                </div>
+            </section>
+
+            <!-- Section 4: CI/CD Alternatives -->
             <section>
-                <section>
-                    <h2>Section 3: CI/CD Integration and Automation</h2>
+                <section class="section-divider">
+                    <h2>🤖 Section 4: Beyond the Labs &mdash; CI/CD Pipelines</h2>
+                    <p>An alternative to VCS-driven workspaces: run Terraform from your own CI system</p>
                 </section>
 
                 <section>
-                    <h3>GitOps Workflow with Terraform</h3>
+                    <h3>🔄 GitOps Workflow with Terraform</h3>
                     <div style="text-align: center;">
                         <div style="display: inline-block; padding: 10px 20px; background: #623ce4; color: white; border-radius: 5px; margin: 5px;">Code Push</div>
                         <span style="font-size: 16px;">→</span>
@@ -1322,88 +1505,111 @@ terraform force-unlock LOCK_ID</code></pre>
                             <li><strong>Infrastructure as Code:</strong> All changes through version control</li>
                             <li><strong>Plan Review:</strong> Human approval for production changes</li>
                             <li><strong>Automated Testing:</strong> Validate changes before deployment</li>
-                            <li><strong>Rollback Capability:</strong> Quick recovery from issues</li>
+                            <li><strong>Rollback Capability:</strong> Revert the commit and re-apply</li>
                         </ul>
+                    </div>
+                    <div class="highlight">
+                        <strong>Lab 12 vs CI:</strong> in Lab 12 Terraform Cloud is the pipeline. With GitHub Actions (next slides) your CI runs the checks and can still hand runs to Terraform Cloud or use another backend.
                     </div>
                 </section>
 
                 <section>
-                    <h3>Advanced CI/CD Pipeline Configuration</h3>
-                    <pre><code class="language-yaml"># .github/workflows/terraform-enterprise.yml
-name: 'Enterprise Terraform Pipeline'
+                    <h3>⚙️ GitHub Actions: Validate, Test, and Scan</h3>
+                    <pre><code class="language-yaml"># .github/workflows/terraform-ci.yml
+name: terraform-ci
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main]
 
-env:
-  TF_VERSION: '1.9.8'
-  TF_IN_AUTOMATION: 'true'
-
 jobs:
   validate:
-    name: 'Validate and Test'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [dev, staging, production]
-
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: ${{ env.TF_VERSION }}
-
-    - name: Terraform Format Check
-      run: terraform fmt -check -recursive
-
-    - name: Terraform Validation
-      run: |
-        terraform init -backend=false
-        terraform validate
-
-    - name: Security Scan
-      uses: aquasecurity/tfsec-action@v1.0.0
-
-    - name: Policy Check
-      run: |
-        conftest verify --policy policies/ --data environments/${{ matrix.environment }}.json plan.json</code></pre>
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform test            # native tests in tests/*.tftest.hcl
+      - name: Security scan (Trivy - tfsec is now part of Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .</code></pre>
                 </section>
 
                 <section>
-                    <h3>Automated Testing Strategies</h3>
+                    <h3>📜 Policy Checks in CI with conftest</h3>
+                    <pre><code class="language-yaml">  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false     # keep stdout clean for redirection
+      - run: terraform init
+      - run: terraform plan -out=tfplan
+      - run: terraform show -json tfplan &gt; plan.json
+      - run: conftest test --all-namespaces --policy policies/ plan.json</code></pre>
+                    <ul>
+                        <li><code>conftest test</code> evaluates Rego <code>deny</code> / <code>warn</code> rules against the plan JSON</li>
+                        <li>The plan job needs cloud credentials (e.g. GitHub OIDC → AWS role) &mdash; never commit keys</li>
+                        <li>Inside Terraform Cloud, the equivalent is an <strong>OPA or Sentinel policy set</strong> evaluated after every plan</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>🧪 Automated Testing Strategies</h3>
                     <div class="two-column">
                         <div class="column">
                             <h4>Static Testing</h4>
                             <ul>
-                                <li><strong>terraform validate</strong> - Syntax validation</li>
-                                <li><strong>terraform plan</strong> - Configuration validation</li>
-                                <li><strong>tfsec</strong> - Security scanning</li>
-                                <li><strong>checkov</strong> - Policy compliance</li>
+                                <li><strong>terraform fmt / validate</strong> - Formatting and syntax</li>
                                 <li><strong>tflint</strong> - Linting rules</li>
+                                <li><strong>Trivy</strong> - Security scanning (tfsec merged into Trivy)</li>
+                                <li><strong>checkov</strong> - Policy compliance</li>
+                                <li><strong>conftest / OPA</strong> - Custom policy on plan JSON</li>
                             </ul>
                         </div>
                         <div class="column">
                             <h4>Dynamic Testing</h4>
                             <ul>
-                                <li><strong>Terratest</strong> - Integration testing</li>
-                                <li><strong>Kitchen-Terraform</strong> - Test Kitchen integration</li>
-                                <li><strong>Atlantis</strong> - Pull request automation</li>
-                                <li><strong>Terraform Cloud</strong> - Managed testing</li>
-                                <li><strong>Custom scripts</strong> - Business logic validation</li>
+                                <li><strong>terraform test</strong> - Native test framework (Terraform 1.6+)</li>
+                                <li><strong>Terratest</strong> - Go-based integration testing</li>
+                                <li><strong>Speculative plans</strong> - Plan review on every pull request</li>
+                                <li><strong>Check blocks</strong> - Post-apply health assertions</li>
                             </ul>
                         </div>
                     </div>
                 </section>
 
                 <section>
-                    <h3>Blue-Green Deployment with Terraform</h3>
-                    <pre><code class="language-hcl"># Blue-green deployment configuration
-variable "deployment_color" {
+                    <h3>🧪 Native Testing with <code>terraform test</code></h3>
+                    <pre><code class="language-hcl"># tests/instance.tftest.hcl
+variables {
+  username    = "user1"
+  environment = "test"
+}
+
+run "instance_is_tagged" {
+  command = plan
+
+  assert {
+    condition     = aws_instance.demo.tags["Owner"] == "user1"
+    error_message = "Owner tag must match the username variable."
+  }
+}</code></pre>
+                    <div class="info">
+                        <strong><code>command = plan</code></strong> checks the plan without creating anything; omit it to apply real resources and destroy them when the test finishes.
+                    </div>
+                </section>
+
+                <section>
+                    <h3>🔵🟢 Blue-Green Deployment with Terraform</h3>
+                    <pre><code class="language-hcl">variable "deployment_color" {
   description = "Current deployment color (blue or green)"
   type        = string
   default     = "blue"
@@ -1414,435 +1620,218 @@ variable "deployment_color" {
   }
 }
 
-locals {
-  inactive_color = var.deployment_color == "blue" ? "green" : "blue"
-}
-
-# Create both blue and green environments
 module "blue_environment" {
-  source = "./modules/application"
-
+  source           = "./modules/application"
   environment_name = "blue"
   instance_count   = var.deployment_color == "blue" ? var.instance_count : 0
-
-  tags = {
-    Color  = "blue"
-    Active = var.deployment_color == "blue" ? "true" : "false"
-  }
 }
 
 module "green_environment" {
-  source = "./modules/application"
-
+  source           = "./modules/application"
   environment_name = "green"
   instance_count   = var.deployment_color == "green" ? var.instance_count : 0
-
-  tags = {
-    Color  = "green"
-    Active = var.deployment_color == "green" ? "true" : "false"
-  }
 }</code></pre>
                 </section>
             </section>
 
-            <!-- Lab 12 Callout -->
-            <section class="lab-callout" data-background-color="#dc3545">
-                <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> VCS Integration & GitOps!</h1>
-                    <h2><span class="emoji">📋</span> Lab 12: VCS Integration and GitOps Workflows</h2>
-                    <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
-                        <ul style="font-size: 1.0em; line-height: 1.4;">
-                            <li>✅ Connect GitHub repository to Terraform Cloud</li>
-                            <li>✅ Implement VCS-driven deployment workflows</li>
-                            <li>✅ Configure webhook-triggered runs on Git push</li>
-                            <li>✅ Test speculative plans on feature branches</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Implement modern GitOps workflows with Terraform Cloud!</p>
-                    </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🚀 Automate Deployments!</h2>
-                </div>
-            </section>
-
-            <!-- Section 4: Policy as Code and Governance -->
+            <!-- Section 5: Policy as Code and Governance -->
             <section>
-                <section>
-                    <h2>Section 4: Policy, Governance, and Best Practices</h2>
+                <section class="section-divider">
+                    <h2>🛡️ Section 5: Policy, Governance, and the Registry</h2>
+                    <p>Survey of enterprise features &mdash; not part of the lab exercises</p>
                 </section>
 
                 <section class="dense-content">
-                    <h3>📦 Terraform Registry & Module Ecosystem</h3>
+                    <h3>📦 Terraform Registry &amp; Module Ecosystem</h3>
                     <div class="terraform-brand" style="margin-bottom: 15px;">
-                        <h4>🏢 Terraform Registry - Public & Private Module Ecosystem</h4>
+                        <h4>🏢 Public &amp; Private Module Registries</h4>
                         <div class="three-column">
                             <div class="column">
-                                <p style="font-size: 0.8em; margin: 0;"><strong>Public Registry:</strong></p>
-                                <ul style="font-size: 0.7em; margin: 5px 0;">
+                                <p style="font-size: 0.9em; margin: 0;"><strong>Public Registry:</strong></p>
+                                <ul style="font-size: 0.85em; margin: 5px 0;">
                                     <li><strong>AWS Provider:</strong> 1000+ resource types</li>
                                     <li><strong>VPC Module:</strong> Most popular AWS module</li>
-                                    <li><strong>Security Groups:</strong> Enterprise patterns</li>
-                                    <li><strong>EKS Module:</strong> Kubernetes integration</li>
-                                    <li><strong>RDS Module:</strong> Database automation</li>
+                                    <li><strong>Security Groups:</strong> Common patterns</li>
+                                    <li><strong>EKS / RDS Modules:</strong> Kubernetes and databases</li>
                                 </ul>
                             </div>
                             <div class="column">
-                                <p style="font-size: 0.8em; margin: 0;"><strong>Registry Statistics:</strong></p>
-                                <ul style="font-size: 0.7em; margin: 5px 0;">
-                                    <li><strong>3000+ modules</strong> in public registry</li>
-                                    <li><strong>2M+ downloads</strong> per month</li>
-                                    <li><strong>500+ providers</strong> covering all major platforms</li>
-                                    <li><strong>90% faster</strong> infrastructure development</li>
+                                <p style="font-size: 0.9em; margin: 0;"><strong>Private Registry:</strong></p>
+                                <ul style="font-size: 0.85em; margin: 5px 0;">
+                                    <li>Built into every Terraform Cloud organization</li>
+                                    <li>Publish modules from a VCS repo by Git tag</li>
+                                    <li>Source: <code>app.terraform.io/&lt;org&gt;/&lt;name&gt;/aws</code></li>
+                                    <li>Semantic versioning and generated docs</li>
                                 </ul>
                             </div>
                             <div class="column">
-                                <p style="font-size: 0.8em; margin: 0;"><strong>Module Benefits:</strong></p>
-                                <ul style="font-size: 0.7em; margin: 5px 0;">
+                                <p style="font-size: 0.9em; margin: 0;"><strong>Module Benefits:</strong></p>
+                                <ul style="font-size: 0.85em; margin: 5px 0;">
                                     <li><strong>Consistency:</strong> Standardized infrastructure</li>
                                     <li><strong>Reusability:</strong> Write once, use everywhere</li>
-                                    <li><strong>Best Practices:</strong> Enterprise-tested patterns</li>
+                                    <li><strong>Best Practices:</strong> Tested patterns</li>
                                     <li><strong>Collaboration:</strong> Team knowledge sharing</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="two-column">
-                        <div class="column">
-                            <h4>🛡️ Sentinel Policy as Code</h4>
-                            <div class="code-block-title">Enterprise Security Policies</div>
-                            <pre><code class="language-sentinel"># Enterprise Security Policy Suite
-import "tfplan/v2" as tfplan
-import "strings"
-import "types"
-
-# SOC 2 Compliance - Resource Tagging Requirements
-required_tags = [
-    "Environment",
-    "Owner", 
-    "CostCenter",
-    "DataClassification",
-    "ComplianceFramework",
-    "BackupTier",
-    "BusinessUnit"
-]
-
-# PCI DSS - Network Security Controls
-allowed_instance_types = [
-    "t3.medium", "t3.large", "t3.xlarge",
-    "c5.large", "c5.xlarge", "c5.2xlarge",
-    "m5.large", "m5.xlarge", "m5.2xlarge"
-]
-
-# HIPAA - Encryption Requirements
-encryption_required_resources = [
-    "aws_ebs_volume",
-    "aws_rds_instance", 
-    "aws_s3_bucket",
-    "aws_redshift_cluster",
-    "aws_kinesis_stream"
-]
-
-# Main policy rule - Tag compliance
-mandatory_tags = rule {
-    all tfplan.resource_changes as _, changes {
-        changes.mode is "managed"
-        changes.type in ["aws_instance", "aws_rds_instance", "aws_s3_bucket"]
-        
-        # Check all required tags exist
-        all required_tags as tag {
-            changes.change.after.tags[tag] is not null
-        }
-        
-        # Validate tag values are not empty
-        all required_tags as tag {
-            length(changes.change.after.tags[tag]) > 0
-        }
-        
-        # Environment tag must be valid
-        changes.change.after.tags["Environment"] in ["development", "staging", "production"]
-        
-        # Data classification must be specified
-        changes.change.after.tags["DataClassification"] in ["public", "internal", "confidential", "restricted"]
-    }
-}
-
-# Security policy - Instance restrictions
-approved_instance_types = rule {
-    all tfplan.resource_changes as _, changes {
-        changes.type is "aws_instance"
-        changes.change.after.instance_type in allowed_instance_types
-        
-        # Production instances must be encrypted
-        changes.change.after.tags["Environment"] is "production" implies
-            changes.change.after.ebs_block_device else [] as devices {
-                all devices as device {
-                    device.encrypted is true
-                }
-            }
-    }
-}
-
-# Network security - No overly permissive security groups
-security_group_compliance = rule {
-    all tfplan.resource_changes as _, changes {
-        changes.type is "aws_security_group"
-        
-        # No SSH from anywhere
-        all changes.change.after.ingress as rule {
-            not (rule.from_port <= 22 and 
-                 rule.to_port >= 22 and 
-                 "0.0.0.0/0" in rule.cidr_blocks)
-        }
-        
-        # No RDP from anywhere  
-        all changes.change.after.ingress as rule {
-            not (rule.from_port <= 3389 and 
-                 rule.to_port >= 3389 and 
-                 "0.0.0.0/0" in rule.cidr_blocks)
-        }
-    }
-}
-
-# Cost control - Prevent expensive resources
-cost_control = rule {
-    all tfplan.resource_changes as _, changes {
-        changes.type is "aws_instance"
-        
-        # Expensive instances require approval tag
-        changes.change.after.instance_type matches "^(c5|m5|r5)\\.(4|8|12|16|24)xlarge$" implies
-            changes.change.after.tags["ApprovedForHighCost"] is "true"
-    }
-}
-
-# Encryption enforcement
-encryption_compliance = rule {
-    all tfplan.resource_changes as _, changes {
-        changes.type in encryption_required_resources
-        
-        changes.type is "aws_ebs_volume" implies changes.change.after.encrypted is true
-        changes.type is "aws_rds_instance" implies changes.change.after.storage_encrypted is true
-        changes.type is "aws_s3_bucket" implies changes.change.after.server_side_encryption_configuration[0].rule[0].apply_server_side_encryption_by_default[0].sse_algorithm is not null
-    }
-}
-
-# Main policy evaluation
-main = rule {
-    mandatory_tags and
-    approved_instance_types and 
-    security_group_compliance and
-    cost_control and
-    encryption_compliance
-}</code></pre>
-                        </div>
-                        <div class="column">
-                            <h4>⚡ Open Policy Agent (OPA) Integration</h4>
-                            <div class="code-block-title">AWS Compliance with OPA/Rego</div>
-                            <pre><code class="language-rego"># AWS security policies
-package terraform.security
-
-import future.keywords.contains
-import future.keywords.if
-import future.keywords.in
-
-# Security baselines
-required_tags := ["Environment", "Owner", "CostCenter", "DataClass"]
-allowed_environments := ["dev", "staging", "prod"]
-
-# Security group compliance
-aws_security_policies[violation] {
-    resource := input.planned_values.root_module.resources[_]
-    resource.type == "aws_security_group"
-
-    rule := resource.values.ingress[_]
-    rule.cidr_blocks[_] == "0.0.0.0/0"
-    rule.from_port <= 22
-    rule.to_port >= 22
-
-    violation := {
-        "resource": resource.address,
-        "type": "security_risk",
-        "message": sprintf("Security group %s allows SSH from 0.0.0.0/0", [resource.address]),
-        "severity": "high"
-    }
-}
-
-# Tagging compliance
-tagging_compliance[violation] {
-    resource := input.planned_values.root_module.resources[_]
-    resource.type in [
-        "aws_instance", "aws_s3_bucket", "aws_rds_instance"
-    ]
-
-    missing_tags := [tag |
-        tag := required_tags[_]
-        not resource.values.tags[tag]
-    ]
-
-    count(missing_tags) > 0
-
-    violation := {
-        "resource": resource.address,
-        "type": "compliance_violation",
-        "message": sprintf("Resource %s missing required tags: %v", [resource.address, missing_tags]),
-        "severity": "medium"
-    }
-}
-
-# Cost governance
-cost_governance[violation] {
-    resource := input.planned_values.root_module.resources[_]
-    resource.type == "aws_instance"
-
-    expensive_types := ["c5.4xlarge", "c5.9xlarge", "c5.18xlarge", "r5.4xlarge", "r5.8xlarge"]
-    resource.values.instance_type in expensive_types
-    not resource.values.tags["CostApproved"] == "true"
-
-    violation := {
-        "resource": resource.address,
-        "type": "cost_control",
-        "message": sprintf("Expensive instance type %s requires cost approval", [resource.values.instance_type]),
-        "severity": "medium"
-    }
-}
-
-# Encryption enforcement
-encryption_compliance[violation] {
-    resource := input.planned_values.root_module.resources[_]
-    resource.values.tags["Environment"] == "prod"
-
-    resource.type in ["aws_ebs_volume", "aws_rds_instance"]
-    not resource.values.encrypted == true
-
-    violation := {
-        "resource": resource.address,
-        "type": "security_requirement",
-        "message": sprintf("Production resource %s must be encrypted", [resource.address]),
-        "severity": "high"
-    }
-}</code></pre>
-                            
-                            <div class="enterprise" style="padding: 12px; margin-top: 15px;">
-                                <h5>🏆 Enterprise Policy Strategy</h5>
-                                <ul style="font-size: 0.8em;">
-                                    <li><strong>Layered Approach:</strong> Global, service-specific, environment-specific policies</li>
-                                    <li><strong>Risk-Based:</strong> High/medium/low severity classification</li>
-                                    <li><strong>Business Integration:</strong> Cost centers, approval workflows</li>
-                                    <li><strong>Continuous Compliance:</strong> Real-time policy evaluation</li>
-                                    <li><strong>Audit Trail:</strong> Complete policy violation history</li>
-                                </ul>
-                            </div>
-                        </div>
+                    <div class="info">
+                        <strong>Policy as code</strong> (next slides) checks every plan against organizational rules before apply &mdash; Terraform Cloud supports both <strong>Sentinel</strong> and <strong>OPA</strong> policy sets.
                     </div>
-                    
-                    <div class="highlight" style="margin-top: 15px;">
-                        <h4>🔄 Enterprise Policy Lifecycle Management</h4>
-                        <div class="three-column">
-                            <div class="column">
-                                <h5>📋 Policy Development</h5>
-                                <ul style="font-size: 0.8em;">
-                                    <li><strong>Requirements Gathering:</strong> Business, legal, compliance stakeholders</li>
-                                    <li><strong>Risk Assessment:</strong> Impact analysis, exception processes</li>
-                                    <li><strong>Policy Authoring:</strong> Sentinel, OPA/Rego development</li>
-                                    <li><strong>Testing:</strong> Validation against real infrastructure</li>
-                                </ul>
-                            </div>
-                            <div class="column">
-                                <h5>🚀 Deployment & Operations</h5>
-                                <ul style="font-size: 0.8em;">
-                                    <li><strong>Staged Rollout:</strong> Dev → staging → production</li>
-                                    <li><strong>Policy Sets:</strong> Environment-specific rule groupings</li>
-                                    <li><strong>Enforcement Levels:</strong> Advisory, soft mandatory, hard mandatory</li>
-                                    <li><strong>Exception Handling:</strong> Approval workflows, temporary overrides</li>
-                                </ul>
-                            </div>
-                            <div class="column">
-                                <h5>📊 Monitoring & Evolution</h5>
-                                <ul style="font-size: 0.8em;">
-                                    <li><strong>Compliance Metrics:</strong> Policy violation rates, trends</li>
-                                    <li><strong>Performance Impact:</strong> Plan/apply time analysis</li>
-                                    <li><strong>Policy Updates:</strong> Version control, change management</li>
-                                    <li><strong>Business Reviews:</strong> Quarterly policy effectiveness assessment</li>
-                                </ul>
-                            </div>
+                </section>
+
+                <section>
+                    <h3>🛡️ Sentinel Policy as Code</h3>
+                    <div class="code-block-title">restrict-ec2-and-rds.sentinel</div>
+                    <pre><code class="language-sentinel">import "tfplan/v2" as tfplan
+
+required_tags = ["Environment", "Owner", "CostCenter"]
+allowed_types = ["t3.micro", "t3.small", "t3.medium"]
+
+# Managed resources being created or updated
+changes = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+		(rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+instances = filter changes as _, rc { rc.type is "aws_instance" }
+databases = filter changes as _, rc { rc.type is "aws_db_instance" }
+
+mandatory_tags = rule {
+	all instances as _, rc {
+		all required_tags as t { rc.change.after.tags contains t }
+	}
+}
+approved_instance_types = rule {
+	all instances as _, rc { rc.change.after.instance_type in allowed_types }
+}
+databases_encrypted = rule {
+	all databases as _, rc { rc.change.after.storage_encrypted is true }
+}
+
+main = rule { mandatory_tags and approved_instance_types and databases_encrypted }</code></pre>
+                </section>
+
+                <section>
+                    <h3>⚡ Open Policy Agent (OPA) / Rego</h3>
+                    <div class="code-block-title">policies/security.rego &mdash; OPA 1.0 syntax</div>
+                    <pre><code class="language-rego">package terraform.security
+
+import rego.v1
+
+required_tags := {"Environment", "Owner", "CostCenter"}
+
+managed contains rc if {
+	some rc in input.resource_changes
+	rc.mode == "managed"
+	some action in rc.change.actions
+	action in {"create", "update"}
+}
+
+deny contains msg if {
+	some rc in managed
+	rc.type == "aws_security_group"
+	some ingress in rc.change.after.ingress
+	"0.0.0.0/0" in ingress.cidr_blocks
+	ingress.from_port &lt;= 22
+	ingress.to_port &gt;= 22
+	msg := sprintf("%s allows SSH from 0.0.0.0/0", [rc.address])
+}
+
+deny contains msg if {
+	some rc in managed
+	rc.type in {"aws_instance", "aws_db_instance"}
+	missing := required_tags - {key | some key, _ in rc.change.after.tags}
+	count(missing) &gt; 0
+	msg := sprintf("%s is missing tags: %v", [rc.address, missing])
+}</code></pre>
+                </section>
+
+                <section>
+                    <h3>🔄 Enterprise Policy Lifecycle</h3>
+                    <div class="three-column">
+                        <div class="column">
+                            <h4>📋 Development</h4>
+                            <ul>
+                                <li>Gather business, legal, compliance requirements</li>
+                                <li>Assess impact and exception processes</li>
+                                <li>Author in Sentinel or Rego</li>
+                                <li>Test against real plans</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>🚀 Deployment</h4>
+                            <ul>
+                                <li>Staged rollout: dev → staging → production</li>
+                                <li>Policy sets scoped to workspaces or projects</li>
+                                <li>Enforcement: advisory, soft mandatory, hard mandatory</li>
+                                <li>Overrides for soft-mandatory failures</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>📊 Evolution</h4>
+                            <ul>
+                                <li>Track violation rates and trends</li>
+                                <li>Version policies in Git</li>
+                                <li>Review policies regularly</li>
+                                <li>Layer global, service, and environment rules</li>
+                            </ul>
                         </div>
                     </div>
                 </section>
 
                 <section>
-                    <h3>Cost Control Policies</h3>
-                    <pre><code class="language-rego"># cost-control.rego
+                    <h3>💰 Cost Control Policies</h3>
+                    <pre><code class="language-rego"># policies/cost.rego - illustrative monthly costs
 package terraform.cost
 
-import future.keywords.in
+import rego.v1
 
-# Define instance type costs (enterprise example)
-instance_costs := {
-    "t2.nano":   5,
-    "t2.micro":  10,
-    "t2.small":  20,
-    "t3.medium": 40,
-    "t3.large":  80,
-    "t3.xlarge": 160
+monthly_cost := {"t3.micro": 8, "t3.small": 15, "t3.medium": 30, "t3.large": 60}
+budget_limit := 200
+
+instances contains r if {
+	some r in input.planned_values.root_module.resources
+	r.type == "aws_instance"
 }
 
-# Warn about expensive instances
-warn[msg] {
-    resource := input.planned_values.root_module.resources[_]
-    resource.type == "aws_instance"
-    
-    cost := instance_costs[resource.values.instance_type]
-    cost > 50
-    
-    msg := sprintf("Instance %s uses expensive type %s ($%d/month)", 
-        [resource.address, resource.values.instance_type, cost])
+warn contains msg if {
+	some r in instances
+	cost := monthly_cost[r.values.instance_type]
+	cost &gt; 50
+	msg := sprintf("%s uses %s (~$%d/month)", [r.address, r.values.instance_type, cost])
 }
 
-# Deny deployment if total cost exceeds budget
-budget_limit := 1000
-
-deny[msg] {
-    total_cost := sum([
-        instance_costs[resource.values.instance_type] |
-        resource := input.planned_values.root_module.resources[_]
-        resource.type == "aws_instance"
-    ])
-    
-    total_cost > budget_limit
-    msg := sprintf("Total deployment cost $%d exceeds budget of $%d", 
-        [total_cost, budget_limit])
+deny contains msg if {
+	total := sum([monthly_cost[r.values.instance_type] | some r in instances])
+	total &gt; budget_limit
+	msg := sprintf("Estimated $%d/month exceeds budget of $%d", [total, budget_limit])
 }</code></pre>
                 </section>
 
                 <section>
-                    <h3>Compliance and Audit Frameworks</h3>
+                    <h3>📋 Compliance and Audit Frameworks</h3>
                     <pre><code class="language-hcl"># Compliance module for SOC 2 requirements
 module "compliance_logging" {
   source = "./modules/compliance"
-  
+
   # Enable comprehensive logging
-  enable_cloudtrail     = true
-  enable_vpc_flow_logs  = true
-  enable_config_rules   = true
-  
+  enable_cloudtrail    = true
+  enable_vpc_flow_logs = true
+  enable_config_rules  = true
+
   # Encryption requirements
-  enforce_encryption_at_rest = true
+  enforce_encryption_at_rest    = true
   enforce_encryption_in_transit = true
-  
+
   # Access control
   require_mfa_for_admin = true
   password_policy = {
-    minimum_length                   = 14
-    require_lowercase_characters    = true
-    require_uppercase_characters    = true
-    require_numbers                 = true
-    require_symbols                 = true
-    max_password_age               = 90
-    password_reuse_prevention      = 12
+    minimum_length            = 14
+    require_symbols           = true
+    max_password_age          = 90
+    password_reuse_prevention = 12
   }
-  
+
   tags = {
     Compliance = "SOC2"
     DataClass  = "confidential"
@@ -1851,207 +1840,182 @@ module "compliance_logging" {
                 </section>
 
                 <section>
-                    <h3>Resource Tagging Strategy</h3>
-                    <pre><code class="language-hcl"># Comprehensive tagging strategy
-locals {
+                    <h3>🏷️ Resource Tagging Strategy</h3>
+                    <pre><code class="language-hcl">locals {
   # Standard tags applied to all resources
   standard_tags = {
-    # Identity
     Environment = var.environment
     Project     = var.project_name
-    Owner       = var.team_name
-    
-    # Operations
+    Owner       = var.username
     ManagedBy   = "Terraform"
     Repository  = var.git_repository
-    Deployment  = var.deployment_id
-    
-    # Cost management
     CostCenter  = var.cost_center
-    Budget      = var.budget_code
-    
-    # Compliance
     DataClass   = var.data_classification
-    Compliance  = join(",", var.compliance_frameworks)
-    
-    # Lifecycle
-    CreatedDate = formatdate("YYYY-MM-DD", timestamp())
     Backup      = var.backup_required ? "daily" : "none"
   }
 }
 
 # Apply tags automatically using provider default tags
 provider "aws" {
+  region = var.aws_region
+
   default_tags {
     tags = local.standard_tags
   }
 }</code></pre>
+                    <div class="danger">
+                        <strong>Avoid <code>timestamp()</code> in tags:</strong> it returns a new value on every run, so every plan shows changes. Use static values (or a CI-supplied variable) instead.
+                    </div>
                 </section>
             </section>
 
-            <!-- Section 5: Performance and Scaling -->
+            <!-- Section 6: Performance and Scaling -->
             <section>
-                <section>
-                    <h2>Section 5: Performance Optimization and Scaling</h2>
+                <section class="section-divider">
+                    <h2>⚡ Section 6: Performance Optimization and Scaling</h2>
+                    <p>Keeping large configurations fast and maintainable</p>
                 </section>
 
                 <section>
-                    <h3>Large-Scale Terraform Optimization</h3>
+                    <h3>📈 Large-Scale Terraform Optimization</h3>
                     <div class="two-column">
                         <div class="column">
                             <h4>State Management</h4>
                             <ul>
-                                <li>Split state files by component</li>
-                                <li>Use terraform workspaces judiciously</li>
-                                <li>Implement state locking</li>
-                                <li>Regular state file cleanup</li>
+                                <li>Split state by component (one workspace each)</li>
+                                <li>Keep each workspace small and focused</li>
+                                <li>Rely on built-in state locking</li>
+                                <li>Remove unused resources from configuration</li>
                             </ul>
                         </div>
                         <div class="column">
                             <h4>Resource Planning</h4>
                             <ul>
-                                <li>Use -target for specific resources</li>
-                                <li>Implement resource parallelization</li>
+                                <li>Use <code>-target</code> only for exceptional cases</li>
+                                <li>Tune <code>-parallelism</code> for large graphs</li>
                                 <li>Minimize provider calls</li>
-                                <li>Cache data sources where possible</li>
+                                <li>Share outputs between workspaces instead of re-querying</li>
                             </ul>
                         </div>
                     </div>
-                    <pre><code class="language-bash"># Performance tuning commands
+                    <pre><code class="language-bash"># Performance tuning (local or CLI-driven runs)
 export TF_CLI_ARGS_plan="-parallelism=20"
 export TF_CLI_ARGS_apply="-parallelism=20"
 
-# Target specific resources for faster deployment
-terraform apply -target=module.network.aws_vpc.main
-terraform apply -target=module.security</code></pre>
+# Target specific resources (exceptional use only)
+terraform apply -target=module.network.aws_vpc.main</code></pre>
                 </section>
 
                 <section>
-                    <h3>Module Composition Patterns</h3>
+                    <h3>🧱 Module Composition Patterns</h3>
                     <pre><code class="language-hcl"># Hierarchical module structure
 module "foundation" {
   source = "./modules/foundation"
-  
-  vpc_cidr             = var.vpc_cidr
-  availability_zones   = var.availability_zones
-  environment         = var.environment
+
+  vpc_cidr           = var.vpc_cidr
+  availability_zones = var.availability_zones
+  environment        = var.environment
 }
 
 module "security" {
   source = "./modules/security"
-  
-  vpc_id              = module.foundation.vpc_id
-  private_subnet_ids  = module.foundation.private_subnet_ids
+
+  vpc_id             = module.foundation.vpc_id
+  private_subnet_ids = module.foundation.private_subnet_ids
   environment        = var.environment
-  
-  depends_on = [module.foundation]
 }
 
 module "applications" {
   source = "./modules/applications"
-  
+
   vpc_id                = module.foundation.vpc_id
   private_subnet_ids    = module.foundation.private_subnet_ids
   app_security_group_id = module.security.app_security_group_id
-  db_security_group_id  = module.security.db_security_group_id
-  
-  depends_on = [module.foundation, module.security]
 }</code></pre>
+                    <div class="info">
+                        <strong>No <code>depends_on</code> needed:</strong> referencing <code>module.foundation.vpc_id</code> already creates the dependency.
+                    </div>
                 </section>
 
                 <section>
-                    <h3>Terraform Cloud and Enterprise Features</h3>
+                    <h3>🏢 Terraform Cloud and Enterprise Features</h3>
                     <div class="enterprise">
-                        <h4>Terraform Cloud/Enterprise Benefits:</h4>
+                        <h4>HCP Terraform / Terraform Enterprise Benefits:</h4>
                         <ul>
-                            <li><strong>Remote Execution:</strong> Consistent environment and faster runs</li>
-                            <li><strong>Workspace Management:</strong> Centralized state and variable management</li>
-                            <li><strong>VCS Integration:</strong> Automated plan/apply from Git commits</li>
-                            <li><strong>Policy Enforcement:</strong> Sentinel policy as code</li>
+                            <li><strong>Remote Execution:</strong> Consistent environment for every run (Labs 10&ndash;12)</li>
+                            <li><strong>Workspace Management:</strong> Centralized state and variables (Lab 11)</li>
+                            <li><strong>VCS Integration:</strong> Automated plan/apply from Git (Lab 12)</li>
+                            <li><strong>Policy Enforcement:</strong> Sentinel and OPA policy sets</li>
                             <li><strong>Cost Estimation:</strong> Predict infrastructure costs</li>
                             <li><strong>Private Registry:</strong> Share modules securely</li>
                         </ul>
                     </div>
-                    <pre><code class="language-hcl"># Terraform Cloud configuration
-terraform {
-  cloud {
-    organization = "company-name"
-    
-    workspaces {
-      name = "production-infrastructure"
-    }
-  }
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}</code></pre>
+                    <div class="info">
+                        <strong>Terraform Enterprise</strong> is the self-hosted distribution of the same product; configurations use the same <code>cloud {}</code> block with an added <code>hostname</code>.
+                    </div>
                 </section>
             </section>
 
             <!-- Hands-on Activities -->
             <section>
-                <section>
-                    <h2>🛠️ Hands-on Activities</h2>
+                <section class="section-divider">
+                    <h2>🛠️ Hands-on Activities Recap</h2>
                 </section>
 
                 <section>
-                    <h3>Lab 10: Terraform Cloud Integration</h3>
+                    <h3>☁️ Lab 10: Terraform Cloud Integration and Remote Execution</h3>
                     <div class="success">
                         <p><strong>Focus:</strong> Remote Execution and State Management</p>
-                        <p><strong>Objective:</strong> Set up Terraform Cloud for remote infrastructure management</p>
+                        <p><strong>Objective:</strong> Connect a local configuration to a CLI-driven workspace</p>
                     </div>
-                    <h4>What you'll build:</h4>
+                    <h4>What you built:</h4>
                     <ul>
-                        <li>Terraform Cloud organization and workspace</li>
-                        <li>Remote state management with cloud backend</li>
-                        <li>Secure variable and credential management</li>
-                        <li>EC2 instance deployed via remote execution</li>
+                        <li>Terraform Cloud organization and CLI-driven workspace</li>
+                        <li><code>cloud {}</code> block + <code>terraform login</code></li>
+                        <li>Environment-variable credentials and Terraform workspace variables</li>
+                        <li>EC2 instance + security group deployed via remote execution</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h3>Lab 11: Terraform Cloud Workspaces</h3>
+                    <h3>👥 Lab 11: Terraform Cloud Workspaces</h3>
                     <div class="success">
                         <p><strong>Focus:</strong> Multi-Environment Workspace Management</p>
                         <p><strong>Objective:</strong> Create and manage multiple workspaces for environment separation</p>
                     </div>
-                    <h4>What you'll build:</h4>
+                    <h4>What you built:</h4>
                     <ul>
-                        <li>Development and staging workspaces</li>
+                        <li><code>lab11-development</code> and <code>lab11-staging</code> workspaces</li>
+                        <li>Tag-based <code>cloud {}</code> configuration</li>
                         <li>Environment-specific variable configuration</li>
-                        <li>Workspace tags and organization</li>
                         <li>CLI-driven workspace switching</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h3>Lab 12: VCS Integration and GitOps Workflows</h3>
+                    <h3>🔗 Lab 12: VCS-Driven Terraform Cloud with GitHub Integration</h3>
                     <div class="enterprise">
                         <p><strong>Focus:</strong> GitHub-Driven Infrastructure Automation</p>
-                        <p><strong>Objective:</strong> Connect GitHub to Terraform Cloud for automated deployments</p>
+                        <p><strong>Objective:</strong> Connect GitHub to Terraform Cloud so commits trigger runs</p>
                     </div>
-                    <h4>What you'll build:</h4>
+                    <h4>What you built:</h4>
                     <ul>
                         <li>GitHub repository with Terraform configuration</li>
                         <li>VCS-driven Terraform Cloud workspace</li>
-                        <li>Automatic plan on pull requests</li>
-                        <li>Branch-based environment management</li>
+                        <li>Runs triggered by pushes to <code>main</code></li>
+                        <li>Speculative plans on pull requests</li>
                     </ul>
                 </section>
             </section>
 
             <!-- Enterprise Best Practices -->
             <section>
-                <section>
-                    <h2>Enterprise Best Practices</h2>
+                <section class="section-divider">
+                    <h2>🏆 Enterprise Best Practices</h2>
                 </section>
 
                 <section>
-                    <h3>Organization and Team Structure</h3>
+                    <h3>👥 Organization and Team Structure</h3>
                     <div class="two-column">
                         <div class="column">
                             <h4>Repository Structure</h4>
@@ -2067,9 +2031,7 @@ terraform {
 ├── policies/
 │   ├── security/
 │   └── cost/
-└── scripts/
-    ├── deploy.sh
-    └── validate.sh</code></pre>
+└── tests/</code></pre>
                         </div>
                         <div class="column">
                             <h4>Team Responsibilities</h4>
@@ -2084,7 +2046,7 @@ terraform {
                 </section>
 
                 <section>
-                    <h3>Security and Compliance Framework</h3>
+                    <h3>🔒 Security and Compliance Framework</h3>
                     <div class="danger">
                         <h4>Security Checklist:</h4>
                         <ul>
@@ -2093,35 +2055,38 @@ terraform {
                             <li>✅ Network segmentation implemented</li>
                             <li>✅ IAM permissions follow least privilege</li>
                             <li>✅ Security groups restrict unnecessary access</li>
-                            <li>✅ Monitoring and logging enabled</li>
+                            <li>✅ Credentials stored as sensitive workspace variables</li>
                             <li>✅ Regular security scanning performed</li>
                         </ul>
                     </div>
                 </section>
 
                 <section>
-                    <h3>Disaster Recovery and Business Continuity</h3>
-                    <pre><code class="language-hcl"># Multi-region backup strategy
-module "primary_region" {
-  source = "./modules/infrastructure"
-  
-  providers = {
-    aws = aws.us_east
-  }
-  
-  environment      = var.environment
-  is_primary      = true
-  backup_region   = "us-west-2"
+                    <h3>🌐 Disaster Recovery and Business Continuity</h3>
+                    <pre><code class="language-hcl"># Multi-region DR - illustration only (the labs deploy to us-east-2 only)
+provider "aws" {
+  alias  = "primary"
+  region = "us-east-2"
 }
 
-module "backup_region" {
-  source = "./modules/infrastructure"
-  
-  providers = {
-    aws = aws.us_west
-  }
-  
-  environment     = var.environment
+provider "aws" {
+  alias  = "dr"
+  region = "us-west-2"
+}
+
+module "primary_region" {
+  source    = "./modules/infrastructure"
+  providers = { aws = aws.primary }
+
+  environment = var.environment
+  is_primary  = true
+}
+
+module "dr_region" {
+  source    = "./modules/infrastructure"
+  providers = { aws = aws.dr }
+
+  environment    = var.environment
   is_primary     = false
   replica_source = module.primary_region.backup_config
 }</code></pre>
@@ -2131,39 +2096,39 @@ module "backup_region" {
             <!-- Summary and Wrap-up -->
             <section>
                 <section>
-                    <h2>Module 3 Summary</h2>
-                    <h3>Advanced Techniques Mastered</h3>
+                    <h2>🎓 Module 3 Summary</h2>
+                    <h3>What You Learned Today</h3>
                     <ul>
-                        <li><strong>Multi-Cloud:</strong> Strategies for managing infrastructure across providers</li>
-                        <li><strong>State Management:</strong> Advanced patterns for large-scale deployments</li>
-                        <li><strong>CI/CD Integration:</strong> Automated testing and deployment pipelines</li>
-                        <li><strong>Policy as Code:</strong> Governance and compliance automation</li>
-                        <li><strong>Performance:</strong> Optimization techniques for enterprise scale</li>
-                        <li><strong>Security:</strong> Comprehensive security and compliance frameworks</li>
+                        <li><strong>Remote Execution:</strong> <code>cloud {}</code> block, <code>terraform login</code>, CLI-driven runs (Lab 10)</li>
+                        <li><strong>Workspaces:</strong> Tag-based selection, per-workspace variables, isolated state (Lab 11)</li>
+                        <li><strong>VCS-Driven Workflows:</strong> GitHub-triggered runs and speculative plans (Lab 12)</li>
+                        <li><strong>CI/CD:</strong> GitHub Actions, <code>terraform test</code>, Trivy, conftest</li>
+                        <li><strong>Policy as Code:</strong> Sentinel and OPA for governance</li>
+                        <li><strong>Scale:</strong> State splitting, module composition, team structure</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h2>Course Completion</h2>
+                    <h2>🎉 Course Completion</h2>
                     <div class="success">
                         <h3>🎉 Congratulations!</h3>
-                        <p>You've completed the comprehensive Terraform training course and are now equipped with:</p>
+                        <p>You've completed all 12 labs of the Terraform training course and are now equipped with:</p>
                         <ul>
                             <li>Deep understanding of Infrastructure as Code principles</li>
                             <li>Hands-on experience with Terraform core concepts and advanced features</li>
-                            <li>Real-world skills for enterprise Terraform deployments</li>
+                            <li>Real-world skills for team Terraform workflows in Terraform Cloud</li>
                             <li>Best practices for security, performance, and governance</li>
                         </ul>
                     </div>
                 </section>
 
                 <section>
-                    <h2>Next Steps and Certification</h2>
+                    <h2>🚀 Next Steps and Certification</h2>
                     <div class="info">
                         <h3>Recommended Next Steps:</h3>
                         <ul>
                             <li><strong>HashiCorp Certified:</strong> Terraform Associate certification</li>
-                            <li><strong>Advanced Learning:</strong> Terraform Cloud/Enterprise features</li>
+                            <li><strong>Advanced Learning:</strong> HCP Terraform policy sets, private registry, run tasks</li>
                             <li><strong>Specialization:</strong> Focus on specific cloud providers or use cases</li>
                             <li><strong>Community:</strong> Contribute to open-source Terraform modules</li>
                             <li><strong>Practice:</strong> Implement Terraform in your organization</li>
@@ -2172,12 +2137,12 @@ module "backup_region" {
                 </section>
 
                 <section>
-                    <h2>Questions & Discussion</h2>
+                    <h2>❓ Questions &amp; Discussion</h2>
                     <div style="text-align: center; margin-top: 50px;">
                         <h3>Thank you for participating!</h3>
                         <p>Ready to transform your infrastructure management?</p>
                         <br>
-                        <h4>Final Lab: Enterprise Infrastructure Project</h4>
+                        <h4>Reminder: destroy any remaining Lab 10&ndash;12 resources before you leave</h4>
                     </div>
                 </section>
             </section>

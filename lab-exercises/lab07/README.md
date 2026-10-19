@@ -26,13 +26,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
 ---
 
@@ -44,7 +45,7 @@ cd ~/environment/terraform_v2/lab-exercises/lab07
 ```
 
 ### Step 2: Review Lab Files
-This lab uses a clean file structure with variables separated from main configuration.
+This lab ships with a complete configuration — every block you'll study below is **already in the files**. Don't add or paste anything; open each file in the Cloud9 editor and read along. (Pasting a block a second time would cause a `Duplicate module call` or `Duplicate resource` error.)
 
 **variables.tf** - All variable definitions:
 ```hcl
@@ -61,6 +62,7 @@ variable "username" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
+  default     = "us-east-2"
 }
 
 variable "environment" {
@@ -70,7 +72,7 @@ variable "environment" {
 }
 ```
 
-**main.tf** - Provider, data sources, and locals:
+Open **main.tf** and review the top of the file — provider, data sources, and locals:
 ```hcl
 terraform {
   required_version = ">= 1.9"
@@ -85,6 +87,9 @@ terraform {
       version = "~> 3.1"
     }
   }
+
+  # Using local backend for this lab
+  # Remote state configuration is covered in Lab 6
 }
 
 provider "aws" {
@@ -102,14 +107,14 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
 # Local values for configuration
 locals {
   name_prefix = "${var.username}-${var.environment}"
-  azs         = slice(data.aws_availability_zones.available.names, 0, 2)
+  azs         = slice(data.aws_availability_zones.available.names, 0, 2) # Use only 2 AZs for simplicity
 
   common_tags = {
     Owner       = var.username
@@ -121,8 +126,8 @@ locals {
 }
 ```
 
-### Step 3: Add VPC Registry Module
-Add the following to your **main.tf** after the locals block:
+### Step 3: Review the VPC Registry Module
+In **main.tf**, review the `module "vpc"` block that follows the locals block:
 
 ```hcl
 # VPC using community module
@@ -139,7 +144,7 @@ module "vpc" {
 
   # Enable NAT for private subnets
   enable_nat_gateway = true
-  single_nat_gateway = true  # Cost optimization: single NAT gateway
+  single_nat_gateway = true # Cost optimization: single NAT gateway
   enable_vpn_gateway = false
 
   # Enable DNS
@@ -154,8 +159,8 @@ module "vpc" {
 
 > **Key Concept:** The `terraform-aws-modules/vpc/aws` module is one of the most popular Terraform Registry modules. It creates a complete VPC with subnets, routing, NAT gateways, and more — saving hundreds of lines of configuration.
 
-### Step 4: Add Security Group Registry Modules
-Append to **main.tf**:
+### Step 4: Review the Security Group Registry Modules
+In **main.tf**, review the `module "web_security_group"` and `module "ssh_security_group"` blocks:
 
 ```hcl
 # Web server security group using community module
@@ -181,7 +186,7 @@ module "ssh_security_group" {
   description = "Security group for SSH access"
   vpc_id      = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["10.0.0.0/16"]  # Only allow SSH from within VPC
+  ingress_cidr_blocks = ["10.0.0.0/16"] # Only allow SSH from within VPC
 
   tags = local.common_tags
 }
@@ -189,8 +194,8 @@ module "ssh_security_group" {
 
 > **Key Concept:** The security group module provides pre-built submodules for common protocols (HTTP, SSH, HTTPS, etc.), reducing boilerplate.
 
-### Step 5: Add EC2 Instances and Load Balancer
-Append to **main.tf**:
+### Step 5: Review the EC2 Instances and Load Balancer
+In **main.tf**, review the `aws_instance.web` resources and the Application Load Balancer resources that use the module outputs:
 
 ```hcl
 # Create EC2 instances using the security groups
@@ -229,7 +234,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [module.web_security_group.security_group_id]
-  subnets           = module.vpc.public_subnets
+  subnets            = module.vpc.public_subnets
 
   tags = merge(local.common_tags, {
     Type = "LoadBalancer"
@@ -284,8 +289,8 @@ resource "aws_lb_listener" "web" {
 
 ## 📦 **Exercise 7.2: S3 Registry Module and Outputs (15 minutes)**
 
-### Step 1: Add S3 Bucket Module
-Append to **main.tf**:
+### Step 1: Review the S3 Bucket Module
+In **main.tf**, review the `module "s3_logs"` block and the `random_string` it uses for a unique bucket name:
 
 ```hcl
 # S3 bucket using community module
@@ -303,6 +308,8 @@ module "s3_logs" {
     enabled = false
   }
 
+  # Encryption disabled for simplicity in shared training environment
+
   tags = merge(local.common_tags, {
     Type = "ApplicationLogs"
   })
@@ -316,17 +323,17 @@ resource "random_string" "bucket_suffix" {
 }
 ```
 
-### Step 2: Create Outputs File
-**outputs.tf:**
+### Step 2: Review the Outputs File
+Open **outputs.tf** and review how it consumes the module outputs:
 ```hcl
 output "vpc_info" {
   description = "VPC information from registry module"
   value = {
-    vpc_id             = module.vpc.vpc_id
-    vpc_cidr_block     = module.vpc.vpc_cidr_block
-    private_subnet_ids = module.vpc.private_subnets
-    public_subnet_ids  = module.vpc.public_subnets
-    nat_gateway_ids    = module.vpc.natgw_ids
+    vpc_id              = module.vpc.vpc_id
+    vpc_cidr_block      = module.vpc.vpc_cidr_block
+    private_subnet_ids  = module.vpc.private_subnets
+    public_subnet_ids   = module.vpc.public_subnets
+    nat_gateway_ids     = module.vpc.natgw_ids
     internet_gateway_id = module.vpc.igw_id
   }
 }
@@ -341,7 +348,7 @@ output "security_groups" {
 
 output "application_endpoint" {
   description = "Application load balancer DNS name"
-  value = "http://${aws_lb.main.dns_name}"
+  value       = "http://${aws_lb.main.dns_name}"
 }
 
 output "web_servers" {
@@ -366,8 +373,8 @@ output "s3_bucket" {
 }
 ```
 
-### Step 3: Confirm Your Environment Variables
-`terraform.tfvars` only sets `environment` for this lab — `username` and `aws_region` come from the env vars you set in Lab Setup:
+### Step 3: Confirm Your Username Variable
+`terraform.tfvars` only sets `environment` for this lab — `username` comes from the `TF_VAR_username` env var you set in Lab Setup, and `aws_region` uses its `us-east-2` default:
 
 ```hcl
 environment = "development"
@@ -375,8 +382,10 @@ environment = "development"
 
 Verify:
 ```bash
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> Do **not** add `username` to `terraform.tfvars` — values in `terraform.tfvars` override `TF_VAR_*` environment variables.
 
 ### Step 4: Deploy the Infrastructure
 ```bash
@@ -433,7 +442,7 @@ terraform destroy
 ### Key Concepts Learned
 - **Terraform Registry**: Central repository of community and verified modules
 - **Module Sources**: Using `terraform-aws-modules/<name>/aws` format
-- **Version Constraints**: Pinning with `~> 5.0` allows patch updates only
+- **Version Constraints**: `~> 5.0` allows any 5.x release at or above 5.0 (but never 6.0); use `~> 5.0.0` to allow patch updates only
 - **Module Composition**: Connecting modules via their outputs (e.g., `module.vpc.vpc_id`)
 - **Submodules**: Using `//modules/<name>` syntax for module subcomponents
 

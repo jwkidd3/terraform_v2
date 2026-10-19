@@ -26,13 +26,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
 ---
 
@@ -115,12 +116,12 @@ variable "cost_optimization" {
   type = object({
     use_spot_instances = bool
     enable_auto_stop   = bool
-    max_price         = number
+    max_price          = number
   })
   default = {
     use_spot_instances = false
     enable_auto_stop   = false
-    max_price         = 0.05
+    max_price          = 0.05
   }
 }
 ```
@@ -137,6 +138,12 @@ yum install -y httpd
 # Start and enable Apache
 systemctl start httpd
 systemctl enable httpd
+
+# Amazon Linux 2023 requires IMDSv2: fetch a session token first, then pass it
+# on every instance metadata request
+TOKEN=$(curl -sX PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
 
 # Create environment-specific content
 cat <<EOF > /var/www/html/index.html
@@ -161,8 +168,8 @@ cat <<EOF > /var/www/html/index.html
             <h3>Server Information</h3>
             <p><strong>Owner:</strong> ${username}</p>
             <p><strong>Environment:</strong> ${environment}</p>
-            <p><strong>Instance ID:</strong> $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>
-            <p><strong>Availability Zone:</strong> $(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)</p>
+            <p><strong>Instance ID:</strong> $INSTANCE_ID</p>
+            <p><strong>Availability Zone:</strong> $AZ</p>
             <p><strong>Server Time:</strong> $(date)</p>
         </div>
     </div>
@@ -229,7 +236,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
@@ -252,9 +259,14 @@ module "vpc" {
     for i, az in local.availability_zones : "10.0.${i + 101}.0/24"
   ]
 
+  # dev runs its instances in the public subnets (no NAT gateway), so they
+  # need a public IP to reach the internet for the user_data package install.
+  # VPC module v5 defaults this to false.
+  map_public_ip_on_launch = true
+
   # NAT Gateway only for non-dev environments
   enable_nat_gateway = local.use_private_subnets
-  single_nat_gateway = var.environment != "prod"  # Multiple NAT gateways only in prod
+  single_nat_gateway = var.environment != "prod" # Multiple NAT gateways only in prod
 
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -417,35 +429,37 @@ resource "aws_lb_listener" "app" {
 }
 ```
 
+> **Key Concept:** In `dev`, there are no private subnets or NAT gateway, so the Auto Scaling Group launches instances into the **public** subnets. `map_public_ip_on_launch = true` gives those instances a public IP so they can reach the internet to install Apache — without it (the VPC module's default is `false`), the `user_data` package install would fail.
+
 ### Step 5: Create Output Configuration
 **outputs.tf:**
 ```hcl
 output "environment_info" {
   description = "Environment configuration details"
   value = {
-    name                    = var.environment
-    instance_type          = var.instance_type
-    instance_count         = var.instance_count
-    high_availability      = var.enable_high_availability
-    monitoring_enabled     = var.enable_monitoring
-    backups_enabled        = var.enable_backups
-    backup_retention_days  = local.backup_retention
+    name                  = var.environment
+    instance_type         = var.instance_type
+    instance_count        = var.instance_count
+    high_availability     = var.enable_high_availability
+    monitoring_enabled    = var.enable_monitoring
+    backups_enabled       = var.enable_backups
+    backup_retention_days = local.backup_retention
   }
 }
 
 output "vpc_info" {
   description = "VPC configuration"
   value = {
-    vpc_id             = module.vpc.vpc_id
-    private_subnets    = module.vpc.private_subnets
-    public_subnets     = module.vpc.public_subnets
-    using_nat_gateway  = local.use_private_subnets
+    vpc_id            = module.vpc.vpc_id
+    private_subnets   = module.vpc.private_subnets
+    public_subnets    = module.vpc.public_subnets
+    using_nat_gateway = local.use_private_subnets
   }
 }
 
 output "application_endpoint" {
   description = "Application endpoint URL"
-  value = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : "Check EC2 instances for public IPs"
+  value       = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : (local.use_private_subnets ? "No load balancer - instances run in private subnets" : "No load balancer - browse to an instance public IP (EC2 console)")
 }
 
 output "security_groups" {
@@ -457,7 +471,7 @@ output "security_groups" {
 
 output "cost_optimization" {
   description = "Cost optimization settings applied"
-  value = var.cost_optimization
+  value       = var.cost_optimization
 }
 ```
 
@@ -465,30 +479,27 @@ output "cost_optimization" {
 
 ## 🚀 **Exercise 8.2: Environment-Specific Configurations (10 minutes)**
 
-### Step 1: Create the Default Variable File
-The `terraform.tfvars` file sets the default username. Environment-specific settings are loaded separately via `-var-file`.
+### Step 1: Review the Default Variable File
+The shipped `terraform.tfvars` contains only comments — it deliberately sets **no** values. Your `username` comes from the `TF_VAR_username` environment variable you exported in Lab Setup, and `aws_region` uses its `us-east-2` default. Environment-specific settings are loaded separately via `-var-file`.
 
-**terraform.tfvars:**
-```hcl
-username = "user1"  # Replace with your username
-```
+> **Do not add `username` to `terraform.tfvars`.** Values in `terraform.tfvars` override `TF_VAR_*` environment variables, so a hard-coded `username = "user1"` would make every student collide on the same resource names in the shared AWS account.
 
 ### Step 2: Create Development Environment Configuration
 **environments/dev.tfvars:**
 ```hcl
 # Development Environment Configuration
-environment               = "dev"
+environment              = "dev"
 instance_type            = "t3.micro"
 instance_count           = 1
 enable_monitoring        = false
-enable_backups          = false
+enable_backups           = false
 enable_high_availability = false
-allowed_cidrs = ["0.0.0.0/0"]  # Open for development
+allowed_cidrs            = ["0.0.0.0/0"] # Open for development
 
 cost_optimization = {
-  use_spot_instances = true   # Use spot instances to save costs
+  use_spot_instances = true # Use spot instances to save costs
   enable_auto_stop   = true
-  max_price         = 0.01
+  max_price          = 0.01
 }
 ```
 
@@ -496,21 +507,21 @@ cost_optimization = {
 **environments/staging.tfvars:**
 ```hcl
 # Staging Environment Configuration
-environment               = "staging"
+environment              = "staging"
 instance_type            = "t3.small"
 instance_count           = 2
 enable_monitoring        = true
-enable_backups          = true
+enable_backups           = true
 enable_high_availability = false
 allowed_cidrs = [
-  "10.0.0.0/8",     # Internal network
-  "172.16.0.0/12"   # VPN range
+  "10.0.0.0/8",   # Internal network
+  "172.16.0.0/12" # VPN range
 ]
 
 cost_optimization = {
-  use_spot_instances = false  # More stable for staging
+  use_spot_instances = false # More stable for staging
   enable_auto_stop   = false
-  max_price         = 0.05
+  max_price          = 0.05
 }
 ```
 
@@ -518,28 +529,32 @@ cost_optimization = {
 **environments/prod.tfvars:**
 ```hcl
 # Production Environment Configuration
-environment               = "prod"
+environment              = "prod"
 instance_type            = "t3.medium"
 instance_count           = 3
 enable_monitoring        = true
-enable_backups          = true
+enable_backups           = true
 enable_high_availability = true
 allowed_cidrs = [
-  "10.0.0.0/8"      # Only internal network
+  "10.0.0.0/8" # Only internal network
 ]
 
 cost_optimization = {
-  use_spot_instances = false  # Never use spot in production
+  use_spot_instances = false # Never use spot in production
   enable_auto_stop   = false
-  max_price         = 0.10
+  max_price          = 0.10
 }
 ```
 
 ### Step 5: Create and Deploy Environments
-The `terraform.tfvars` file is loaded automatically, providing the `username`. You then pass the environment-specific file with `-var-file` to supply the remaining variables.
+Your `username` comes from `TF_VAR_username`. You pass the environment-specific file with `-var-file` to supply the remaining variables.
 
 ```bash
-# Create the environment tfvars files with the content from Steps 2-4 above
+# Confirm your username is set
+echo "Username: $TF_VAR_username"
+
+# The environment tfvars files from Steps 2-4 are already in environments/
+ls environments/
 
 # Initialize Terraform
 terraform init

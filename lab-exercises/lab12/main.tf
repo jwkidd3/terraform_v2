@@ -9,10 +9,10 @@ terraform {
   }
 
   cloud {
-    organization = "REPLACE_WITH_YOUR_ORG"   # e.g., "user1-terraform-training"
+    organization = "REPLACE_WITH_YOUR_ORG" # e.g., "user1-terraform-training"
 
     workspaces {
-      name = "REPLACE_WITH_WORKSPACE_NAME"   # e.g., "vcs-lab12-user1"
+      name = "REPLACE_WITH_WORKSPACE_NAME" # e.g., "vcs-lab12-user1"
     }
   }
 }
@@ -39,7 +39,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
@@ -77,6 +77,10 @@ resource "aws_instance" "demo" {
     environment = var.environment
     app_version = var.app_version
   }))
+
+  # user_data only runs on first boot. Replacing the instance whenever the
+  # rendered script changes (e.g. a new app_version) makes the new page appear.
+  user_data_replace_on_change = true
 
   tags = merge(local.common_tags, {
     Name       = "${local.name_prefix}-demo"

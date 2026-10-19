@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.9"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -11,7 +11,7 @@ terraform {
       version = "~> 3.1"
     }
   }
-  
+
   # Using local backend for this lab
   # Remote state configuration is covered in Lab 6
 }
@@ -31,15 +31,15 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 
 # Local values for configuration
 locals {
   name_prefix = "${var.username}-${var.environment}"
-  azs         = slice(data.aws_availability_zones.available.names, 0, 2)  # Use only 2 AZs for simplicity
-  
+  azs         = slice(data.aws_availability_zones.available.names, 0, 2) # Use only 2 AZs for simplicity
+
   common_tags = {
     Owner       = var.username
     Environment = var.environment
@@ -63,7 +63,7 @@ module "vpc" {
 
   # Enable NAT for private subnets
   enable_nat_gateway = true
-  single_nat_gateway = true  # Cost optimization: single NAT gateway
+  single_nat_gateway = true # Cost optimization: single NAT gateway
   enable_vpn_gateway = false
 
   # Enable DNS
@@ -98,7 +98,7 @@ module "ssh_security_group" {
   description = "Security group for SSH access"
   vpc_id      = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["10.0.0.0/16"]  # Only allow SSH from within VPC
+  ingress_cidr_blocks = ["10.0.0.0/16"] # Only allow SSH from within VPC
 
   tags = local.common_tags
 }
@@ -109,7 +109,7 @@ resource "aws_instance" "web" {
 
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
-  
+
   subnet_id = module.vpc.private_subnets[count.index]
   vpc_security_group_ids = [
     module.web_security_group.security_group_id,
@@ -139,7 +139,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [module.web_security_group.security_group_id]
-  subnets           = module.vpc.public_subnets
+  subnets            = module.vpc.public_subnets
 
   tags = merge(local.common_tags, {
     Type = "LoadBalancer"

@@ -25,13 +25,14 @@ By the end of this lab, you will be able to:
 
 ## Lab Setup
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
 ---
 
@@ -66,10 +67,11 @@ variable "environment" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
+  default     = "us-east-2"
 }
 ```
 
-**terraform.tfvars** (only `environment` is set here; `username` and `aws_region` come from the env vars you exported in Lab Setup):
+**terraform.tfvars** (only `environment` is set here; `username` comes from the `TF_VAR_username` env var you exported in Lab Setup, and `aws_region` uses its `us-east-2` default):
 ```hcl
 environment = "development"
 ```
@@ -102,7 +104,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 

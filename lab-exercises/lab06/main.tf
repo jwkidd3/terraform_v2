@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.4"
+    }
   }
 }
 
@@ -16,6 +20,11 @@ provider "aws" {
 variable "username" {
   description = "Your unique username"
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
+  }
 }
 
 variable "aws_region" {
@@ -24,9 +33,14 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
+# Random suffix - S3 bucket names are global across ALL AWS accounts
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
 # S3 bucket for demonstration
 resource "aws_s3_bucket" "demo" {
-  bucket        = "${var.username}-state-demo-bucket"
+  bucket        = "${var.username}-state-demo-bucket-${random_id.bucket_suffix.hex}"
   force_destroy = true
 
   tags = {

@@ -136,22 +136,29 @@ docker ps
 
 ## 🐳 **Exercise 1.3: Your First Infrastructure as Code**
 
-### Step 1: Create Lab Directory
+The configuration files for this lab are already provided in the course repository. In this exercise you will review each one before running it.
+
+### Step 1: Navigate to the Lab Directory
 ```bash
-cd ~/environment
-mkdir terraform-lab1
-cd terraform-lab1
+cd ~/environment/terraform_v2/lab-exercises/lab01
+ls
 ```
 
-### Step 2: Create main.tf - Your First Infrastructure!
-Create your first Terraform file that manages Docker containers:
+You should see `main.tf`, `outputs.tf`, `terraform.tfvars`, and this `README.md`.
+
+### Step 2: Review main.tf - Your First Infrastructure!
+Open `main.tf`. This is your first Terraform file — it manages a Docker image and a container:
+
+```bash
+cat main.tf
+```
 
 ```hcl
 # main.tf - Your first Infrastructure as Code!
 
 terraform {
   required_version = ">= 1.9"
-  
+
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
@@ -169,6 +176,11 @@ provider "docker" {
 variable "username" {
   description = "Your unique username"
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
+  }
 }
 
 # Create a simple web server using Docker
@@ -180,12 +192,12 @@ resource "docker_image" "nginx" {
 resource "docker_container" "web" {
   image = docker_image.nginx.image_id
   name  = "${var.username}-my-first-container"
-  
+
   ports {
     internal = 80
     external = 8080
   }
-  
+
   # Add a custom index page
   upload {
     content = <<-EOF
@@ -223,13 +235,67 @@ resource "docker_container" "web" {
 }
 ```
 
-### Step 3: Create terraform.tfvars
-```hcl
-# terraform.tfvars - Your variable values
+**Key points:**
+- The `terraform` block pins the Terraform version and the Docker provider
+- The `username` variable has no default and a `validation` block — Terraform rejects anything other than 3-20 lowercase letters, numbers, and hyphens
+- `docker_container.web` references `docker_image.nginx.image_id`, so Terraform knows to pull the image before creating the container
 
-# Replace "user1" with your actual username
-username = "user1"
+### Step 3: Review outputs.tf
+Open `outputs.tf`. Outputs print useful values after every `terraform apply`:
+
+```bash
+cat outputs.tf
 ```
+
+```hcl
+# outputs.tf - Show important information about your infrastructure
+
+output "container_name" {
+  description = "Name of the Docker container"
+  value       = docker_container.web.name
+}
+
+output "container_port" {
+  description = "External port for accessing the web server"
+  value       = docker_container.web.ports[0].external
+}
+
+output "container_restart_policy" {
+  description = "Restart policy of the Docker container"
+  value       = docker_container.web.restart
+}
+
+output "web_url" {
+  description = "URL to access your web server locally"
+  value       = "http://localhost:${docker_container.web.ports[0].external}"
+}
+
+output "success_message" {
+  description = "Congratulations message"
+  value       = "🎉 Congratulations ${var.username}! You've successfully created infrastructure with Terraform!"
+}
+```
+
+### Step 4: Review terraform.tfvars
+```bash
+cat terraform.tfvars
+```
+
+```hcl
+# terraform.tfvars
+#
+# `username` is intentionally NOT set here. Provide it via the
+# TF_VAR_username environment variable so each student in the shared
+# classroom environment gets a unique value:
+#
+#     export TF_VAR_username="user1"   # replace with your assigned name
+```
+
+> **Note:** `username` is supplied **only** by the `TF_VAR_username` environment variable you exported in Exercise 1.2 — never put it in `terraform.tfvars`. A value in `terraform.tfvars` takes precedence over `TF_VAR_*` environment variables, so it would silently replace your assigned name. Confirm it is set:
+>
+> ```bash
+> echo $TF_VAR_username
+> ```
 
 ---
 
@@ -252,8 +318,8 @@ terraform plan
 ```
 
 **What you should see:**
-- Plan to add 2 resources (Docker image and container)
-- Detailed description of what will be created
+- `Plan: 2 to add, 0 to change, 0 to destroy.` (Docker image and container)
+- A `Changes to Outputs:` section listing the five outputs from `outputs.tf`
 
 ### Step 3: Apply the Configuration
 ```bash
@@ -262,28 +328,40 @@ terraform apply
 ```
 
 - Type `yes` when prompted
-- **You should see:** "Apply complete! Resources: 2 added"
+- **You should see:** "Apply complete! Resources: 2 added" followed by an `Outputs:` section
 
-### Step 4: View Your Success!
+### Step 4: View Your Outputs
+```bash
+# Show all outputs
+terraform output
+
+# Show a single output
+terraform output container_name
+
+# -raw prints just the value (no quotes) - handy in scripts
+terraform output -raw web_url
+```
+
+### Step 5: View Your Success!
 ```bash
 # Check your container is running
 docker ps
 
-# Get the container details
-docker inspect ${TF_VAR_username}-my-first-container
+# Get the container details (name comes from the container_name output)
+docker inspect $(terraform output -raw container_name)
 ```
 
-### Step 5: Test Your Web Server
+### Step 6: Test Your Web Server
 Since we're in Cloud9, we can't directly browse to localhost:8080, but we can test it:
 
 ```bash
-# Test your web server
-curl http://localhost:8080
+# Test your web server using the web_url output
+curl $(terraform output -raw web_url)
 
 # You should see your custom HTML page!
 ```
 
-### Step 6: View Terraform State
+### Step 7: View Terraform State
 ```bash
 # See what Terraform knows about your infrastructure
 terraform show
@@ -302,16 +380,18 @@ terraform state list
 3. **Terraform created** real infrastructure (Docker containers) from your code
 4. **Terraform tracks** the state of your infrastructure
 
-### Key Files Created:
+### Key Files:
 - `main.tf` - Your infrastructure definition (this IS your documentation!)
-- `terraform.tfvars` - Your configuration values
-- `terraform.tfstate` - Terraform's knowledge of your infrastructure
-- `.terraform/` - Terraform's working directory
+- `outputs.tf` - Values Terraform reports back after each apply
+- `terraform.tfvars` - Variable values (your `username` comes from `TF_VAR_username` instead)
+- `terraform.tfstate` - Terraform's knowledge of your infrastructure (created by `apply`)
+- `.terraform/` and `.terraform.lock.hcl` - Downloaded providers and their pinned versions (created by `init`)
 
 ### The Terraform Commands:
 - **terraform init** - Prepare your directory, download providers
 - **terraform plan** - Preview what changes will be made
 - **terraform apply** - Make the changes happen
+- **terraform output** - Read values exposed by `outputs.tf`
 - **terraform show** - View current infrastructure state
 
 ---
@@ -319,14 +399,6 @@ terraform state list
 ## 🧪 **Exercise 1.5: Experiment and Learn (Optional)**
 
 ### Try Making Changes:
-Edit your `terraform.tfvars` file to change the external port:
-
-```hcl
-# Try different ports
-username = "user1"  # Keep your username
-# No additional variables needed - experiment in main.tf
-```
-
 Edit `main.tf` to change the external port:
 ```hcl
 ports {
@@ -337,9 +409,10 @@ ports {
 
 Then run:
 ```bash
-terraform plan   # See what will change
+terraform plan   # See what will change (the container is replaced)
 terraform apply  # Apply the changes
-curl http://localhost:9090  # Test new port
+terraform output web_url             # Now shows port 9090
+curl $(terraform output -raw web_url)  # Test new port
 ```
 
 ---
@@ -425,7 +498,10 @@ sudo resize2fs /dev/xvda1
 **Solution**: Change the external port in main.tf to a different number
 
 ### Problem: "terraform: command not found"
-**Solution**: Re-run the installation commands from Exercise 1.1
+**Solution**: Re-run the installation commands from Exercise 1.2
+
+### Problem: "No value for required variable" or "Username must be 3-20 characters"
+**Solution**: Run `echo $TF_VAR_username`. If it is empty or wrong, re-run `export TF_VAR_username="userN"` with your assigned username (lowercase letters, numbers, and hyphens only)
 
 ### Problem: "Permission denied accessing Docker socket"
 **Solution**: Run `sudo usermod -a -G docker $USER` and restart Cloud9

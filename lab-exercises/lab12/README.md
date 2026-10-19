@@ -9,8 +9,8 @@
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
 - Connect a GitHub repository to Terraform Cloud
-- Trigger Terraform Cloud runs automatically from `git push`
-- Observe speculative plans for non-default branches
+- Trigger Terraform Cloud runs automatically from `git push` to the tracked branch
+- Observe speculative plans on pull requests
 - Compare CLI-driven and VCS-driven workflows
 
 > **Note on scope:** This lab focuses on the *workflow* — Git push triggering a remote run — not on building production infrastructure. The Terraform code deploys a single EC2 instance so you can spend your time on the VCS integration, not on waiting for an ALB to provision. Lab 9 already covers production-grade architecture.
@@ -26,13 +26,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace user1 with the username assigned by your instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> All resources deploy to **us-east-2**. In this lab both `username` and `aws_region` are entered as workspace variables (Exercise 12.2, Step 4).
 
 > **Key idea:** In Labs 10–11 you ran `terraform apply` from your shell and TFC executed the run. In this lab `git push` becomes the trigger — you will never run `terraform` locally after the setup.
 
@@ -94,25 +95,21 @@ EOF
 
 ## ☁️ **Exercise 12.2: Create the VCS-Driven Workspace (20 minutes)**
 
-### Step 1: Configure GitHub as a VCS Provider (one-time per organization)
+### Step 1: Decide How HCP Terraform Connects to GitHub
 
-Before TFC can install webhooks on your GitHub repos, your TFC organization needs GitHub.com registered as a **VCS Provider**. This is a one-time setup per organization — if you already did this for another lab, skip to Step 2.
+HCP Terraform (formerly Terraform Cloud) needs its own connection to GitHub so it can read your repository and be notified of pushes and pull requests.
 
-> The PAT you created in Exercise 12.1 is for command-line git operations only. TFC's webhook-driven runs use a separate **OAuth handshake** between TFC and GitHub.
+> The PAT you created in Exercise 12.1 is for command-line git operations only. HCP Terraform's VCS-driven runs use a separate connection between HCP Terraform and GitHub.
 
 **Pick one path:**
 
-#### Path A (recommended): GitHub App
-1. TFC → **Organization Settings** → **Providers** (or **VCS Providers**) → **Add a VCS Provider**
-2. Choose **GitHub.com (GitHub App)** if shown
-3. Click **Install the Terraform Cloud GitHub App on GitHub**
-4. On GitHub, install the app on **your account** and grant it access to **All repositories** (or at minimum the `terraform-vcs-lab12-<your-username>` repo)
-5. You're redirected back to TFC — GitHub.com is now listed as a connected provider
+#### Path A (recommended): HCP Terraform GitHub App
+**Nothing to configure up front.** The GitHub App does **not** need an organization-level VCS provider — you don't visit **Organization Settings → Providers** at all. You authorize the app for your GitHub account, and install it on your account, while creating the workspace in Step 2. Skip ahead to Step 2.
 
-#### Path B: GitHub OAuth App (custom)
-Use this if Path A isn't available in your TFC plan.
+#### Path B: GitHub OAuth App — GitHub.com (Custom)
+Use this only if your instructor directs you to, or if the GitHub App option isn't available to you. This is a one-time setup per HCP Terraform organization — if you already did this for another lab, skip to Step 2.
 
-1. TFC → **Organization Settings** → **Providers** → **Add a VCS Provider** → **GitHub.com (Custom)**
+1. TFC → **Organization Settings** → **Providers** (or **VCS Providers**) → **Add a VCS Provider** → **GitHub.com (Custom)**
 2. TFC displays a **Callback URL** like `https://app.terraform.io/auth/<id>/callback` — copy it
 3. In a new tab, GitHub → click your avatar → **Settings** → scroll to **Developer settings** (bottom of the left sidebar) → **OAuth Apps** → **New OAuth App**
 4. Fill in:
@@ -128,33 +125,41 @@ Use this if Path A isn't available in your TFC plan.
 7. Click **Generate a new client secret**, copy it **immediately** (GitHub only shows it once)
 8. Switch back to TFC, paste **Client ID** and **Client Secret**, then **Create VCS Provider**
 9. TFC redirects you to GitHub to authorize the OAuth app → click **Authorize**
-10. You're back in TFC with `GitHub.com` listed as a connected provider
+10. You're back in TFC with `GitHub.com (Custom)` listed as a connected provider
 
 ### Step 2: Create the Workspace
-1. https://app.terraform.io → your organization → **New** → **Workspace**
+1. https://app.terraform.io → your organization → **New** → **Workspace** (select your project, e.g. **Default Project**, if asked, then **Create**)
 2. Choose **Version control workflow** *(this is the key choice — different from Labs 10–11)*
-3. Select **GitHub.com** (now available because of Step 1)
-4. Pick your `terraform-vcs-lab12-<your-username>` repository
+3. On **Connect to a version control provider**:
+   - **Path A:** choose **GitHub** → **GitHub.com**. The first time, a GitHub pop-up asks you to authorize the HCP Terraform app (shown on GitHub as **Terraform Cloud** / **HCP Terraform**) for your GitHub account — click **Authorize**. You only do this once per GitHub account.
+   - **Path B:** choose the **GitHub.com (Custom)** provider you created in Step 1.
+4. Pick your `terraform-vcs-lab12-<your-username>` repository.
+   - **Path A — repository not listed?** The app isn't installed on your GitHub account yet. Open the **organization menu** above the repository list and choose **Add another organization**. In the GitHub pop-up, select your personal account and install the app for **All repositories** or **Only select repositories** (pick `terraform-vcs-lab12-<your-username>`), then click **Install**. Your repository now appears in the list.
 5. Workspace name: `vcs-lab12-<your-username>` *(e.g., `vcs-lab12-user1`)*
-6. **Create workspace**
+6. Leave the **Advanced options** at their defaults — the VCS branch left blank means the repository's default branch (`main`), and **Automatic speculative plans** stays enabled (you'll use it in Exercise 12.4)
+7. **Create workspace**
 
-### Step 3: Verify the GitHub Webhook
-TFC installed a webhook on your repo automatically:
-- GitHub repo → **Settings** → **Webhooks** — you should see an `app.terraform.io` entry (or the GitHub App, depending on Path A vs B)
-- TFC workspace → **Settings** → **Version Control** — shows the connected repo and webhook status
+### Step 3: Verify the VCS Connection
+- TFC workspace → **Settings** → **Version Control** — shows the connected repository and the tracked branch (default branch, `main`)
+- **Path A:** GitHub → click your avatar → **Settings** → **Applications** → **Installed GitHub Apps** → **Configure** next to the HCP Terraform app — under **Repository access**, confirm the app has access to `terraform-vcs-lab12-<your-username>` (**All repositories**, or the repo is in the selected list). *(Alternatively: repo → **Settings** → **GitHub Apps**.)*
+- **Path B:** GitHub repo → **Settings** → **Webhooks** — you should see an `app.terraform.io` entry with a recent successful delivery
 
-> **If no webhook appears:** the VCS provider in Step 1 wasn't installed correctly. Go back to **Organization Settings → Providers**, verify GitHub.com is listed and shows a green "connected" indicator. If using Path B, the most common gotcha is the Callback URL not matching exactly between GitHub and TFC.
+> **If a push doesn't trigger a run later in the lab**, check these in order:
+> 1. **Wrong branch** — the workspace only watches its tracked branch (`main`). Pushes to any other branch are ignored by design (see Exercise 12.4).
+> 2. **Path A: the app can't see the repo** — the HCP Terraform GitHub App was installed for *selected* repositories that don't include this one. Fix it under GitHub → **Settings** → **Applications** → **Installed GitHub Apps** → **Configure**.
+> 3. **Path B: no webhook / broken OAuth app** — go back to **Organization Settings → Providers** and verify GitHub.com (Custom) is listed and connected. The most common gotcha is the Callback URL not matching exactly between GitHub and TFC.
+> 4. **Brand-new workspace** — a workspace with no runs ignores VCS webhooks until its first run is started manually (Step 6).
 
 ### Step 4: Add Workspace Variables
 **Variables** tab:
 
 **Environment Variables** (AWS credentials, plus the destroy guardrail):
 
-| Key                     | Value                        | Sensitive |
-|-------------------------|------------------------------|-----------|
-| `AWS_ACCESS_KEY_ID`     | *your AWS access key*        | ✅        |
-| `AWS_SECRET_ACCESS_KEY` | *your AWS secret access key* | ✅        |
-| `CONFIRM_DESTROY`       | `1`                          |           |
+| Key                     | Value                                                | Sensitive |
+|-------------------------|------------------------------------------------------|-----------|
+| `AWS_ACCESS_KEY_ID`     | *the access key ID provided by your instructor*      | ✅        |
+| `AWS_SECRET_ACCESS_KEY` | *the secret access key provided by your instructor*  | ✅        |
+| `CONFIRM_DESTROY`       | `1`                                                  |           |
 
 > **Why `CONFIRM_DESTROY`?** Terraform Cloud requires this environment variable on VCS-driven workspaces before it will run a destroy plan. Set it now so the cleanup step at the end of the lab works.
 
@@ -163,9 +168,9 @@ TFC installed a webhook on your repo automatically:
 | Key          | Value                                   |
 |--------------|-----------------------------------------|
 | `username`   | *your assigned username (e.g. user1)*   |
-| `aws_region` | *your assigned region (e.g. us-east-2)* |
+| `aws_region` | `us-east-2`                             |
 
-> `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username and may be assigned a different region — you don't want either committed to GitHub. `environment` and `app_version` come from the `terraform.tfvars` file you just created.
+> `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username, and per-student values don't belong in the Git repository. (`aws_region` would also fall back to its `us-east-2` default; setting it keeps the workspace explicit.) `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 
 ### Step 5: Fill In the `cloud {}` Block
 Open `main.tf` in your repo and replace the two placeholders:
@@ -179,7 +184,7 @@ Open `main.tf` in your repo and replace the two placeholders:
   }
 ```
 
-### Step 6: Commit and Push — Watch the First Run Trigger
+### Step 6: Commit, Push, and Start the First Run
 ```bash
 git add .
 git commit -m "Initial VCS-driven Terraform Cloud configuration"
@@ -188,11 +193,13 @@ git push origin main
 
 > When prompted, use your **PAT** as the password.
 
-In the TFC workspace:
-1. A new run appears within a few seconds (source: GitHub)
+HCP Terraform requires the **first** run in a new VCS-driven workspace to be started manually — a workspace with no runs ignores VCS webhooks. In the TFC workspace:
+1. Click **New run** (or **Actions** → **Start new run**), choose **Plan and apply**, then **Start run**. HCP Terraform fetches the latest commit on `main` — the one you just pushed. *(If a run has already appeared on its own, use that one instead.)*
 2. Open the run and watch the plan stream
-3. Review the plan — one EC2 instance
+3. Review the plan — one EC2 instance and its security group
 4. **Confirm & Apply**
+
+From now on, every push to `main` triggers a run automatically.
 
 ---
 
@@ -217,20 +224,20 @@ git push origin main
 
 ### Step 3: Watch the Auto-Triggered Run
 1. Switch to the TFC UI immediately — a new run should appear within seconds
-2. The plan shows the `AppVersion` tag updating *and* the instance being replaced (because `user_data` changes force replacement)
+2. The plan shows the instance being **replaced** (`-/+`) with the new `AppVersion` tag — `main.tf` sets `user_data_replace_on_change = true` on `aws_instance.demo`, so a change to the rendered `user_data` script forces a new instance (user data only runs on first boot)
 3. **Confirm & Apply**
 
 ### Step 4: Verify the Change in the Browser
-1. Workspace → **States** → **Latest** → **Outputs** → copy `instance_url`
-2. Open it in your browser — the page should now read `App Version: v1.1.0`
+1. Workspace → **States** → **Latest** → **Outputs** → copy `instance_url` (the replacement instance has a new public IP)
+2. Give the new instance a minute or two to boot and run `user_data`, then open the URL in your browser — the page should now read `App Version: v1.1.0`
 
 > **What just happened:** you changed one line of HCL, pushed to GitHub, and the cloud provider rebuilt the instance — no `terraform` command from your shell. This is the foundation of GitOps.
 
 ---
 
-## 🔄 **Exercise 12.4: Speculative Plans on a Feature Branch (10 minutes)**
+## 🔄 **Exercise 12.4: Speculative Plans on a Pull Request (10 minutes)**
 
-VCS-driven workspaces run **speculative plans** for non-default branches — plans only, no apply. This is the foundation for PR-based review workflows.
+A VCS-driven workspace tracks **one** branch (here, `main`) and **ignores pushes to every other branch**. Instead, when you open a **pull request** that targets the tracked branch, HCP Terraform runs a **speculative plan** — a plan only, never an apply — and reports the result back on the pull request. This is the foundation for PR-based review workflows.
 
 ### Step 1: Create a Feature Branch
 ```bash
@@ -247,7 +254,7 @@ Edit `main.tf` and add **one new line** to the existing `common_tags` block — 
     ManagedBy   = "TerraformCloud"
     Lab         = "12"
     Workflow    = "VCS-driven"
-    CostCenter  = "Training"   # ← only this line is new
+    CostCenter  = "Training" # ← only this line is new
   }
 ```
 
@@ -258,16 +265,27 @@ git commit -m "Add CostCenter tag"
 git push origin feature/add-tags
 ```
 
-### Step 4: Observe the Speculative Plan in TFC
-1. TFC workspace → **Runs** tab → new run with a **"Plan only (speculative)"** badge
-2. Open it — the plan shows what *would* change if this branch were merged
-3. **No apply happens** — that's the point of speculative plans
+Check the workspace's **Runs** tab — **no new run appears**. That's expected: the push went to `feature/add-tags`, which the workspace doesn't track.
 
-### Step 5: (Optional) Merge via Pull Request
-1. GitHub → **Pull requests** → **New pull request**
+### Step 4: Open a Pull Request (required)
+1. GitHub → your repository → **Pull requests** → **New pull request** (or click **Compare & pull request** on the banner GitHub shows for your recently pushed branch)
 2. Base: `main` ← Compare: `feature/add-tags`
-3. Notice TFC posts the plan results to the PR (if your repo allows status checks)
-4. Merge — once merged into `main`, TFC triggers a real plan/apply
+3. **Create pull request**
+
+Opening the pull request is what triggers the speculative plan.
+
+### Step 5: Observe the Speculative Plan
+1. On the pull request page, look at the **checks** section near the bottom — an HCP Terraform / Terraform Cloud status check appears, first pending, then with a plan summary (the tag change updates the instance and security group **in place** — nothing is replaced)
+2. Click **Details** next to the check to open the run in HCP Terraform
+3. In the TFC workspace → **Runs** tab, the same run is listed and marked as a **speculative plan / plan only**
+4. **No apply happens** — there is no **Confirm & Apply** button. That's the point of speculative plans: reviewers see exactly what a change would do *before* it is merged
+
+> **No status check on the PR?** Confirm the PR's base branch is `main`; check that TFC workspace → **Settings** → **Version Control** → **Automatic speculative plans** is enabled; and, for Path A, that the HCP Terraform GitHub App has access to the repository (GitHub → **Settings** → **Applications** → **Installed GitHub Apps**). Pull requests opened from forks do not trigger speculative plans.
+
+### Step 6: (Optional) Merge the Pull Request
+1. On GitHub, **Merge pull request** → **Confirm merge**
+2. The merge is a new commit on `main`, so TFC triggers a real plan/apply run
+3. Review it and **Confirm & Apply** to roll out the `CostCenter` tag
 
 ---
 
@@ -275,9 +293,9 @@ git push origin feature/add-tags
 
 | Aspect             | CLI-Driven (Labs 10–11)              | VCS-Driven (Lab 12)                   |
 |--------------------|---------------------------------------|---------------------------------------|
-| Trigger            | `terraform apply` from your shell    | `git push` to the connected branch    |
+| Trigger            | `terraform apply` from your shell    | `git push` / merge to the tracked branch |
 | Source of truth    | Your local working directory         | GitHub repository                     |
-| Speculative plans  | Manual (`terraform plan`)            | Automatic on every branch push        |
+| Speculative plans  | Manual (`terraform plan`)            | Automatic on pull requests to the tracked branch |
 | Team collaboration | Each person runs locally             | Everyone collaborates through Git     |
 | Best for           | Iterative development, experiments   | Production change management          |
 
@@ -289,12 +307,12 @@ git push origin feature/add-tags
 - ✅ Created a GitHub repository and connected it to a VCS-driven TFC workspace
 - ✅ Triggered an automatic plan/apply by pushing to `main`
 - ✅ Triggered an update by editing a variable and pushing again
-- ✅ Observed a speculative plan on a feature branch (plan only, no apply)
+- ✅ Opened a pull request and observed its speculative plan (plan only, no apply)
 
 ### Key Concepts
 - **VCS-driven workflow** — TFC pulls code from GitHub on push; you don't run `terraform` locally
-- **Webhook integration** — GitHub posts to TFC's webhook URL on every push
-- **Speculative plans** — non-default branches get plans only, perfect for PR review
+- **Webhook integration** — GitHub notifies TFC of pushes and pull requests; the workspace acts only on its tracked branch
+- **Speculative plans** — pull requests against the tracked branch get plan-only runs reported back on the PR, perfect for review
 - **GitOps** — Git is the single source of truth for infrastructure state
 
 ---

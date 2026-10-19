@@ -2,7 +2,7 @@
 
 terraform {
   required_version = ">= 1.9"
-  
+
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
@@ -20,6 +20,11 @@ provider "docker" {
 variable "username" {
   description = "Your unique username"
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
+  }
 }
 
 # Create a simple web server using Docker
@@ -31,12 +36,12 @@ resource "docker_image" "nginx" {
 resource "docker_container" "web" {
   image = docker_image.nginx.image_id
   name  = "${var.username}-my-first-container"
-  
+
   ports {
     internal = 80
     external = 8080
   }
-  
+
   # Add a custom index page
   upload {
     content = <<-EOF

@@ -9,10 +9,10 @@ terraform {
   }
 
   cloud {
-    organization = "REPLACE_WITH_YOUR_ORG"   # e.g., "user1-terraform-training"
+    organization = "REPLACE_WITH_YOUR_ORG" # e.g., "user1-terraform-training"
 
     workspaces {
-      name = "REPLACE_WITH_WORKSPACE_NAME"   # e.g., "user1-terraform-cloud-lab10"
+      name = "REPLACE_WITH_WORKSPACE_NAME" # e.g., "user1-terraform-cloud-lab10"
     }
   }
 }
@@ -38,7 +38,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 

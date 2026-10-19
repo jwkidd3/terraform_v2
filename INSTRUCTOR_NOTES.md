@@ -80,7 +80,7 @@ For Labs 10–12, each student creates their own free-tier TFC organization.
 |------------------------|--------------------|---------------------------------|
 | `username`             | per-student        | from their assignment           |
 | `aws_region`           | **`us-east-2`**    | the class deployment region     |
-| `AWS_ACCESS_KEY_ID`    | env var, sensitive | the shared account's access key |
+| `AWS_ACCESS_KEY_ID`    | env var, sensitive | the shared account's access key — you hand this out (READMEs say "provided by your instructor") |
 | `AWS_SECRET_ACCESS_KEY`| env var, sensitive | matching secret                 |
 
 For Lab 12 specifically, also add `CONFIRM_DESTROY=1` (env var, not sensitive) so the destroy step at the end of the lab works.
@@ -89,9 +89,15 @@ For Lab 12 specifically, also add `CONFIRM_DESTROY=1` (env var, not sensitive) s
 
 **GitHub PAT (Lab 12):** walk through token creation live — first-time users miss the "copy the token NOW" step.
 
-**GitHub VCS Provider in TFC (Lab 12):** each student must configure GitHub.com as a VCS Provider at the **organization level** in TFC *before* they create a VCS-driven workspace. Without it, the per-workspace "Connect to GitHub" button completes but no webhook gets installed and pushes never trigger runs. Lab 12 Exercise 12.2 Step 1 walks through this; allow extra time (5–10 min) the first time students do it. Two paths:
-- **GitHub App** (preferred): Organization Settings → Providers → Add → GitHub.com (GitHub App) → install the HCP Terraform GitHub App on their account.
-- **OAuth App** (custom): students create a GitHub OAuth App, paste its Client ID + Client Secret into TFC. More moving parts; only use if the GitHub App path isn't available.
+**GitHub VCS connection in TFC (Lab 12):** Lab 12 Exercise 12.2 offers two paths; allow extra time (5–10 min) the first time students do it.
+- **GitHub App** (preferred, Path A): **no organization-level step is needed** — students do *not* go to Organization Settings → Providers. During workspace creation they pick **Version control workflow** → **GitHub** → **GitHub.com**, authorize the HCP Terraform app for their GitHub account in the pop-up, and — if their repo isn't listed — choose **Add another organization** from the organization menu above the repo list to install the app on their personal account (all repositories, or selected repositories including the lab repo).
+- **OAuth App** (Path B, **GitHub.com (Custom)**): configured once per TFC org at **Organization Settings → Providers**; students create a GitHub OAuth App and paste its Client ID + Client Secret into TFC. More moving parts; only use if the GitHub App path isn't available.
+
+**"My push didn't trigger a run" (Lab 12) — most common causes, in order:**
+1. **Pushing to a non-tracked branch.** A VCS workspace only acts on its tracked branch (`main`) and ignores pushes to other branches. In Exercise 12.4 the `feature/add-tags` push intentionally triggers nothing — the speculative plan comes from opening a **pull request** `main ← feature/add-tags`.
+2. **GitHub App not granted access to the repo** (Path A) — app installed for *selected* repos that don't include the lab repo. Fix: GitHub → Settings → Applications → Installed GitHub Apps → Configure.
+3. **Brand-new workspace** — HCP Terraform ignores VCS webhooks until the workspace's first run has been started manually (New run → Plan and apply). Lab 12 Step 6 tells students to do this.
+4. Path B only: missing repo webhook / Callback URL mismatch between GitHub and TFC.
 
 ---
 
@@ -144,7 +150,8 @@ Each lab is budgeted at 45 minutes. Lab 9 (largest local-state lab) and Lab 12 (
 ## 🩹 Known Friction Points
 
 - **Lab 4** S3 buckets sometimes take 2–3 min to fully delete; if a student hits `BucketAlreadyExists` on re-apply, they're waiting on AWS's name reservation timeout, not a Terraform bug.
-- **Lab 5** modules depend on the account's **default VPC in us-east-2**. If your shared account had its default VPC removed there, students get cryptic "no subnet specified" errors. Recreate with: `aws ec2 create-default-vpc --region us-east-2`.
+- **Lab 5 and Labs 10–12** depend on the account's **default VPC in us-east-2** (the Lab 10–12 EC2 instances and security groups don't specify a VPC or subnet). If your shared account had its default VPC removed there, students get cryptic "no subnet specified" / "VPCIdNotSpecified" errors. Recreate with: `aws ec2 create-default-vpc --region us-east-2`.
 - **Lab 7/8/9** ALB health checks need 2–3 minutes to mark targets healthy after first apply. Tell students to wait before `curl`-ing.
 - **Lab 10–12** `terraform login` writes a token to `~/.terraform.d/credentials.tfrc.json`. If Cloud9 recycles the home dir between sessions, students re-login.
-- **Fallback to another region**: if us-east-2 hits a transient issue, any student can switch with `export TF_VAR_aws_region=us-east-1` (or us-west-1/us-west-2) and rerun. All four regions have raised quotas.
+- **Fallback to another region**: if us-east-2 hits a transient issue, any student can switch with `export TF_VAR_aws_region=us-east-1` (or us-west-1/us-west-2) and rerun. All four regions have raised quotas. For Labs 10–12 (remote runs), change the `aws_region` **workspace variable** instead — local `TF_VAR_*` exports don't reach TFC.
+- **Labs 7–12 use Amazon Linux 2023** (`al2023-ami-2023.*-x86_64`; Amazon Linux 2 reached end of support 2026-06-30). AL2023 enforces IMDSv2, so any `user_data` that reads instance metadata must fetch a session token first (see `lab08/user_data.sh`). `yum` still works (it's an alias for `dnf`); `amazon-linux-extras` does not exist on AL2023.

@@ -1,10 +1,13 @@
 # terraform.tfvars - Variable Values
 #
-# Both `username` and `aws_region` are intentionally NOT set here — students
-# are spread across multiple AWS regions. Provide them via environment vars:
+# `username` is intentionally NOT set here. Provide it via the
+# TF_VAR_username environment variable (a value in this file would
+# override TF_VAR_username):
 #
-#     export TF_VAR_username="user1"        # your assigned username
-#     export TF_VAR_aws_region="us-east-2"  # your assigned region
+#     export TF_VAR_username="user1"   # your assigned username
+#
+# `aws_region` is not set either: every student deploys to us-east-2,
+# which is the variable's default.
 
 # Basic configuration
 environment = "dev"

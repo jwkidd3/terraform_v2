@@ -10,8 +10,8 @@ output "container_port" {
   value       = docker_container.web.ports[0].external
 }
 
-output "container_status" {
-  description = "Status of the Docker container"
+output "container_restart_policy" {
+  description = "Restart policy of the Docker container"
   value       = docker_container.web.restart
 }
 

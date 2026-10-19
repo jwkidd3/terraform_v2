@@ -25,13 +25,14 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username and Region
+### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned values from the instructor
+# IMPORTANT: Replace with your assigned username from the instructor
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
-echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
+echo "Username: $TF_VAR_username"
 ```
+
+> **Note:** `username` comes **only** from `TF_VAR_username` — do not add it to `terraform.tfvars` (a value there would override the environment variable). All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
 ---
 
@@ -42,7 +43,9 @@ echo "Username: $TF_VAR_username | Region: $TF_VAR_aws_region"
 cd ~/environment/terraform_v2/lab-exercises/lab06
 ```
 
-### Step 2: Create a Simple Infrastructure Configuration
+### Step 2: Review the Infrastructure Configuration
+The configuration is already provided in the lab directory. Review `main.tf` (you will examine `outputs.tf` in Exercise 6.4):
+
 **main.tf:**
 ```hcl
 terraform {
@@ -53,6 +56,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.4"
+    }
   }
 }
 
@@ -60,20 +67,30 @@ provider "aws" {
   region = var.aws_region
 }
 
+variable "username" {
+  description = "Your unique username"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
+    error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
+  }
+}
+
 variable "aws_region" {
-  description = "AWS region"
+  description = "AWS region for resources"
   type        = string
   default     = "us-east-2"
 }
 
-variable "username" {
-  description = "Your unique username"
-  type        = string
+# Random suffix - S3 bucket names are global across ALL AWS accounts
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
 }
 
 # S3 bucket for demonstration
 resource "aws_s3_bucket" "demo" {
-  bucket        = "${var.username}-state-demo-bucket"
+  bucket        = "${var.username}-state-demo-bucket-${random_id.bucket_suffix.hex}"
   force_destroy = true
 
   tags = {
@@ -127,6 +144,8 @@ terraform init
 terraform plan -var="username=$TF_VAR_username"
 terraform apply -var="username=$TF_VAR_username" -auto-approve
 ```
+
+The plan should show `Plan: 6 to add, 0 to change, 0 to destroy.` (the random suffix, the bucket, its versioning configuration, and three objects). The bucket name ends with a random suffix because S3 bucket names are global across all AWS accounts — read the full name at any time with `terraform output -raw bucket_name`.
 
 ### Step 4: Examine the State File
 ```bash
@@ -184,14 +203,15 @@ terraform plan -var="username=$TF_VAR_username"
 ### Step 4: Practice Safe State Operations
 ```bash
 # Create a backup of your state file
-cp terraform.tfstate terraform.tfstate.backup
+# (use a distinct name — Terraform overwrites terraform.tfstate.backup itself)
+cp terraform.tfstate terraform.tfstate.manual-backup
 
 # Remove a resource from state (but not from AWS)
 terraform state rm 'aws_s3_object.demo_files[2]'
 
 # Verify the resource is gone from state but still exists in AWS
 terraform state list
-aws s3 ls s3://${TF_VAR_username}-state-demo-bucket/ --recursive
+aws s3 ls s3://$(terraform output -raw bucket_name)/ --recursive
 ```
 
 ---
@@ -201,7 +221,8 @@ aws s3 ls s3://${TF_VAR_username}-state-demo-bucket/ --recursive
 ### Step 1: Import Lost Resource
 ```bash
 # Import the resource back into state
-terraform import 'aws_s3_object.demo_files[2]' ${TF_VAR_username}-state-demo-bucket/demo/file-3.txt
+# (the import ID for an S3 object is <bucket name>/<key>)
+terraform import 'aws_s3_object.demo_files[2]' $(terraform output -raw bucket_name)/demo/file-3.txt
 
 # Verify it's back in state
 terraform state list | grep demo_files
@@ -232,7 +253,70 @@ Create **state-best-practices.md:**
 - Understand state file contents before sharing
 ```
 
-### Step 3: Cleanup and State Verification
+---
+
+## 🎯 **Exercise 6.4: Advanced State Concepts (5 minutes)**
+
+### Step 1: Review outputs.tf
+`outputs.tf` has been in the lab directory since Exercise 6.1, so its values were recorded in state by your first `terraform apply`:
+
+```hcl
+# outputs.tf - State and Infrastructure Information
+
+output "state_info" {
+  description = "Information about current state management"
+  value = {
+    backend_type   = "local"
+    state_location = "${path.cwd}/terraform.tfstate"
+    workspace      = terraform.workspace
+    state_file     = "terraform.tfstate"
+  }
+}
+
+output "bucket_name" {
+  description = "Name of the demo S3 bucket (includes a random suffix)"
+  value       = aws_s3_bucket.demo.id
+}
+
+output "infrastructure_summary" {
+  description = "Summary of managed infrastructure"
+  value       = local.bucket_info
+}
+
+output "best_practices" {
+  description = "State management reminders"
+  value = {
+    backup_state   = "Always backup state before major operations"
+    unique_naming  = "Use username prefixes for shared environments"
+    state_security = "State files may contain sensitive information"
+    communication  = "Coordinate with team for shared infrastructure"
+  }
+}
+```
+
+> **Key Concept:** Output values live in the state file alongside resources. `terraform output` reads them straight from state — it does not contact AWS — which is why other tools and scripts can rely on it.
+
+### Step 2: Verify Outputs
+```bash
+# Show all outputs
+terraform output
+
+# Show specific output
+terraform output state_info
+
+# Print a single raw value (used by the commands earlier in this lab)
+terraform output -raw bucket_name
+
+# Outputs are stored in the state file itself
+jq '.outputs | keys' terraform.tfstate
+```
+
+---
+
+## 🧹 **Cleanup and State Verification**
+
+Destroy everything this lab created so nothing is left running in the shared account:
+
 ```bash
 # Verify all resources before cleanup
 terraform state list
@@ -245,53 +329,12 @@ terraform destroy -var="username=$TF_VAR_username" -auto-approve
 
 # Verify state is empty
 terraform state list
+
+# Verify the bucket is gone
+aws s3 ls | grep "${TF_VAR_username}-state-demo"
 ```
 
----
-
-## 🎯 **Exercise 6.4: Advanced State Concepts (5 minutes)**
-
-### Step 1: Create outputs.tf
-```hcl
-# outputs.tf - State and Infrastructure Information
-
-output "state_info" {
-  description = "Information about current state management"
-  value = {
-    backend_type      = "local"
-    state_location    = "${path.cwd}/terraform.tfstate"
-    workspace         = terraform.workspace
-    state_file        = "terraform.tfstate"
-  }
-}
-
-output "infrastructure_summary" {
-  description = "Summary of managed infrastructure"
-  value = local.bucket_info
-}
-
-output "best_practices" {
-  description = "State management reminders"
-  value = {
-    backup_state     = "Always backup state before major operations"
-    unique_naming    = "Use username prefixes for shared environments"
-    state_security   = "State files may contain sensitive information"
-    communication    = "Coordinate with team for shared infrastructure"
-  }
-}
-```
-
-### Step 2: Verify Outputs
-```bash
-# Apply to create outputs
-terraform apply -var="username=$TF_VAR_username" -auto-approve
-
-# Show outputs
-terraform output
-
-# Show specific output
-terraform output state_info
-```
+`terraform destroy` should report `Destroy complete! Resources: 6 destroyed.`, and both of the last two commands should return nothing.
 
 ---
 

@@ -10,9 +10,14 @@ output "state_info" {
   }
 }
 
+output "bucket_name" {
+  description = "Name of the demo S3 bucket (includes a random suffix)"
+  value       = aws_s3_bucket.demo.id
+}
+
 output "infrastructure_summary" {
   description = "Summary of managed infrastructure"
-  value = local.bucket_info
+  value       = local.bucket_info
 }
 
 output "best_practices" {

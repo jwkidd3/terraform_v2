@@ -37,15 +37,14 @@ All configuration files for this lab have been pre-created. You will review each
 # Navigate to the lab directory
 cd ~/environment/terraform_v2/lab-exercises/lab03
 
-# Set your username and region (use values assigned by your instructor)
+# Set your username (use the value assigned by your instructor)
 export TF_VAR_username="user1"
-export TF_VAR_aws_region="us-east-2"
 
 # Verify AWS access
 aws sts get-caller-identity
 ```
 
-> **Note:** Replace `user1` and `us-east-2` with the values assigned to you by your instructor. `terraform.tfvars` no longer hardcodes these — the env vars are the single source of truth.
+> **Note:** Replace `user1` with the username assigned to you by your instructor. `username` is supplied only by `TF_VAR_username` — never add it to `terraform.tfvars`, because a value there overrides the environment variable. All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
 ---
 
@@ -188,8 +187,18 @@ variable "tags" {
 Open `terraform.tfvars` to see how values are assigned to these complex variables:
 
 ```hcl
+# terraform.tfvars - Variable Values
+#
+# `username` is intentionally NOT set here. Provide it via the
+# TF_VAR_username environment variable (a value in this file would
+# override TF_VAR_username):
+#
+#     export TF_VAR_username="user1"   # your assigned username
+#
+# `aws_region` is not set either: every student deploys to us-east-2,
+# which is the variable's default.
+
 # Basic configuration
-username    = "user1" # Replace with your assigned username
 environment = "dev"
 
 # Application configuration
@@ -223,6 +232,8 @@ cost_allocation = {
 }
 ```
 
+> **Note:** `username` and `aws_region` are not in this file. `username` comes from `TF_VAR_username`, and `aws_region` uses its `us-east-2` default.
+
 > **Key Concept:** Notice how each complex variable value matches the structure defined by its `type` constraint in `variables.tf`. Terraform will return a clear error if any field is missing or has the wrong type.
 
 ---
@@ -235,7 +246,7 @@ In this exercise, you will review how data sources discover existing AWS resourc
 
 Open `data.tf` and examine the data sources. These query AWS for existing resources rather than creating new ones.
 
-**AMI lookup** -- Finds the latest Amazon Linux 2 AMI dynamically:
+**AMI lookup** -- Finds the latest Amazon Linux 2023 AMI dynamically:
 
 ```hcl
 data "aws_ami" "amazon_linux" {
@@ -244,7 +255,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
@@ -348,8 +359,7 @@ locals {
 
   # Resource naming patterns
   resource_names = {
-    web_sg     = "${local.name_prefix}-web-sg"
-    s3_bucket  = "${local.name_prefix}-logs"
+    web_sg       = "${local.name_prefix}-web-sg"
     ec2_instance = "${local.name_prefix}-web"
   }
 }

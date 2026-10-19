@@ -1,7 +1,7 @@
 variable "username" {
   description = "Your unique username"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[a-z0-9-]{3,20}$", var.username))
     error_message = "Username must be 3-20 characters: lowercase letters, numbers, and hyphens."
@@ -65,11 +65,11 @@ variable "cost_optimization" {
   type = object({
     use_spot_instances = bool
     enable_auto_stop   = bool
-    max_price         = number
+    max_price          = number
   })
   default = {
     use_spot_instances = false
     enable_auto_stop   = false
-    max_price         = 0.05
+    max_price          = 0.05
   }
 }
