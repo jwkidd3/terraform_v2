@@ -103,12 +103,14 @@ For Lab 12 specifically, also add `CONFIRM_DESTROY=1` (env var, not sensitive) s
 
 ## ☁️ Cloud9 Environment Prep
 
-All Cloud9 IDEs are provisioned in **`us-east-1`**. In Lab 1, Exercise 1.2, students run `lab-exercises/lab01/setup.sh <username>`. The script grows the root EBS volume to 100 GB, installs Terraform 1.9.8, unzip, jq and git, starts Docker, and saves `TF_VAR_username` to `~/.bashrc`. It is safe to re-run.
+All Cloud9 IDEs are provisioned in **`us-east-1`** with connection type **Secure Shell (SSH)**, not AWS Systems Manager (SSM). Lab 1, Exercise 1.1 tells students to choose SSH. Check this while they create their environments: the connection type can't be changed afterwards, so a wrong choice means deleting and recreating the environment.
+
+In Lab 1, Exercise 1.2, students run `lab-exercises/lab01/setup.sh <username>`. The script grows the root EBS volume to 100 GB, installs Terraform 1.9.8, unzip, jq and git, starts Docker, and saves `TF_VAR_username` to `~/.bashrc`. It is safe to re-run.
 
 **IAM:** the resize calls `ec2:DescribeInstances`, `ec2:DescribeVolumes`, `ec2:ModifyVolume` and `ec2:DescribeVolumesModifications` from the Cloud9 instance's credentials. If `ec2:ModifyVolume` is denied, the script prints a warning and continues on the original disk. Grant the permission, or resize the volumes yourself beforehand. Budget: 100 GB gp2/gp3 × N students for the length of the class.
 
 Verify on a clean IDE (after `setup.sh` and `source ~/.bashrc`):
-1. IDE is in `us-east-1` (check the URL or Cloud9 console)
+1. IDE is in `us-east-1` and its connection type is **SSH** (Cloud9 console → environment details)
 2. `df -h /` shows ~100G, and `terraform version` reports `>= 1.9`
 3. `docker --version` works (Lab 1 uses Docker)
 4. `aws sts get-caller-identity` returns the shared account
