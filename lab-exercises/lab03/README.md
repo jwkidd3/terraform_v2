@@ -37,14 +37,18 @@ All configuration files for this lab have been pre-created. You will review each
 # Navigate to the lab directory
 cd ~/environment/terraform_v2/lab-exercises/lab03
 
-# Set your username (use the value assigned by your instructor)
-export TF_VAR_username="user1"
-
 # Verify AWS access
 aws sts get-caller-identity
 ```
 
-> **Note:** Replace `user1` with the username assigned to you by your instructor. `username` is supplied only by `TF_VAR_username` — never add it to `terraform.tfvars`, because a value there overrides the environment variable. All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
+```bash
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
+echo "Username: $TF_VAR_username"
+```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
+
+> **Note:** `username` is supplied only by `TF_VAR_username` — never add it to `terraform.tfvars`, because a value there overrides the environment variable. All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
 ---
 
@@ -145,6 +149,12 @@ variable "security_config" {
     allowed_cidr_blocks = list(string)
     backup_enabled      = bool
   })
+  default = {
+    enable_encryption   = false
+    enable_logging      = true
+    allowed_cidr_blocks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    backup_enabled      = true
+  }
   validation {
     condition = alltrue([
       for cidr in var.security_config.allowed_cidr_blocks :
@@ -189,11 +199,11 @@ Open `terraform.tfvars` to see how values are assigned to these complex variable
 ```hcl
 # terraform.tfvars - Variable Values
 #
-# `username` is intentionally NOT set here. Provide it via the
-# TF_VAR_username environment variable (a value in this file would
-# override TF_VAR_username):
+# `username` is intentionally NOT set here (a value in this file would
+# override TF_VAR_username). Your username comes from TF_VAR_username,
+# which lab01/setup.sh saved to ~/.bashrc in Lab 1:
 #
-#     export TF_VAR_username="user1"   # your assigned username
+#     echo "$TF_VAR_username"   # confirm it is set (else: source ~/.bashrc)
 #
 # `aws_region` is not set either: every student deploys to us-east-2,
 # which is the variable's default.

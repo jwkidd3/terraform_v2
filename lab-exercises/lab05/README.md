@@ -26,10 +26,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned username from the instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > **Note:** `username` comes **only** from `TF_VAR_username` — do not add it to `terraform.tfvars` (a value there would override the environment variable). All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
@@ -398,13 +399,56 @@ Answer these questions about your module:
 3. **Best Practices**: What Terraform best practices does this module implement?
 4. **Conditional Resources**: How does the `enable_monitoring` variable control CloudWatch alarm creation?
 
-### Step 2: Test Module Validation
-Try these commands to see variable validation in action:
+### Step 2: Test Variable Validation
+Validation rules run at two levels: on the **root** module's own variables, and on each **module**'s input variables.
+
+**Root module validation** — a `-var` flag on the command line overrides `TF_VAR_username` for this one command, so you can try an invalid value safely:
 
 ```bash
-# This should fail validation - try it!
-terraform apply -var="username=USER-123-INVALID"
+# Rejected by the username validation in the ROOT variables.tf
+terraform plan -var="username=USER-123-INVALID"
 ```
+
+**Expected error (excerpt):**
+```
+Error: Invalid value for variable
+
+  on variables.tf line 1:
+   1: variable "username" {
+    │ var.username is "USER-123-INVALID"
+
+Username must be 3-20 characters: lowercase letters, numbers, and hyphens.
+```
+
+The root module stops here, so the module's own `username` check is never reached. To see a **module-level** validation error, pass a module input that only the module validates. The module accepts `environment` values `dev`, `staging`, or `prod`. In `main.tf`, temporarily change the `dev_blog` module's environment:
+
+```hcl
+module "dev_blog" {
+  ...
+  environment       = "development" # temporarily invalid
+  ...
+}
+```
+
+```bash
+terraform validate
+```
+
+**Expected error (excerpt):**
+```
+Error: Invalid value for variable
+
+  on main.tf line 22, in module "dev_blog":
+  22:   environment       = "development"
+    │ var.environment is "development"
+
+Environment must be dev, staging, or prod.
+
+This was checked by the validation rule at
+modules/web-application/variables.tf:27,3-13.
+```
+
+The error points at the module call in `main.tf` but names the rule in `modules/web-application/variables.tf` — the module protects itself no matter who calls it. **Change `environment` back to `"dev"`** and confirm `terraform validate` reports `Success! The configuration is valid.`
 
 ---
 

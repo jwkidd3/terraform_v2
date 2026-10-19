@@ -9,7 +9,7 @@ terraform {
   }
 
   cloud {
-    organization = "REPLACE_WITH_YOUR_ORG" # e.g., "user1-terraform-training"
+    organization = "REPLACE_WITH_YOUR_ORG" # your exact org name from Lab 10, e.g. "user1-terraform-training" (or "...-jd" if you added a suffix)
 
     # Using `tags` (not `name`) is what lets one configuration target
     # multiple workspaces. Every workspace tagged "lab11" becomes

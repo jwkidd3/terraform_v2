@@ -42,15 +42,15 @@ terraform_v2/
 │   ├── lab01/                         # Lab 1: Introduction to Terraform with Docker
 │   ├── lab02/                         # Lab 2: AWS Infrastructure with Terraform
 │   ├── lab03/                         # Lab 3: Advanced Variables and Configuration
-│   ├── lab04/                         # Lab 4: Resource Dependencies and Lifecycle
+│   ├── lab04/                         # Lab 4: Resource Dependencies and Lifecycle Management
 │   ├── lab05/                         # Lab 5: Creating and Using Terraform Modules
-│   ├── lab06/                         # Lab 6: Local State Management
-│   ├── lab07/                         # Lab 7: Working with Registry Modules
+│   ├── lab06/                         # Lab 6: Local State Management and Best Practices
+│   ├── lab07/                         # Lab 7: Working with Terraform Registry Modules
 │   ├── lab08/                         # Lab 8: Multi-Environment Deployment Patterns
 │   ├── lab09/                         # Lab 9: VPC Networking and 2-Tier Architecture
-│   ├── lab10/                         # Lab 10: Terraform Cloud Integration
+│   ├── lab10/                         # Lab 10: Terraform Cloud Integration and Remote Execution
 │   ├── lab11/                         # Lab 11: Terraform Cloud Workspaces
-│   └── lab12/                         # Lab 12: VCS-Driven Terraform Cloud
+│   └── lab12/                         # Lab 12: VCS-Driven Terraform Cloud with GitHub Integration
 ├── presentations/                     # Theory presentations (Reveal.js)
 │   ├── module1_core_concepts.html
 │   ├── module2_configuration.html
@@ -71,7 +71,7 @@ terraform_v2/
 ### Prerequisites
 - **AWS Cloud9** environment with appropriate IAM permissions
 - **Terraform Cloud** account (free tier sufficient)
-- **GitHub** account (for Labs 10-12)
+- **GitHub** account (for Lab 12)
 
 ## Learning Outcomes
 

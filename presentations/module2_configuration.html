@@ -117,10 +117,10 @@
             background-color: transparent;
             border: none;
             padding: 8px;
-            font-size: 0.55em;
+            font-size: 0.7em;
             line-height: 1.15;
             color: #f8f8f2;
-            max-height: 560px;
+            max-height: 700px;
             overflow-y: auto;
             display: block;
             word-wrap: break-word;
@@ -552,7 +552,7 @@
             <!-- Title Slide -->
             <section class="title-slide">
                 <div class="terraform-logo"></div>
-                <h1>Module 2: Mastering Terraform Configuration</h1>
+                <h1><span class="emoji">⚙️</span> Module 2: Mastering Terraform Configuration</h1>
                 <h2>Advanced Configuration Management & Enterprise Best Practices</h2>
                 <div class="progress-bar" style="width: 300px; margin: 30px auto;">
                     <div class="progress-fill" style="width: 67%;"></div>
@@ -754,10 +754,10 @@
                 </div>
             </section>
 
-            <!-- Section 1: Data Sources & Integration -->
+            <!-- Section 1: Data Sources & State Management -->
             <section>
                 <section class="section-divider">
-                    <h2>📊 Section 1: Data Sources & Integration</h2>
+                    <h2>📊 Section 1: Data Sources & State Management</h2>
                     <p>Integrate existing infrastructure and discover resources dynamically</p>
                 </section>
 
@@ -922,11 +922,11 @@ import {
     bucket       = "my-team-tf-state"
     key          = "app/terraform.tfstate"
     region       = "us-east-2"
-    use_lockfile = true # S3 native locking (Terraform >= 1.10)
+    use_lockfile = true # S3 native locking (Terraform >= 1.11)
   }
 }</code></pre>
                             <div class="highlight">
-                                <p><strong>💡 Note:</strong> DynamoDB-based locking (<code>dynamodb_table</code>) is deprecated in favor of <code>use_lockfile</code>. A stuck lock can be cleared with <code>terraform force-unlock LOCK_ID</code> - only when you are sure no run is active.</p>
+                                <p><strong>💡 Note:</strong> S3 native locking is GA in Terraform 1.11, which also deprecates DynamoDB-based locking (<code>dynamodb_table</code>). It is not available on the class's Terraform 1.9.8 - the labs use local state. A stuck lock can be cleared with <code>terraform force-unlock LOCK_ID</code> - only when you are sure no run is active.</p>
                             </div>
                         </div>
                     </div>
@@ -1101,8 +1101,9 @@ output "internet_gateway_id" {
 
 # Reference module outputs
 resource "aws_instance" "web" {
-  ami       = data.aws_ami.ubuntu.id
-  subnet_id = module.networking.private_subnet_ids[0]
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t3.micro"
+  subnet_id     = module.networking.private_subnet_ids[0]
 
   tags = {
     Name = "${var.environment}-web-server"
@@ -1119,7 +1120,7 @@ resource "aws_instance" "web" {
   source = "./modules/networking"
 }</code></pre>
                         </div>
-                        <div class="column">
+                        <div class="column" style="flex: 2;">
                             <h4>Remote Modules</h4>
                             <pre><code class="language-hcl"># Git repository
 module "vpc" {
@@ -1140,7 +1141,7 @@ module "vpc" {
                 <section>
                     <h3>🗂️ Composing Registry Modules (Lab 7 Pattern)</h3>
                     <div class="two-column">
-                        <div class="column">
+                        <div class="column" style="flex: 1.3;">
                             <pre><code class="language-hcl">module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0" # any 5.x release
@@ -1169,7 +1170,7 @@ module "s3_logs" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 3.0"
 
-  bucket        = "${local.name_prefix}-app-logs-${random_string.suffix.result}"
+  bucket        = "${local.name_prefix}-app-logs-${random_string.bucket_suffix.result}"
   force_destroy = true
 }</code></pre>
                         </div>
@@ -1396,7 +1397,13 @@ output "database_connection" {
     username      = aws_db_instance.main.username
 
     # Template only - the password is supplied at runtime
-    connection_template = "postgresql://${aws_db_instance.main.username}:[PASSWORD]@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
+    connection_template = format(
+      "postgresql://%s:[PASSWORD]@%s:%d/%s",
+      aws_db_instance.main.username,
+      aws_db_instance.main.address,
+      aws_db_instance.main.port,
+      aws_db_instance.main.db_name,
+    )
   }
   sensitive = true
 }
@@ -2506,7 +2513,6 @@ variable "api_key" {
             progress: true,
             center: false,
             touch: true,
-            keyboard: true,
             overview: true,
             
             // Transitions
@@ -2530,7 +2536,7 @@ variable "api_key" {
                 theme: 'monokai'
             },
             
-            // Enhanced keyboard shortcuts
+            // Navigation keys (Enter/Space advance, arrows navigate)
             keyboard: {
                 13: 'next', // Enter key
                 32: 'next', // Space key

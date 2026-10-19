@@ -27,10 +27,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned username from the instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > **Note:** `username` comes **only** from `TF_VAR_username` — do not add it to `terraform.tfvars` (a value there would override the environment variable). All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
@@ -141,9 +142,11 @@ locals {
 ### Step 3: Initialize and Apply
 ```bash
 terraform init
-terraform plan -var="username=$TF_VAR_username"
-terraform apply -var="username=$TF_VAR_username" -auto-approve
+terraform plan
+terraform apply -auto-approve
 ```
+
+> `username` comes from `TF_VAR_username` automatically, so no `-var` flag is needed.
 
 The plan should show `Plan: 6 to add, 0 to change, 0 to destroy.` (the random suffix, the bucket, its versioning configuration, and three objects). The bucket name ends with a random suffix because S3 bucket names are global across all AWS accounts — read the full name at any time with `terraform output -raw bucket_name`.
 
@@ -193,12 +196,14 @@ terraform state show 'aws_s3_object.demo_files[2]'
 
 ### Step 3: State Refresh and Drift Detection
 ```bash
-# Refresh state from actual infrastructure
-terraform refresh -var="username=$TF_VAR_username"
+# Compare state with the real infrastructure, then update state
+terraform apply -refresh-only
 
 # Plan to see if there are any differences
-terraform plan -var="username=$TF_VAR_username"
+terraform plan
 ```
+
+`terraform apply -refresh-only` reads every resource from AWS and shows any differences between the real infrastructure and your state **before** changing anything. If it finds differences it asks you to type `yes` before recording them in state; it never creates, changes, or destroys resources. Nothing has drifted yet, so expect `No changes. Your infrastructure still matches the configuration.` with no prompt. It replaces the older `terraform refresh` command, which is deprecated because it rewrote state silently, without showing you what changed.
 
 ### Step 4: Practice Safe State Operations
 ```bash
@@ -234,14 +239,14 @@ Create **state-best-practices.md:**
 # Terraform State Best Practices for Shared Environments
 
 ## Key Concepts:
-1. **State Isolation**: Each user works in separate directories
+1. **State Isolation**: Each student works in their own environment and lab directory
 2. **State Backup**: Always backup state before operations
 3. **State Locking**: Prevents concurrent modifications (conceptual)
 4. **State Security**: State files can contain sensitive data
 
 ## Shared Environment Guidelines:
 - Use unique resource naming with usernames
-- Work in separate directories: ~/environment/terraform-lab6-user1/
+- Each student has their own Cloud9 environment and works in its own copy of the lab (`~/environment/terraform_v2/lab-exercises/lab06`), so local state files are never shared
 - Never commit state files to version control
 - Use .gitignore to exclude *.tfstate files
 - Communicate with team about infrastructure changes
@@ -322,10 +327,10 @@ Destroy everything this lab created so nothing is left running in the shared acc
 terraform state list
 
 # Plan destruction
-terraform plan -destroy -var="username=$TF_VAR_username"
+terraform plan -destroy
 
 # Clean up all resources
-terraform destroy -var="username=$TF_VAR_username" -auto-approve
+terraform destroy -auto-approve
 
 # Verify state is empty
 terraform state list

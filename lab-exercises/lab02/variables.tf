@@ -11,13 +11,13 @@ variable "username" {
 }
 
 variable "environment" {
-  description = "Environment name (development, staging, production)"
+  description = "Environment name (dev, staging, prod)"
   type        = string
-  default     = "development"
+  default     = "dev"
 
   validation {
-    condition     = contains(["development", "staging", "production"], var.environment)
-    error_message = "Environment must be development, staging, or production."
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
   }
 }
 

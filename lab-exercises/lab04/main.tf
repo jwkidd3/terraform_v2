@@ -152,10 +152,11 @@ resource "aws_s3_object" "config" {
 #     ignore_changes = [content]
 #
 #     # Note: create_before_destroy is intentionally omitted.
-#     # An aws_s3_object uses bucket+key as its unique identity, so a replacement
-#     # with the same key would collide with the existing object before the old
-#     # one is destroyed. create_before_destroy is best used on resources that
-#     # generate unique IDs (e.g., aws_launch_template, aws_security_group).
+#     # An aws_s3_object is identified by bucket+key. A replacement that reuses
+#     # the same key just overwrites the existing object; Terraform then destroys
+#     # the old resource, which deletes that same key, so the file is lost even
+#     # though the apply succeeds. create_before_destroy is best used on resources
+#     # that generate unique IDs (e.g., aws_launch_template, aws_security_group).
 #   }
 # }
 # ---- end Exercise 4.4 ----

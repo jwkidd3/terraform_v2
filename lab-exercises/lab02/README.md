@@ -27,10 +27,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned username from the instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > **Note:** All lab resources deploy to **us-east-2** — the default of the `aws_region` variable — so there is no region to set. (Your Cloud9 IDE runs in us-east-1; that does not affect where Terraform deploys.)
 
@@ -260,13 +261,13 @@ variable "username" {
 }
 
 variable "environment" {
-  description = "Environment name (development, staging, production)"
+  description = "Environment name (dev, staging, prod)"
   type        = string
-  default     = "development"
+  default     = "dev"
 
   validation {
-    condition     = contains(["development", "staging", "production"], var.environment)
-    error_message = "Environment must be development, staging, or production."
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
   }
 }
 
@@ -280,7 +281,7 @@ variable "aws_region" {
 #### Key Concepts in variables.tf
 
 - **`username`** has no default value, so it must be provided. We set it via the `TF_VAR_username` environment variable. The validation block uses `can(regex(...))` to require 3-20 lowercase letters, numbers, or hyphens — the username becomes part of S3 bucket and security group names, so it must be safe for both.
-- **`environment`** defaults to `"development"` and uses the `contains()` function to only accept `"development"`, `"staging"`, or `"production"`.
+- **`environment`** defaults to `"dev"` and uses the `contains()` function to only accept `"dev"`, `"staging"`, or `"prod"`.
 - **`aws_region`** defaults to `"us-east-2"`, the class deployment region, so you never need to set it.
 - **Validation blocks** run during `terraform plan` and `terraform apply`, catching invalid input before any resources are created.
 
@@ -443,7 +444,7 @@ terraform state show aws_s3_bucket.app_storage
 
 ### Step 1: Change the Environment Variable
 
-Let's see what happens when we change the `environment` variable from the default `"development"` to `"staging"`.
+Let's see what happens when we change the `environment` variable from the default `"dev"` to `"staging"`.
 
 ```bash
 terraform plan -var="environment=staging"
@@ -469,7 +470,7 @@ Try providing an invalid environment value:
 terraform plan -var="environment=invalid"
 ```
 
-You should see the validation error: `Environment must be development, staging, or production.`
+You should see the validation error: `Environment must be dev, staging, or prod.`
 
 Try providing a username that is too short:
 

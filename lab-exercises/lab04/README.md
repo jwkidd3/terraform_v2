@@ -25,10 +25,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace with your assigned username from the instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > **Note:** `username` comes **only** from `TF_VAR_username` — do not add it to `terraform.tfvars` (a value there would override the environment variable). All resources deploy to **us-east-2**, the default of the `aws_region` variable, so there is no region to set.
 
@@ -309,10 +310,11 @@ resource "aws_s3_object" "important_file" {
     ignore_changes = [content]
 
     # Note: create_before_destroy is intentionally omitted.
-    # An aws_s3_object uses bucket+key as its unique identity, so a replacement
-    # with the same key would collide with the existing object before the old
-    # one is destroyed. create_before_destroy is best used on resources that
-    # generate unique IDs (e.g., aws_launch_template, aws_security_group).
+    # An aws_s3_object is identified by bucket+key. A replacement that reuses
+    # the same key just overwrites the existing object; Terraform then destroys
+    # the old resource, which deletes that same key, so the file is lost even
+    # though the apply succeeds. create_before_destroy is best used on resources
+    # that generate unique IDs (e.g., aws_launch_template, aws_security_group).
   }
 }
 ```
@@ -364,7 +366,8 @@ Terraform records output values in state during `apply`, so apply once to pick u
 
 ```bash
 terraform apply
-# Plan shows only "Changes to Outputs" — 0 to add, 0 to change, 0 to destroy
+# The plan lists only "Changes to Outputs:" (no resource changes), then:
+# Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 ```
 
 Type `yes` when prompted.

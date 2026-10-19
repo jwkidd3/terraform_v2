@@ -27,10 +27,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
@@ -43,8 +44,10 @@ echo "Username: $TF_VAR_username"
 cd ~/environment/terraform_v2/lab-exercises/lab09
 ```
 
-### Step 2: Create Production-Ready VPC Infrastructure
-Let's build a comprehensive VPC that supports a 2-tier application with public subnets (for the ALB and NAT Gateway) and private subnets (for the web/application servers).
+### Step 2: Review the Production-Ready VPC Infrastructure
+This configuration builds a comprehensive VPC that supports a 2-tier application with public subnets (for the ALB and NAT Gateway) and private subnets (for the web/application servers).
+
+This lab ships with a complete configuration — every file and block shown below is **already in the lab directory**. Don't add or paste anything; open each file in the Cloud9 editor and read along. (Pasting a block a second time would cause a `Duplicate resource` or `Duplicate variable declaration` error.)
 
 **variables.tf:**
 ```hcl
@@ -71,7 +74,7 @@ variable "aws_region" {
 }
 ```
 
-**terraform.tfvars** (only `environment` is set here; `username` comes from the `TF_VAR_username` env var you exported in Lab Setup, and `aws_region` uses its `us-east-2` default):
+**terraform.tfvars** (only `environment` is set here; `username` comes from the `TF_VAR_username` env var that `setup.sh` saved in Lab 1, and `aws_region` uses its `us-east-2` default):
 ```hcl
 environment = "development"
 ```
@@ -321,7 +324,7 @@ resource "aws_security_group" "web" {
 
 # Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
+  name               = "${var.username}-l9-alb" # ALB names max 32 chars
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -330,14 +333,14 @@ resource "aws_lb" "main" {
   enable_deletion_protection = false
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-alb"
+    Name = "${var.username}-l9-alb"
     Type = "ApplicationLoadBalancer"
   })
 }
 
 # Target Group for Web Servers
 resource "aws_lb_target_group" "web" {
-  name     = "${local.name_prefix}-web-tg"
+  name     = "${var.username}-l9-tg" # Target group names max 32 chars
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -358,7 +361,7 @@ resource "aws_lb_target_group" "web" {
   deregistration_delay = 60
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-web-tg"
+    Name = "${var.username}-l9-tg"
     Type = "TargetGroup"
   })
 }
@@ -490,10 +493,10 @@ chmod 644 /var/www/html/health.html
 
 ---
 
-## Exercise 9.3: Create Outputs and Deploy (10 minutes)
+## Exercise 9.3: Review Outputs and Deploy (10 minutes)
 
-### Step 1: Create Outputs
-Create **outputs.tf**:
+### Step 1: Review the Outputs
+Open **outputs.tf** and review it (it's already in the lab directory):
 
 ```hcl
 output "vpc_info" {
@@ -543,10 +546,23 @@ output "nat_gateway_ip" {
 terraform init
 terraform apply -var="username=$TF_VAR_username"
 
-# Test the application
+# Get the load balancer address
 ALB_DNS=$(terraform output -raw load_balancer_dns)
 echo "Application URL: http://$ALB_DNS"
+```
 
+> **Wait 2–3 minutes before testing.** The web servers need time to boot, run their user data, and pass two health checks before the ALB sends them traffic. Until then, `curl` returns `502 Bad Gateway` or `503 Service Temporarily Unavailable` — that's expected.
+
+Check target health — continue when both targets show `healthy`:
+```bash
+aws elbv2 describe-target-health --region us-east-2 \
+  --target-group-arn "$(aws elbv2 describe-target-groups --region us-east-2 \
+    --names "${TF_VAR_username}-l9-tg" --query 'TargetGroups[0].TargetGroupArn' --output text)" \
+  --query 'TargetHealthDescriptions[].[Target.Id,TargetHealth.State]' --output table
+```
+
+Then test the application:
+```bash
 # Test multiple times to see load balancing
 for i in {1..5}; do
   echo "Request $i:"

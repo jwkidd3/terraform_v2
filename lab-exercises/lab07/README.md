@@ -28,10 +28,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
@@ -230,7 +231,7 @@ resource "aws_instance" "web" {
 
 # Load balancer to distribute traffic
 resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
+  name               = "${var.username}-l7-alb" # ALB names max 32 chars
   internal           = false
   load_balancer_type = "application"
   security_groups    = [module.web_security_group.security_group_id]
@@ -243,7 +244,7 @@ resource "aws_lb" "main" {
 
 # Target group for load balancer
 resource "aws_lb_target_group" "web" {
-  name     = "${local.name_prefix}-web-tg"
+  name     = "${var.username}-l7-tg" # Target group names max 32 chars
   port     = 80
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
@@ -374,7 +375,7 @@ output "s3_bucket" {
 ```
 
 ### Step 3: Confirm Your Username Variable
-`terraform.tfvars` only sets `environment` for this lab — `username` comes from the `TF_VAR_username` env var you set in Lab Setup, and `aws_region` uses its `us-east-2` default:
+`terraform.tfvars` only sets `environment` for this lab — `username` comes from the `TF_VAR_username` env var that `setup.sh` saved in Lab 1, and `aws_region` uses its `us-east-2` default:
 
 ```hcl
 environment = "development"
@@ -419,7 +420,7 @@ terraform state list
 # For example: module.vpc.aws_vpc.this[0]
 ```
 
-> **Key Concept:** Registry modules abstract away complexity. The VPC module alone creates 20+ resources (VPC, subnets, route tables, NAT gateways, etc.) from just a few lines of configuration.
+> **Key Concept:** Registry modules abstract away complexity. The VPC module alone creates about 20 resources (VPC, subnets, route tables, NAT gateways, etc.) from just a few lines of configuration.
 
 ---
 

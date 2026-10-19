@@ -28,10 +28,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`, so you don't need to set it.
 
@@ -44,8 +45,10 @@ echo "Username: $TF_VAR_username"
 cd ~/environment/terraform_v2/lab-exercises/lab08
 ```
 
-### Step 2: Design Environment-Flexible Configuration
-We'll create infrastructure code that adapts to different environments using variable files. The architecture uses Launch Templates and Auto Scaling Groups for scalable compute, with a conditional Application Load Balancer for high-availability environments.
+### Step 2: Review the Environment-Flexible Configuration
+This infrastructure code adapts to different environments using variable files. The architecture uses Launch Templates and Auto Scaling Groups for scalable compute, with a conditional Application Load Balancer for high-availability environments.
+
+This lab ships with a complete configuration — every file and block shown below (`variables.tf`, `user_data.sh`, `main.tf`, `outputs.tf`, and `environments/*.tfvars`) is **already in the lab directory**. Don't add or paste anything; open each file in the Cloud9 editor and read along. (Pasting a block a second time would cause a `Duplicate resource` or `Duplicate variable declaration` error.)
 
 **variables.tf:**
 ```hcl
@@ -126,7 +129,7 @@ variable "cost_optimization" {
 }
 ```
 
-### Step 3: Create User Data Script
+### Step 3: Review the User Data Script
 The application servers use an external user data script loaded via `templatefile()`.
 
 **user_data.sh:**
@@ -178,7 +181,7 @@ cat <<EOF > /var/www/html/index.html
 EOF
 ```
 
-### Step 4: Create Main Configuration
+### Step 4: Review the Main Configuration
 This configuration uses Launch Templates and Auto Scaling Groups (rather than direct EC2 instances) for better scalability. An Application Load Balancer is conditionally created when `var.enable_high_availability` is enabled.
 
 **main.tf:**
@@ -431,7 +434,7 @@ resource "aws_lb_listener" "app" {
 
 > **Key Concept:** In `dev`, there are no private subnets or NAT gateway, so the Auto Scaling Group launches instances into the **public** subnets. `map_public_ip_on_launch = true` gives those instances a public IP so they can reach the internet to install Apache — without it (the VPC module's default is `false`), the `user_data` package install would fail.
 
-### Step 5: Create Output Configuration
+### Step 5: Review the Output Configuration
 **outputs.tf:**
 ```hcl
 output "environment_info" {
@@ -459,7 +462,7 @@ output "vpc_info" {
 
 output "application_endpoint" {
   description = "Application endpoint URL"
-  value       = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : (local.use_private_subnets ? "No load balancer - instances run in private subnets" : "No load balancer - browse to an instance public IP (EC2 console)")
+  value       = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : (local.use_private_subnets ? "No load balancer - instances run in private subnets" : "No load balancer - in the EC2 console, filter instances by tag Owner = ${var.username} and browse to the public IP")
 }
 
 output "security_groups" {
@@ -480,11 +483,11 @@ output "cost_optimization" {
 ## 🚀 **Exercise 8.2: Environment-Specific Configurations (10 minutes)**
 
 ### Step 1: Review the Default Variable File
-The shipped `terraform.tfvars` contains only comments — it deliberately sets **no** values. Your `username` comes from the `TF_VAR_username` environment variable you exported in Lab Setup, and `aws_region` uses its `us-east-2` default. Environment-specific settings are loaded separately via `-var-file`.
+The shipped `terraform.tfvars` contains only comments — it deliberately sets **no** values. Your `username` comes from the `TF_VAR_username` environment variable that `setup.sh` saved in Lab 1, and `aws_region` uses its `us-east-2` default. Environment-specific settings are loaded separately via `-var-file`.
 
 > **Do not add `username` to `terraform.tfvars`.** Values in `terraform.tfvars` override `TF_VAR_*` environment variables, so a hard-coded `username = "user1"` would make every student collide on the same resource names in the shared AWS account.
 
-### Step 2: Create Development Environment Configuration
+### Step 2: Review the Development Environment Configuration
 **environments/dev.tfvars:**
 ```hcl
 # Development Environment Configuration
@@ -503,7 +506,7 @@ cost_optimization = {
 }
 ```
 
-### Step 3: Create Staging Environment Configuration
+### Step 3: Review the Staging Environment Configuration
 **environments/staging.tfvars:**
 ```hcl
 # Staging Environment Configuration
@@ -525,7 +528,7 @@ cost_optimization = {
 }
 ```
 
-### Step 4: Create Production Environment Configuration
+### Step 4: Review the Production Environment Configuration
 **environments/prod.tfvars:**
 ```hcl
 # Production Environment Configuration
@@ -546,7 +549,7 @@ cost_optimization = {
 }
 ```
 
-### Step 5: Create and Deploy Environments
+### Step 5: Deploy the Development Environment
 Your `username` comes from `TF_VAR_username`. You pass the environment-specific file with `-var-file` to supply the remaining variables.
 
 ```bash
@@ -586,6 +589,9 @@ The plan output shows resource-by-resource differences. Look for:
 - **Instance type changes** (`t3.micro` → `t3.small` → `t3.medium`)
 - **ASG desired_capacity changes** (1 → 2 → 3)
 - **ALB resources** that appear only in production (HA enabled)
+- **Replacements (`-/+`)** for the Auto Scaling Group, launch template, and security group — their names (`name` / `name_prefix`) include the environment, and AWS can't rename those resources in place, so Terraform must destroy and recreate them
+
+> **Note:** Those replacements appear only because you are planning staging and prod against the **dev** state file. In a real project each environment keeps its own state (separate backend key or directory), so switching `-var-file` would create a separate stack rather than replace dev. Don't apply these plans — just read them.
 
 > **Why this matters:** the same Terraform code produces three different deployments. The only thing that varies is the variable file. This is the multi-environment pattern in its simplest form — no workspaces, no separate directories.
 
@@ -599,7 +605,6 @@ The plan output shows resource-by-resource differences. Look for:
 ✅ **Conditional resources** - Deployed resources based on environment needs  
 ✅ **Cost optimization** - Applied different cost strategies per environment  
 ✅ **Security controls** - Environment-appropriate security settings  
-✅ **Deployment automation** - Created reusable deployment scripts  
 
 ### Key Concepts Learned
 - **Variable files**: Using tfvars for environment separation

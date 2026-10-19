@@ -496,7 +496,7 @@
                         <h3><span class="emoji">⚡</span> Hands-On Labs (~70% · 5 × 45 min)</h3>
                         <ul>
                             <li><strong>Lab 1: Introduction to Terraform with Docker</strong>
-                                <ul><li>Create your Cloud9 environment and install Terraform</li>
+                                <ul><li>Create your Cloud9 environment (SSH) and run <code>setup.sh</code></li>
                                 <li>Run an nginx container with the Docker provider</li>
                                 <li>Practice init, plan, apply, destroy and inspect state</li></ul>
                             </li>
@@ -763,7 +763,7 @@
                             <ul>
                                 <li><strong>Major Cloud Providers:</strong>
                                     <ul>
-                                        <li>AWS (600+ resources) — used in this course</li>
+                                        <li>AWS (1,500+ resource types) — used in this course</li>
                                         <li>Azure, Google Cloud, and many others</li>
                                     </ul>
                                 </li>
@@ -1016,15 +1016,18 @@ $ terraform state mv aws_instance.web aws_instance.web_server</div>
                         <ol>
                             <li>Sign in to the AWS console and select <strong>us-east-1</strong></li>
                             <li>Create and open your Cloud9 environment (named after your username)</li>
-                            <li>Clone the course repository into <code>~/environment</code></li>
-                            <li>Set your username for every lab:</li>
+                            <li>Clone the course repository into <code>~/environment/terraform_v2</code></li>
+                            <li>Run <code>setup.sh</code> with your assigned username, then reload your shell:</li>
                         </ol>
-                        <div class="command-demo">$ export TF_VAR_username="user1"   # your assigned name
-$ echo "export TF_VAR_username=\"$TF_VAR_username\"" &gt;&gt; ~/.bashrc</div>
+                        <div class="command-demo">$ cd ~/environment/terraform_v2
+$ bash lab-exercises/lab01/setup.sh user1
+$ source ~/.bashrc</div>
+                        <p style="font-size: 0.75em;"><code>setup.sh</code> grows the disk to 100 GB (no reboot), installs Terraform 1.9.8, unzip, jq and git, starts Docker, and saves <code>TF_VAR_username</code> to <code>~/.bashrc</code>.</p>
                         <ol start="5">
-                            <li>Install Terraform 1.9.8 and verify Docker is running</li>
+                            <li>Quick checks:</li>
                         </ol>
-                        <div class="command-demo">$ terraform version
+                        <div class="command-demo">$ df -h /              # Size ~100G
+$ terraform version    # v1.9.8
 $ docker ps</div>
 
                         <h3>Key Skills You'll Develop Today</h3>
@@ -1046,8 +1049,8 @@ $ docker ps</div>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Build:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
-                            <li>✅ Create your AWS Cloud9 environment (us-east-1)</li>
-                            <li>✅ Install and verify Terraform and Docker</li>
+                            <li>✅ Create your AWS Cloud9 environment (us-east-1, SSH connection)</li>
+                            <li>✅ Run setup.sh (100 GB disk, Terraform 1.9.8, Docker, username)</li>
                             <li>✅ Run an nginx web server container with the Docker provider</li>
                             <li>✅ Practice the terraform init, plan, apply, destroy workflow and inspect state</li>
                         </ul>
@@ -1242,13 +1245,11 @@ resource "aws_s3_bucket" "app_storage" {
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "development"
+  default     = "dev"
 
   validation {
-    condition = contains(
-      ["development", "staging", "production"], var.environment
-    )
-    error_message = "Environment must be development, staging, or production."
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
   }
 }</code></pre>
                         <div class="highlight">
@@ -1368,11 +1369,11 @@ terraform fmt -recursive</div>
                     <div class="column">
                         <h3>Conditional Expressions</h3>
                         <pre><code class="language-hcl">resource "aws_instance" "web" {
-  count = var.environment == "production" ? 3 : 1
+  count = var.environment == "prod" ? 3 : 1
 
   ami = data.aws_ami.amazon_linux.id
   instance_type = (
-    var.environment == "production" ? "t3.large" : "t3.micro"
+    var.environment == "prod" ? "t3.large" : "t3.micro"
   )
 
   tags = {
@@ -1493,16 +1494,9 @@ locals {
 
   # Environment-specific configuration
   config = {
-    dev = {
-      instance_type = "t3.micro"
-      min_size      = 1
-      max_size      = 2
-    }
-    prod = {
-      instance_type = "t3.medium"
-      min_size      = 2
-      max_size      = 10
-    }
+    dev     = { instance_type = "t3.micro", min_size = 1, max_size = 2 }
+    staging = { instance_type = "t3.small", min_size = 1, max_size = 4 }
+    prod    = { instance_type = "t3.medium", min_size = 2, max_size = 10 }
   }
 
   instance_type = local.config[var.environment].instance_type
@@ -1696,9 +1690,9 @@ output "public_subnet_ids" {
 # Addresses: aws_s3_object.data_files[0], [1]</code></pre>
 
                         <h3>Conditional Resource Creation</h3>
-                        <pre><code class="language-hcl"># Create resource only in production
+                        <pre><code class="language-hcl"># Create resource only in prod
 resource "aws_cloudtrail" "audit" {
-  count = var.environment == "production" ? 1 : 0
+  count = var.environment == "prod" ? 1 : 0
 
   name           = "${var.project_name}-audit-trail"
   s3_bucket_name = aws_s3_bucket.audit[0].bucket
@@ -1787,7 +1781,7 @@ resource "aws_iam_user" "users" {
                             </ul>
                         </div>
                         <div class="danger">
-                            <p><strong>⚠️ Watch Out:</strong> <code>create_before_destroy</code> fails when the new object must reuse a unique name (e.g. the same S3 object key) — the old one still exists. <code>prevent_destroy</code> also blocks <code>terraform destroy</code> until you remove it.</p>
+                            <p><strong>⚠️ Watch Out:</strong> <code>create_before_destroy</code> is unsafe when the replacement reuses the same unique name (e.g. the same S3 object key): the new upload overwrites that key, then destroying the old resource deletes the same key — the object is lost. <code>prevent_destroy</code> also blocks <code>terraform destroy</code> until you remove it.</p>
                         </div>
                         <div class="highlight">
                             <p><strong>💡 Lab 4 Preview:</strong> You'll add <code>ignore_changes = [content]</code> to an S3 object, edit the content, and see <code>plan</code> report no changes.</p>
@@ -1836,6 +1830,18 @@ resource "aws_iam_user" "users" {
 ├── variables.tf # Inputs
 ├── outputs.tf   # Returns
 └── user_data.sh # Template file</div>
+
+                        <h3>Rendering a Template</h3>
+                        <pre><code class="language-hcl"># modules/web-application/main.tf
+resource "aws_instance" "web" {
+  # ...
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    app_name    = var.app_name
+    environment = var.environment
+    username    = var.username
+  }))
+}</code></pre>
+                        <p style="font-size: 0.75em;"><code>templatefile()</code> fills <code>${app_name}</code>-style placeholders in the file; <code>path.module</code> is the module's own directory.</p>
                     </div>
 
                     <div class="column">
@@ -1853,8 +1859,10 @@ resource "aws_iam_user" "users" {
                         <pre><code class="language-hcl">module "web_server" {
   source = "./modules/web-application"
 
+  username      = var.username
+  app_name      = "my-blog"
+  environment   = "dev" # dev, staging, or prod
   instance_type = "t3.micro"
-  environment   = "production"
 }</code></pre>
                         <div class="highlight">
                             <p><strong>💡 Remember:</strong> run <code>terraform init</code> after adding or changing a <code>module</code> block's <code>source</code>.</p>
@@ -2027,7 +2035,13 @@ Day 3: Terraform Cloud Enterprise</div>
                         </div>
 
                         <p><strong>Course Structure:</strong> Day 1 of 3</p>
-                        <p><strong>Up Next:</strong> Day 2 — advanced configuration patterns</p>
+                        <p><strong>Up Next — Day 2:</strong></p>
+                        <ul style="font-size: 0.8em;">
+                            <li>Lab 6: Local State Management and Best Practices</li>
+                            <li>Lab 7: Working with Terraform Registry Modules</li>
+                            <li>Lab 8: Multi-Environment Deployment Patterns</li>
+                            <li>Lab 9: VPC Networking and 2-Tier Architecture</li>
+                        </ul>
                     </div>
                 </div>
             </section>
@@ -2078,12 +2092,6 @@ Day 3: Terraform Cloud Enterprise</div>
             highlight: {
                 highlightOnLoad: true,
                 theme: 'monokai'
-            },
-            
-            // Math support if needed
-            math: {
-                mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
-                config: 'TeX-AMS_HTML-full'
             }
         });
         

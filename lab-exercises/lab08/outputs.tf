@@ -23,7 +23,7 @@ output "vpc_info" {
 
 output "application_endpoint" {
   description = "Application endpoint URL"
-  value       = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : (local.use_private_subnets ? "No load balancer - instances run in private subnets" : "No load balancer - browse to an instance public IP (EC2 console)")
+  value       = var.enable_high_availability ? "http://${aws_lb.app[0].dns_name}" : (local.use_private_subnets ? "No load balancer - instances run in private subnets" : "No load balancer - in the EC2 console, filter instances by tag Owner = ${var.username} and browse to the public IP")
 }
 
 output "security_groups" {

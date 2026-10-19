@@ -26,10 +26,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`. As in Lab 10, your username must also be entered as a workspace variable in each workspace.
 
@@ -52,18 +53,18 @@ You should see `main.tf`, `variables.tf`, `outputs.tf`, and `terraform.tfvars`. 
 
 > **Why `tags` instead of `name`?**
 > - `workspaces { name = "..." }` locks the working directory to one workspace.
-> - `workspaces { tags = [...] }` lets the configuration target *any* workspace in your organization with that tag. This is what enables `terraform workspace list` and `terraform workspace select` to function.
+> - `workspaces { tags = [...] }` lets the configuration target *any* workspace in your organization with that tag. This is what enables `terraform workspace list` and `terraform workspace select` to function — and `terraform workspace new` creates new workspaces that already carry the tag.
 
 ---
 
 ## ✏️ **Exercise 11.1: Point the Configuration at Your Organization (5 minutes)**
 
 ### Step 1: Edit `main.tf`
-Replace the organization placeholder with your TFC organization from Lab 10:
+Replace the organization placeholder with the **exact** organization name you created in Lab 10 — including any suffix you added because the name was taken (e.g. `user1-terraform-training-jd`):
 
 ```hcl
   cloud {
-    organization = "user1-terraform-training"   # ← your org name
+    organization = "user1-terraform-training"   # ← your actual org name from Lab 10
     workspaces {
       tags = ["lab11"]
     }
@@ -74,30 +75,62 @@ Save the file. Do **not** add a `name = ...` here — the `tags` block selects w
 
 ---
 
-## ☁️ **Exercise 11.2: Create the Development Workspace (10 minutes)**
+## ☁️ **Exercise 11.2: Create Both Workspaces from the CLI (10 minutes)**
 
-### Step 1: Create the Workspace in the TFC UI
-1. Open https://app.terraform.io and navigate to your organization
-2. Click **New** → **Workspace**
-3. Choose **CLI-driven workflow**
-4. Workspace name: `lab11-development`
-5. Description: "Development environment workspace"
-6. Click **Create workspace**
+When the `cloud {}` block uses `tags`, any workspace that **Terraform itself creates** is automatically given those tags. Creating the workspaces from the CLI guarantees the `lab11` tag is attached in exactly the form `tags = ["lab11"]` searches for — no manual tagging in the UI.
 
-### Step 2: Tag the Workspace `lab11`
-This is the critical step that connects the workspace to your `cloud {}` block, which selects workspaces with `tags = ["lab11"]`.
+### Step 1: Initialize
+```bash
+cd ~/environment/terraform_v2/lab-exercises/lab11
+terraform init
+```
 
-1. Open the workspace's **Overview** page (the page you land on after creating it)
-2. In the right sidebar, find the **Tags** area and click **Manage Tags**
-3. In the **Manage workspace tags** drawer, click **+ Add tag**
-4. Enter `lab11` as the tag **key** and leave the value **empty** — a key-only tag is what the list form `tags = ["lab11"]` matches
-5. *(Optional, for your own organization)* add a second tag with key `environment` and value `development`
-6. Click **Save**
+Terraform contacts HCP Terraform and finds **no** workspaces tagged `lab11` yet, so `init` stops and asks you to name one:
 
-> Without the `lab11` tag, `terraform workspace select lab11-development` will fail with "workspace not found." The tag must be exactly `lab11` (lowercase, no value).
+```
+No workspaces found.
 
-### Step 3: Add Workspace Variables
-Open the **Variables** tab and add:
+  There are no workspaces with the configured tags (lab11)
+  in your HCP Terraform organization. To finish initializing, Terraform needs at
+  least one workspace available.
+
+  Terraform can create a properly tagged workspace for you now. Please enter a
+  name to create a new HCP Terraform workspace.
+
+  Enter a value:
+```
+
+Type `lab11-development` and press **Enter**. `init` finishes with *"HCP Terraform has been successfully initialized!"*
+
+> **Prompted with a numbered list instead, or not prompted at all?** Workspaces tagged `lab11` already exist in your organization (for example, from an earlier attempt). Pick `lab11-development` if it's listed, otherwise any entry — then continue with Step 2; `workspace new` reports *"already exists"* for any workspace you already have, which is fine.
+
+### Step 2: Create the Two Workspaces
+`init` only recorded your choice locally; `terraform workspace new` creates each workspace in HCP Terraform, tagged `lab11`:
+
+```bash
+terraform workspace new lab11-development
+terraform workspace new lab11-staging
+```
+
+Each command prints `Created and switched to workspace "..."!`
+
+### Step 3: List the Workspaces
+```bash
+terraform workspace list
+```
+
+You should see both `lab11-development` and `lab11-staging` (the `*` marks the one currently selected). In the HCP Terraform UI, both workspaces now appear in your organization with the `lab11` tag in the **Tags** area of each workspace's **Overview** page.
+
+> **Fallback — tagging in the UI:** if a workspace was created in the UI instead (or is missing from `terraform workspace list`), open its **Overview** page → **Tags** area in the right sidebar → **Manage Tags** → **+ Add tag** → key `lab11`, value left **empty** → **Save**, then re-run `terraform workspace list`. If it still doesn't appear, delete that workspace (**Settings** → **Destruction and Deletion**) and re-create it with `terraform workspace new` as above.
+
+---
+
+## 🔑 **Exercise 11.3: Configure Workspace Variables (10 minutes)**
+
+Each workspace has its own variables. Set them in the HCP Terraform UI.
+
+### Step 1: Development Workspace Variables
+Open https://app.terraform.io → your organization → **`lab11-development`** → **Variables** tab and add:
 
 **Environment Variables** (AWS credentials):
 
@@ -110,73 +143,38 @@ Open the **Variables** tab and add:
 
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
-| `username`       | *your assigned username (e.g. user1)*   |
+| `username`       | *your username (`echo $TF_VAR_username`)* |
 | `aws_region`     | `us-east-2`                             |
 | `environment`    | `development`                           |
 | `instance_count` | `1`                                     |
 
-> Note: `username` MUST be set as a workspace variable — TFC remote runs do not inherit your local `TF_VAR_*` env vars. `aws_region` would fall back to its `us-east-2` default, but setting it explicitly keeps each workspace self-describing. Each workspace (development and staging) has its own variables, so set all four in both, even though `username` and `aws_region` are the same in each.
+> Note: `username` MUST be set as a workspace variable — HCP Terraform remote runs do not inherit your local `TF_VAR_*` env vars. `aws_region` would fall back to its `us-east-2` default, but setting it explicitly keeps each workspace self-describing. Each workspace (development and staging) has its own variables, so set all four in both, even though `username` and `aws_region` are the same in each.
 
-### Step 4: Set Apply Method
-1. In **Settings** → **General**, find **Apply Method**
-2. Set it to **Manual apply** (safer while learning)
-3. Save
-
----
-
-## 🚀 **Exercise 11.3: Create the Staging Workspace (10 minutes)**
-
-Repeat the steps above for a staging environment:
-
-### Step 1: Create the Workspace
-1. **New** → **Workspace** → **CLI-driven workflow**
-2. Name: `lab11-staging`
-3. Description: "Staging environment workspace"
-4. **Create workspace**
-
-### Step 2: Tag It
-1. Workspace **Overview** → **Tags** area in the right sidebar → **Manage Tags**
-2. **+ Add tag** → key `lab11`, value left empty
-3. *(Optional)* **+ Add tag** → key `environment`, value `staging`
-4. **Save**
-
-### Step 3: Add Workspace Variables
-Same AWS credentials, same `username` and `aws_region` as development, but **different `environment` and `instance_count`**:
+### Step 2: Staging Workspace Variables
+Open **`lab11-staging`** → **Variables**. Add the same AWS credentials and the same `username` and `aws_region`, but **different `environment` and `instance_count`**:
 
 | Key              | Value                                   |
 |------------------|-----------------------------------------|
-| `username`       | *your assigned username (e.g. user1)*   |
+| `username`       | *your username (`echo $TF_VAR_username`)* |
 | `aws_region`     | `us-east-2`                             |
 | `environment`    | `staging`                               |
 | `instance_count` | `2`                                     |
 
-### Step 4: Set Apply Method
-**Manual apply** again.
+### Step 3: Confirm the Apply Method
+In each workspace, open **Settings** → **General** and confirm **Apply Method** is **Manual apply** (the default for new workspaces — safer while learning). Save if you changed it.
 
 ---
 
 ## 🔧 **Exercise 11.4: Deploy to Both Workspaces (15 minutes)**
 
-### Step 1: Initialize
-```bash
-cd ~/environment/terraform_v2/lab-exercises/lab11
-terraform init
-```
-
-Terraform contacts TFC, discovers both workspaces tagged `lab11`, and configures the local working directory for workspace switching.
-
-Because **more than one** workspace matches the tag, `terraform init` prompts you to choose which one to use first — a numbered list of `lab11-development` and `lab11-staging`. Enter the number for `lab11-development`. (You'll switch between them with `terraform workspace select` below.)
-
-> **If `init` reports no matching workspaces** (or one of them is missing from the list): re-check Step 2 of Exercises 11.2 / 11.3 — the `lab11` tag must exist on both workspaces, spelled exactly, with no value.
-
-### Step 2: List Available Workspaces
+### Step 1: Confirm Both Workspaces Are Visible
 ```bash
 terraform workspace list
 ```
 
 You should see both `lab11-development` and `lab11-staging` listed.
 
-### Step 3: Deploy to Development
+### Step 2: Deploy to Development
 ```bash
 terraform workspace select lab11-development
 terraform plan
@@ -190,7 +188,7 @@ terraform apply
 
 Approve when prompted. The run executes remotely in TFC.
 
-### Step 4: Deploy to Staging
+### Step 3: Deploy to Staging
 ```bash
 terraform workspace select lab11-staging
 terraform plan
@@ -202,7 +200,7 @@ The plan should show **2 EC2 instances** (different `instance_count`). Apply:
 terraform apply
 ```
 
-### Step 5: Compare the Two Workspaces
+### Step 4: Compare the Two Workspaces
 ```bash
 terraform workspace select lab11-development
 terraform output
@@ -223,13 +221,13 @@ Each workspace has its own independent state, run history, and outputs. In the T
 ## 🎯 **Lab Summary**
 
 ### What You Accomplished
-- ✅ Created two TFC workspaces (`lab11-development`, `lab11-staging`) from one configuration
+- ✅ Created two tagged TFC workspaces (`lab11-development`, `lab11-staging`) from the CLI with `terraform workspace new`
 - ✅ Used `workspaces { tags = ["lab11"] }` to enable CLI-side workspace switching
 - ✅ Configured per-workspace variables (`environment`, `instance_count`) in the TFC UI
 - ✅ Deployed two distinct environments — 1 instance in dev, 2 in staging — from identical HCL
 
 ### Key Concepts
-- **Tag-based workspace selection**: `workspaces { tags = [...] }` lets one configuration manage many workspaces. `workspaces { name = "..." }` locks you to one.
+- **Tag-based workspace selection**: `workspaces { tags = [...] }` lets one configuration manage many workspaces, and `terraform workspace new` creates new workspaces already carrying those tags. `workspaces { name = "..." }` locks you to one.
 - **State isolation**: each workspace has its own state file; changes in one cannot affect another.
 - **Variable precedence in TFC**: workspace variables override values from auto-loaded `terraform.tfvars`. This is why we leave `environment` and `instance_count` out of `terraform.tfvars` — TFC supplies them per workspace.
 - **Environment vs Terraform variables**: credentials (Environment) vs HCL `variable` blocks (Terraform). Same `Variables` tab, different runtime behavior.
@@ -247,7 +245,7 @@ terraform workspace select lab11-staging
 terraform destroy
 ```
 
-Approve each destroy in the TFC UI. You can keep the workspaces themselves for reference, or delete them via **Settings** → **Destruction and Deletion** → **Delete from Terraform Cloud**.
+Each `terraform destroy` shows the destroy plan in your terminal and prompts in the CLI — type `yes` to approve. You can keep the workspaces themselves for reference, or delete them via **Settings** → **Destruction and Deletion** → **Delete from HCP Terraform**.
 
 ---
 

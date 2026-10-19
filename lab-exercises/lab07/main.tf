@@ -135,7 +135,7 @@ resource "aws_instance" "web" {
 
 # Load balancer to distribute traffic
 resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
+  name               = "${var.username}-l7-alb" # ALB names max 32 chars
   internal           = false
   load_balancer_type = "application"
   security_groups    = [module.web_security_group.security_group_id]
@@ -148,7 +148,7 @@ resource "aws_lb" "main" {
 
 # Target group for load balancer
 resource "aws_lb_target_group" "web" {
-  name     = "${local.name_prefix}-web-tg"
+  name     = "${var.username}-l7-tg" # Target group names max 32 chars
   port     = 80
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id

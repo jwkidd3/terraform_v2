@@ -26,10 +26,9 @@ By the end of this lab, you will be able to:
 
 ## 🛠️ **Lab Setup**
 
-### Set Your Username
+### Your Username
+This lab doesn't use `TF_VAR_username` from your shell — every run executes remotely in HCP Terraform, triggered by `git push`. Instead you'll set `username` (the same value `setup.sh` saved in Lab 1) as a **workspace variable** in Exercise 12.2, Step 4. To see the value:
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
 echo "Username: $TF_VAR_username"
 ```
 
@@ -59,7 +58,7 @@ git config --global credential.helper store
 ### Step 2: Create a Public GitHub Repository
 1. https://github.com → **New repository**
 2. Name: `terraform-vcs-lab12-<your-username>` *(e.g., `terraform-vcs-lab12-user1`)*
-3. **Public** (required for TFC free-tier VCS integration)
+3. **Public** (simplest for this lab — HCP Terraform can also connect to private repositories, but a public repo avoids any access or permission issues)
 4. Check **Initialize this repository with a README**
 5. **Create repository**
 
@@ -74,8 +73,6 @@ cp ~/environment/terraform_v2/lab-exercises/lab12/variables.tf .
 cp ~/environment/terraform_v2/lab-exercises/lab12/outputs.tf .
 cp ~/environment/terraform_v2/lab-exercises/lab12/user_data.sh .
 ```
-
-> When prompted for password during `git clone`, paste your **Personal Access Token**.
 
 ### Step 4: Create `terraform.tfvars` in the Repo
 The lab's source `terraform.tfvars` deliberately omits `username` — you'll
@@ -153,7 +150,7 @@ Use this only if your instructor directs you to, or if the GitHub App option isn
 ### Step 4: Add Workspace Variables
 **Variables** tab:
 
-**Environment Variables** (AWS credentials, plus the destroy guardrail):
+**Environment Variables** (AWS credentials, plus `CONFIRM_DESTROY`):
 
 | Key                     | Value                                                | Sensitive |
 |-------------------------|------------------------------------------------------|-----------|
@@ -161,7 +158,7 @@ Use this only if your instructor directs you to, or if the GitHub App option isn
 | `AWS_SECRET_ACCESS_KEY` | *the secret access key provided by your instructor*  | ✅        |
 | `CONFIRM_DESTROY`       | `1`                                                  |           |
 
-> **Why `CONFIRM_DESTROY`?** Terraform Cloud requires this environment variable on VCS-driven workspaces before it will run a destroy plan. Set it now so the cleanup step at the end of the lab works.
+> **About `CONFIRM_DESTROY`:** older Terraform Cloud documentation required this environment variable before a destroy plan could run. Current HCP Terraform instead gates destroy plans with the workspace's **Settings** → **Destruction and Deletion** → **Allow destroy plans** toggle (checked during Cleanup). Setting `CONFIRM_DESTROY=1` is harmless, so add it anyway.
 
 **Terraform Variables**:
 
@@ -173,11 +170,11 @@ Use this only if your instructor directs you to, or if the GitHub App option isn
 > `username` and `aws_region` live in the workspace (not in `terraform.tfvars`) because each student in the shared AWS account needs a unique username, and per-student values don't belong in the Git repository. (`aws_region` would also fall back to its `us-east-2` default; setting it keeps the workspace explicit.) `environment` and `app_version` come from the `terraform.tfvars` file you just created.
 
 ### Step 5: Fill In the `cloud {}` Block
-Open `main.tf` in your repo and replace the two placeholders:
+Open `main.tf` in your repo and replace the two placeholders. Use the **exact** organization name you created in Lab 10 — including any suffix you added because the name was taken (e.g. `user1-terraform-training-jd`):
 
 ```hcl
   cloud {
-    organization = "user1-terraform-training"   # your org from Lab 10
+    organization = "user1-terraform-training"   # your actual org name from Lab 10
     workspaces {
       name = "vcs-lab12-user1"                  # the workspace you just created
     }
@@ -191,7 +188,7 @@ git commit -m "Initial VCS-driven Terraform Cloud configuration"
 git push origin main
 ```
 
-> When prompted, use your **PAT** as the password.
+> This first push is where git asks for credentials (cloning a public repository doesn't). For **Username**, enter your GitHub username; for **Password**, paste your **Personal Access Token** — it won't echo. `credential.helper store` saves it, so later pushes won't prompt.
 
 HCP Terraform requires the **first** run in a new VCS-driven workspace to be started manually — a workspace with no runs ignores VCS webhooks. In the TFC workspace:
 1. Click **New run** (or **Actions** → **Start new run**), choose **Plan and apply**, then **Start run**. HCP Terraform fetches the latest commit on `main` — the one you just pushed. *(If a run has already appeared on its own, use that one instead.)*
@@ -235,7 +232,7 @@ git push origin main
 
 ---
 
-## 🔄 **Exercise 12.4: Speculative Plans on a Pull Request (10 minutes)**
+## 🔄 **Exercise 12.4: Speculative Plans on a Pull Request (5 minutes)**
 
 A VCS-driven workspace tracks **one** branch (here, `main`) and **ignores pushes to every other branch**. Instead, when you open a **pull request** that targets the tracked branch, HCP Terraform runs a **speculative plan** — a plan only, never an apply — and reports the result back on the pull request. This is the foundation for PR-based review workflows.
 
@@ -322,10 +319,10 @@ Opening the pull request is what triggers the speculative plan.
 ### Destroy the Infrastructure
 From the TFC workspace UI:
 1. Open the workspace
-2. **Settings** → **Destruction and Deletion** → **Queue destroy plan**
+2. **Settings** → **Destruction and Deletion** → confirm **Allow destroy plans** is enabled → **Queue destroy plan**
 3. Confirm and approve the destroy run
 
-> If the destroy plan errors with *"Destroy is disabled..."*, the `CONFIRM_DESTROY=1` environment variable is missing from the workspace. Add it under **Variables** → **Environment Variables** and re-queue the destroy.
+> **Can't queue the destroy, or it errors with a "destroy plans are disabled" message?** On the same **Settings** → **Destruction and Deletion** page, make sure the **Allow destroy plans** toggle is **enabled**, save, and queue the destroy again. (`CONFIRM_DESTROY` is not what controls this in current HCP Terraform.)
 
 ### Optional Local Cleanup
 ```bash

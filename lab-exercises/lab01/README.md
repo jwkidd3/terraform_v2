@@ -42,7 +42,7 @@ By the end of this lab, you will be able to:
 |---------|-------|
 | **Environment type** | New EC2 instance |
 | **Instance type** | m5.large (8 GiB RAM + 2 vCPU) |
-| **Platform** | Amazon Linux |
+| **Platform** | Amazon Linux 2023 |
 | **Timeout** | 30 minutes |
 | **Connection** | **Secure Shell (SSH)** |
 
@@ -112,7 +112,7 @@ Replace `user1` with **your assigned username** (lowercase letters, numbers, and
 bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh user1
 ```
 
-The disk resize takes about a minute. Each step prints a ✔ when it finishes, followed by a summary like this:
+The disk resize takes about a minute. The disk grows while Cloud9 keeps running — no reboot is needed. Each step prints a ✔ when it finishes, followed by a summary like this:
 
 ```
 ==> Setup complete
@@ -165,7 +165,7 @@ cd ~/environment/terraform_v2/lab-exercises/lab01
 ls
 ```
 
-You should see `main.tf`, `outputs.tf`, `terraform.tfvars`, and this `README.md`.
+You should see `main.tf`, `outputs.tf`, `setup.sh` (which you ran in Exercise 1.2), `terraform.tfvars`, and this `README.md`.
 
 ### Step 2: Review main.tf - Your First Infrastructure!
 Open `main.tf`. This is your first Terraform file — it manages a Docker image and a container:
@@ -305,11 +305,12 @@ cat terraform.tfvars
 ```hcl
 # terraform.tfvars
 #
-# `username` is intentionally NOT set here. Provide it via the
-# TF_VAR_username environment variable so each student in the shared
-# classroom environment gets a unique value:
+# `username` is intentionally NOT set here. It comes from the
+# TF_VAR_username environment variable, which setup.sh saved to
+# ~/.bashrc in Exercise 1.2, so each student in the shared classroom
+# environment gets a unique value:
 #
-#     export TF_VAR_username="user1"   # replace with your assigned name
+#     echo "$TF_VAR_username"   # confirm it is set (else: source ~/.bashrc)
 ```
 
 > **Note:** `username` is supplied **only** by the `TF_VAR_username` environment variable that `setup.sh` saved in Exercise 1.2 — never put it in `terraform.tfvars`. A value in `terraform.tfvars` takes precedence over `TF_VAR_*` environment variables, so it would silently replace your assigned name. Confirm it is set:
@@ -510,10 +511,10 @@ docker ps | grep $TF_VAR_username
 ```bash
 bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh $TF_VAR_username
 ```
-If it reports **"Could not resize the volume"**, your Cloud9 credentials can't modify EBS volumes. Ask your instructor.
+If it reports **"Could not resize the volume"** or **"Could not look up the root EBS volume"**, your Cloud9 credentials can't read or modify EBS volumes. Ask your instructor. Rebooting does not help — the resize happens online.
 
 ### Problem: "Docker daemon not running"
-**Solution**: Run `sudo service docker start`
+**Solution**: Run `sudo systemctl start docker`
 
 ### Problem: "Port already in use"
 **Solution**: Change the external port in main.tf to a different number

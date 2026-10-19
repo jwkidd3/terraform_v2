@@ -16,6 +16,10 @@ By the end of this lab, you will be able to:
 
 ---
 
+> **Naming note:** HCP Terraform is the current name for the product formerly called **Terraform Cloud** (TFC). The UI, docs, and CLI output say "HCP Terraform"; this lab still uses "Terraform Cloud" / "TFC" in places — they mean the same service at https://app.terraform.io.
+
+---
+
 ## 📋 **Prerequisites**
 - Completion of Labs 1–9
 - Terraform Cloud account (free tier is sufficient): https://app.terraform.io
@@ -27,10 +31,11 @@ By the end of this lab, you will be able to:
 
 ### Set Your Username
 ```bash
-# IMPORTANT: Replace user1 with the username assigned by your instructor
-export TF_VAR_username="user1"
+# Your username was saved by setup.sh in Lab 1 — confirm it is set
 echo "Username: $TF_VAR_username"
 ```
+
+> If it prints nothing, run `source ~/.bashrc`. If it shows the wrong name, re-run `bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh <your-username>` and then `source ~/.bashrc`. Do **not** `export` a different value — every resource name includes it.
 
 > All resources deploy to **us-east-2** — `aws_region` defaults to `"us-east-2"` in `variables.tf`. Keep your username handy: in this lab it must also be entered as a workspace variable (see Exercise 10.1 Step 3).
 
@@ -56,7 +61,9 @@ This is the same kind of EC2 configuration you've seen before — the new piece 
 5. Use any email address you control
 6. Click **Create organization**
 
-> **Important — write your organization name down.** You will paste it into `main.tf` in Exercise 10.2 and reuse it in Labs 11 and 12.
+> **Name already taken?** Organization names are globally unique across all of HCP Terraform, and a student from a previous class may already own `<your-username>-terraform-training`. If the UI reports the name is taken, append a short unique suffix — your initials or the class date — and try again: e.g. `user1-terraform-training-jd` or `user1-terraform-training-0614`.
+
+> **Important — write your organization name down exactly as created** (including any suffix). You will paste it into `main.tf` in Exercise 10.2 and reuse it in every `cloud { organization = ... }` block in Labs 11 and 12. The examples in these labs show `user1-terraform-training`; always substitute your actual name.
 
 ### Step 2: Create a CLI-Driven Workspace
 1. Click **New** → **Workspace**
@@ -83,7 +90,7 @@ In the workspace, open the **Variables** tab and add:
 | `aws_region` | `us-east-2` *(recommended — makes the region explicit)* |
 
 > **Important — `TF_VAR_*` is local-only:**
-> The `TF_VAR_username` environment variable you exported in Cloud9 does NOT propagate to TFC's remote runners. You **must** set `username` as a Terraform workspace variable, otherwise the remote plan fails with "No value for required variable". Setting `aws_region` is recommended but optional — if you omit it, the remote run uses the `us-east-2` default from `variables.tf`, which is the correct region for this course.
+> The `TF_VAR_username` environment variable in your Cloud9 shell does NOT propagate to TFC's remote runners. You **must** set `username` as a Terraform workspace variable, otherwise the remote plan fails with "No value for required variable". Setting `aws_region` is recommended but optional — if you omit it, the remote run uses the `us-east-2` default from `variables.tf`, which is the correct region for this course.
 >
 > **Why two kinds of variables?**
 > - **Environment Variables** behave like `export FOO=bar` in a shell session. AWS SDKs read `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment, so that's where credentials belong.
@@ -109,7 +116,7 @@ Replace both placeholders with the values from Exercise 10.1:
 
 ```hcl
   cloud {
-    organization = "user1-terraform-training"          # your org name
+    organization = "user1-terraform-training"          # your actual org name (with any suffix)
     workspaces {
       name = "user1-terraform-cloud-lab10"             # your workspace name
     }
@@ -123,7 +130,13 @@ Save the file.
 terraform login
 ```
 
-When prompted, type `yes`. A browser tab opens — generate a token, copy it, and paste it back into the terminal. The CLI stores the token in `~/.terraform.d/credentials.tfrc.json`.
+When prompted, type `yes`. Cloud9 can't open a browser for you, so the CLI prints a URL instead (`https://app.terraform.io/app/settings/tokens?source=terraform-login`):
+
+1. Copy the URL from the terminal and open it in a new browser tab
+2. Generate a token (any description, e.g. "Cloud9 lab"), then copy it
+3. Paste it at the `Token for app.terraform.io:` prompt and press **Enter** — the token **will not echo** (nothing appears as you paste), which is normal
+
+The CLI stores the token in `~/.terraform.d/credentials.tfrc.json`.
 
 ### Step 3: Initialize and Run Remotely
 ```bash
@@ -137,7 +150,7 @@ terraform plan
 The plan output streams from Terraform Cloud — notice the banner:
 
 ```
-Running plan in Terraform Cloud. Output will stream here.
+Running plan in HCP Terraform. Output will stream here.
 ```
 
 That tells you the run is happening on TFC's runners, not in your Cloud9 shell.

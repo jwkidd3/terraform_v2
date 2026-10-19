@@ -9,7 +9,7 @@ terraform {
   }
 
   cloud {
-    organization = "REPLACE_WITH_YOUR_ORG" # e.g., "user1-terraform-training"
+    organization = "REPLACE_WITH_YOUR_ORG" # the exact org name you create in Exercise 10.1, e.g. "user1-terraform-training" (or "...-jd" if you added a suffix)
 
     workspaces {
       name = "REPLACE_WITH_WORKSPACE_NAME" # e.g., "user1-terraform-cloud-lab10"

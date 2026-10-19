@@ -241,7 +241,7 @@ resource "aws_security_group" "web" {
 
 # Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
+  name               = "${var.username}-l9-alb" # ALB names max 32 chars
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -250,14 +250,14 @@ resource "aws_lb" "main" {
   enable_deletion_protection = false
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-alb"
+    Name = "${var.username}-l9-alb"
     Type = "ApplicationLoadBalancer"
   })
 }
 
 # Target Group for Web Servers
 resource "aws_lb_target_group" "web" {
-  name     = "${local.name_prefix}-web-tg"
+  name     = "${var.username}-l9-tg" # Target group names max 32 chars
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -278,7 +278,7 @@ resource "aws_lb_target_group" "web" {
   deregistration_delay = 60
 
   tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-web-tg"
+    Name = "${var.username}-l9-tg"
     Type = "TargetGroup"
   })
 }

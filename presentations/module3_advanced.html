@@ -718,7 +718,7 @@
             <!-- Title Slide -->
             <section class="title-slide">
                 <div class="terraform-logo"></div>
-                <h1>Module 3: Terraform Cloud Enterprise Mastery</h1>
+                <h1><span class="emoji">☁️</span> Module 3: Terraform Cloud Enterprise Mastery</h1>
                 <h2>Remote Execution, Workspaces, and VCS-Driven Workflows</h2>
                 <div class="progress-bar" style="width: 300px; margin: 30px auto;">
                     <div class="progress-fill" style="width: 100%;"></div>
@@ -865,7 +865,7 @@
                         <div class="info" style="padding: 15px;">
                             <h4>☁️ Lab 10: Terraform Cloud Integration and Remote Execution</h4>
                             <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
-                                <li><strong>Organization:</strong> Create <code>&lt;username&gt;-terraform-training</code></li>
+                                <li><strong>Organization:</strong> Create <code>&lt;username&gt;-terraform-training</code> (names are globally unique &mdash; if taken, add a short suffix)</li>
                                 <li><strong>CLI-Driven Workspace:</strong> One workspace for this configuration</li>
                                 <li><strong>Connect:</strong> <code>cloud {}</code> block + <code>terraform login</code> from Cloud9</li>
                                 <li><strong>Variables:</strong> AWS credentials (environment, sensitive); <code>username</code>, <code>aws_region</code> (Terraform)</li>
@@ -882,7 +882,7 @@
                             <h4>👥 Lab 11: Terraform Cloud Workspaces</h4>
                             <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
                                 <li><strong>Tag-Based Selection:</strong> <code>cloud { workspaces { tags = ["lab11"] } }</code></li>
-                                <li><strong>Multiple Workspaces:</strong> <code>lab11-development</code> and <code>lab11-staging</code></li>
+                                <li><strong>Multiple Workspaces:</strong> <code>terraform workspace new</code> creates <code>lab11-development</code> and <code>lab11-staging</code>, tagged <code>lab11</code></li>
                                 <li><strong>Workspace Variables:</strong> Different <code>environment</code> / <code>instance_count</code> per workspace</li>
                                 <li><strong>Switching:</strong> <code>terraform workspace list</code> / <code>select</code></li>
                                 <li><strong>State Isolation:</strong> Separate state and run history per workspace</li>
@@ -903,6 +903,7 @@
                             <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
                                 <li><strong>VCS Provider:</strong> GitHub App, or OAuth &ldquo;GitHub.com (Custom)&rdquo;</li>
                                 <li><strong>VCS-Driven Workspace:</strong> Connected to your GitHub repo</li>
+                                <li><strong>First Run:</strong> Start it manually (New run → Plan and apply)</li>
                                 <li><strong>Push to <code>main</code>:</strong> Automatic plan, then Confirm &amp; Apply</li>
                             </ul>
                         </div>
@@ -910,7 +911,7 @@
                             <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
                                 <li><strong>Update via Git:</strong> Bump <code>app_version</code> and push again</li>
                                 <li><strong>Speculative Plans:</strong> Plan-only runs for pull requests against <code>main</code></li>
-                                <li><strong>Cleanup:</strong> <code>CONFIRM_DESTROY=1</code> + queue destroy plan</li>
+                                <li><strong>Cleanup:</strong> &ldquo;Allow destroy plans&rdquo; enabled + queue destroy plan</li>
                             </ul>
                         </div>
                     </div>
@@ -1024,7 +1025,7 @@
                         <div class="column">
                             <h4>🏗️ Core Components</h4>
                             <ul>
-                                <li><strong>Organization:</strong> Top-level container (Lab 10: <code>&lt;username&gt;-terraform-training</code>)</li>
+                                <li><strong>Organization:</strong> Top-level container (Lab 10: <code>&lt;username&gt;-terraform-training</code>; names are globally unique &mdash; if taken, append a short suffix)</li>
                                 <li><strong>Workspace:</strong> One configuration + its state, variables, and runs</li>
                                 <li><strong>Teams:</strong> Groups of users with specific permissions</li>
                                 <li><strong>Variables:</strong> Environment and Terraform variables, per workspace</li>
@@ -1096,7 +1097,7 @@
                         </div>
                     </div>
                     <div class="info">
-                        <strong>Lab 10:</strong> replace the two placeholders in <code>main.tf</code> with your organization and workspace names.
+                        <strong>Lab 10:</strong> replace the two placeholders in <code>main.tf</code> with your organization and workspace names. Org names are globally unique: if <code>&lt;username&gt;-terraform-training</code> was taken and you added a short suffix, use your actual org name here.
                     </div>
                 </section>
 
@@ -1198,21 +1199,25 @@ terraform destroy   # clean up at the end of the lab</code></pre>
                     <div class="two-column">
                         <div class="column">
                             <h4>Lab 10 &mdash; exactly one workspace</h4>
-                            <pre><code class="language-hcl">cloud {
-  organization = "user1-terraform-training"
+                            <pre><code class="language-hcl">terraform {
+  cloud {
+    organization = "user1-terraform-training"
 
-  workspaces {
-    name = "user1-terraform-cloud-lab10"
+    workspaces {
+      name = "user1-terraform-cloud-lab10"
+    }
   }
 }</code></pre>
                         </div>
                         <div class="column">
                             <h4>Lab 11 &mdash; every workspace tagged <code>lab11</code></h4>
-                            <pre><code class="language-hcl">cloud {
-  organization = "user1-terraform-training"
+                            <pre><code class="language-hcl">terraform {
+  cloud {
+    organization = "user1-terraform-training"
 
-  workspaces {
-    tags = ["lab11"]
+    workspaces {
+      tags = ["lab11"]
+    }
   }
 }</code></pre>
                         </div>
@@ -1220,17 +1225,22 @@ terraform destroy   # clean up at the end of the lab</code></pre>
                     <ul>
                         <li><code>name</code> locks the directory to one workspace &mdash; <code>terraform workspace select</code> has nothing to switch to</li>
                         <li><code>tags</code> makes every workspace with <strong>all</strong> listed tags selectable from this directory</li>
-                        <li>Tag the workspace in the UI (Lab 11: <strong>Settings → General → Tags</strong>); untagged workspaces stay invisible (&ldquo;workspace not found&rdquo;)</li>
+                        <li><strong>Lab 11 creates the workspaces from the CLI:</strong> <code>terraform workspace new &lt;name&gt;</code> creates a workspace that already carries the configured tags (so does <code>terraform init</code> when no tagged workspace exists yet and it asks for a name)</li>
+                        <li>Fallback for a workspace made in the UI: <strong>Overview → Tags</strong> (right sidebar) <strong>→ Manage Tags</strong> &rarr; key <code>lab11</code>, value empty; untagged workspaces stay invisible (&ldquo;workspace not found&rdquo;)</li>
                     </ul>
                 </section>
 
                 <section>
                     <h3>🔁 Switching Workspaces from the CLI</h3>
-                    <pre><code class="language-bash">terraform init                               # finds workspaces tagged lab11
+                    <pre><code class="language-bash">terraform init                               # no lab11 workspace yet? init asks for a
+                                             #   name: enter lab11-development (recorded locally)
+terraform workspace new lab11-development    # created in HCP Terraform, tagged lab11
+terraform workspace new lab11-staging        # created in HCP Terraform, tagged lab11
 
 terraform workspace list
 #   lab11-development
 #   lab11-staging
+# set each workspace's variables in the UI before its first plan
 
 terraform workspace select lab11-development
 terraform plan                               # 1 instance (instance_count = 1)
@@ -1332,7 +1342,7 @@ resource "aws_instance" "app" {
                         <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.0em; line-height: 1.4;">
                             <li>✅ Point <code>cloud { workspaces { tags = ["lab11"] } }</code> at your organization</li>
-                            <li>✅ Create <code>lab11-development</code> and <code>lab11-staging</code> (CLI-driven, tagged <code>lab11</code>)</li>
+                            <li>✅ Create <code>lab11-development</code> and <code>lab11-staging</code> from the CLI &mdash; Terraform tags them <code>lab11</code></li>
                             <li>✅ Set per-workspace Terraform variables and environment-variable credentials</li>
                             <li>✅ <code>terraform workspace select</code> each one, deploy 1 vs 2 instances, destroy both</li>
                         </ul>
@@ -1412,7 +1422,8 @@ resource "aws_instance" "app" {
                     </div>
                     <ul>
                         <li>A VCS-driven workspace tracks <strong>one branch</strong> &mdash; the repo's default branch (<code>main</code>) unless you choose another</li>
-                        <li>A push to the tracked branch queues a full run: plan, then apply after you click <strong>Confirm &amp; Apply</strong> (or automatically with auto-apply)</li>
+                        <li><strong>First run is manual:</strong> a brand-new workspace with no runs ignores webhooks &mdash; start it with <strong>New run → Plan and apply</strong></li>
+                        <li>After that, a push to the tracked branch queues a full run: plan, then apply after you click <strong>Confirm &amp; Apply</strong> (or automatically with auto-apply)</li>
                         <li>Check the connection: workspace <strong>Settings → Version Control</strong>; GitHub repo <strong>Settings → Webhooks</strong> (OAuth) or the app's installation (GitHub App)</li>
                         <li>Variables still live in the workspace: credentials, <code>username</code>, <code>aws_region</code> are <strong>not</strong> committed; <code>environment</code> and <code>app_version</code> come from the committed <code>terraform.tfvars</code></li>
                     </ul>
@@ -1447,14 +1458,14 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
                         </thead>
                         <tbody>
                             <tr><td>Environment variable</td><td><code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code></td><td>sensitive</td></tr>
-                            <tr><td>Environment variable</td><td><code>CONFIRM_DESTROY</code></td><td><code>1</code></td></tr>
+                            <tr><td>Environment variable</td><td><code>CONFIRM_DESTROY</code> (legacy, harmless)</td><td><code>1</code></td></tr>
                             <tr><td>Terraform variable</td><td><code>username</code> / <code>aws_region</code></td><td><code>user1</code> / <code>us-east-2</code></td></tr>
                             <tr><td>Committed <code>terraform.tfvars</code></td><td><code>environment</code> / <code>app_version</code></td><td><code>gitops</code> / <code>v1.0.0</code></td></tr>
                         </tbody>
                     </table>
                     <ul>
-                        <li><code>CONFIRM_DESTROY=1</code> must be set before Terraform Cloud will queue a destroy plan</li>
-                        <li>Cleanup: workspace <strong>Settings → Destruction and Deletion → Queue destroy plan</strong>, then confirm and apply</li>
+                        <li>Destroy plans require <strong>Allow destroy plans</strong> to be enabled: workspace <strong>Settings → Destruction and Deletion</strong>. <code>CONFIRM_DESTROY=1</code> is a legacy variable &mdash; harmless, but it does not replace this setting</li>
+                        <li>Cleanup: on the same page, <strong>Queue destroy plan</strong>, then confirm and apply</li>
                         <li>Deleting a workspace does <strong>not</strong> destroy its resources &mdash; destroy first</li>
                     </ul>
                 </section>
@@ -1469,9 +1480,9 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
                         <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.0em; line-height: 1.4;">
                             <li>✅ Create a GitHub repo and connect it (GitHub App, or OAuth &ldquo;GitHub.com (Custom)&rdquo;)</li>
-                            <li>✅ Create a VCS-driven workspace with credentials, <code>username</code>, <code>aws_region</code>, <code>CONFIRM_DESTROY</code></li>
-                            <li>✅ Push to <code>main</code> → automatic plan → Confirm &amp; Apply; push again to update</li>
-                            <li>✅ Open a pull request → speculative plan; queue a destroy plan to clean up</li>
+                            <li>✅ Create a VCS-driven workspace with credentials, <code>username</code>, <code>aws_region</code></li>
+                            <li>✅ Start the first run manually (New run → Plan and apply); then push to <code>main</code> → automatic plan → Confirm &amp; Apply</li>
+                            <li>✅ Open a pull request → speculative plan; allow destroy plans, then queue one to clean up</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
@@ -1649,7 +1660,7 @@ module "green_environment" {
                             <div class="column">
                                 <p style="font-size: 0.9em; margin: 0;"><strong>Public Registry:</strong></p>
                                 <ul style="font-size: 0.85em; margin: 5px 0;">
-                                    <li><strong>AWS Provider:</strong> 1000+ resource types</li>
+                                    <li><strong>AWS Provider:</strong> 1,500+ resource types</li>
                                     <li><strong>VPC Module:</strong> Most popular AWS module</li>
                                     <li><strong>Security Groups:</strong> Common patterns</li>
                                     <li><strong>EKS / RDS Modules:</strong> Kubernetes and databases</li>
@@ -2169,7 +2180,6 @@ module "dr_region" {
             progress: true,
             center: false,
             touch: true,
-            keyboard: true,
             overview: true,
             
             // Transitions
