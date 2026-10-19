@@ -9,7 +9,7 @@
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
 - Set up an AWS Cloud9 development environment
-- Install and verify Terraform in a Cloud9 environment
+- Prepare Cloud9 with a setup script (100 GB disk, Terraform, Docker)
 - Create a Terraform configuration using the Docker provider
 - Execute the complete Terraform workflow: init, plan, apply, destroy
 - Interpret Terraform plan output and state files
@@ -92,44 +92,65 @@ ls terraform_v2/lab-exercises/
 
 ---
 
-## 🛠️ **Exercise 1.2: Install Terraform and Docker**
+## 🛠️ **Exercise 1.2: Run the Environment Setup Script**
 
-### Step 1: Set Your Username
+A fresh Cloud9 environment has a small 10 GB disk and no Terraform. The course repository includes a setup script, `setup.sh`, that prepares everything in one step:
+
+| Step | What `setup.sh` does |
+|------|----------------------|
+| 1 | Grows the Cloud9 disk (EBS root volume) to **100 GB** and extends the filesystem |
+| 2 | Installs **Terraform 1.9.8** (checksum-verified), plus `unzip`, `jq`, and `git` |
+| 3 | Starts **Docker** and makes sure your user can run it |
+| 4 | Saves your username to `~/.bashrc` as `TF_VAR_username` |
+
+The script is safe to re-run: steps that are already done are skipped.
+
+### Step 1: Run the Script
+Replace `user1` with **your assigned username** (lowercase letters, numbers, and hyphens only):
+
 ```bash
-# IMPORTANT: Replace "user1" with your assigned username
-export TF_VAR_username="user1"
-echo "export TF_VAR_username=\"$TF_VAR_username\"" >> ~/.bashrc
+bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh user1
+```
+
+The disk resize takes about a minute. Each step prints a ✔ when it finishes, followed by a summary like this:
+
+```
+==> Setup complete
+    Username:    user1
+    Disk:        100G
+    Terraform:   Terraform v1.9.8
+    Docker:      25.0.x
+    AWS CLI:     aws-cli/2.x.x
+    Git:         2.x.x
+```
+
+> **Why a username?** Everyone in the class shares one AWS account. Terraform adds your username to every resource name (for example `user1-web-server`) so your resources never collide with a classmate's.
+
+### Step 2: Load Your Username into This Terminal
+The script saved your username to `~/.bashrc`, which only applies to **new** terminals. Load it into the current one:
+
+```bash
+source ~/.bashrc
 echo "Username set to: $TF_VAR_username"
 ```
 
-### Step 2: Install Terraform
+> **Tip:** If the script printed **"Added ec2-user to the docker group"**, close this terminal tab and open a new one (**Window → New Terminal**) before continuing.
+
+### Step 3: Verify Your Tools
 ```bash
-# Download Terraform
-wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+# Disk should show ~100G total
+df -h /
 
-# Install Terraform
-sudo unzip terraform_1.9.8_linux_amd64.zip -d /usr/local/bin/
-rm terraform_1.9.8_linux_amd64.zip
-
-# Verify installation
+# Terraform
 terraform version
+
+# Docker (should list no containers yet, with no permission errors)
+docker ps
 ```
 
 **Expected output:**
 ```
 Terraform v1.9.8
-```
-
-### Step 3: Verify Docker
-```bash
-# Check Docker is available
-docker version
-
-# If not available, start it
-sudo service docker start
-
-# Check Docker status
-docker ps
 ```
 
 ---
@@ -291,7 +312,7 @@ cat terraform.tfvars
 #     export TF_VAR_username="user1"   # replace with your assigned name
 ```
 
-> **Note:** `username` is supplied **only** by the `TF_VAR_username` environment variable you exported in Exercise 1.2 — never put it in `terraform.tfvars`. A value in `terraform.tfvars` takes precedence over `TF_VAR_*` environment variables, so it would silently replace your assigned name. Confirm it is set:
+> **Note:** `username` is supplied **only** by the `TF_VAR_username` environment variable that `setup.sh` saved in Exercise 1.2 — never put it in `terraform.tfvars`. A value in `terraform.tfvars` takes precedence over `TF_VAR_*` environment variables, so it would silently replace your assigned name. Confirm it is set:
 >
 > ```bash
 > echo $TF_VAR_username
@@ -484,12 +505,12 @@ docker ps | grep $TF_VAR_username
 ### Problem: "Unable to access your environment"
 **Solution**: Wait 1-2 minutes and try again. If the issue persists, delete the environment and recreate it.
 
-### Problem: Disk space warning
-**Solution**: Run:
+### Problem: Disk space warning, or `df -h /` doesn't show ~100G
+**Solution**: Re-run the setup script; it skips anything already done:
 ```bash
-sudo growpart /dev/xvda 1
-sudo resize2fs /dev/xvda1
+bash ~/environment/terraform_v2/lab-exercises/lab01/setup.sh $TF_VAR_username
 ```
+If it reports **"Could not resize the volume"**, your Cloud9 credentials can't modify EBS volumes. Ask your instructor.
 
 ### Problem: "Docker daemon not running"
 **Solution**: Run `sudo service docker start`
@@ -498,13 +519,13 @@ sudo resize2fs /dev/xvda1
 **Solution**: Change the external port in main.tf to a different number
 
 ### Problem: "terraform: command not found"
-**Solution**: Re-run the installation commands from Exercise 1.2
+**Solution**: Re-run `setup.sh` (Exercise 1.2, Step 1), then open a new terminal tab
 
 ### Problem: "No value for required variable" or "Username must be 3-20 characters"
-**Solution**: Run `echo $TF_VAR_username`. If it is empty or wrong, re-run `export TF_VAR_username="userN"` with your assigned username (lowercase letters, numbers, and hyphens only)
+**Solution**: Run `echo $TF_VAR_username`. If it is empty, run `source ~/.bashrc`. If it is wrong, re-run `setup.sh` with your assigned username, then `source ~/.bashrc` (lowercase letters, numbers, and hyphens only)
 
 ### Problem: "Permission denied accessing Docker socket"
-**Solution**: Run `sudo usermod -a -G docker $USER` and restart Cloud9
+**Solution**: Open a new terminal tab (**Window → New Terminal**). If that doesn't help, re-run `setup.sh`, then open another new tab
 
 ---
 
