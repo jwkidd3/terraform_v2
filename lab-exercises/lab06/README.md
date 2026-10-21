@@ -350,18 +350,18 @@ aws s3 ls | grep "${TF_VAR_username}-state-demo"
 - [ ] Practiced safe state removal and import operations
 - [ ] Understood state backup and recovery procedures
 - [ ] Applied state management best practices for shared environments
-- [ ] Successfully cleaned up all resources
+- [ ] Cleaned up all resources
 
 ---
 
 ## 🎯 **Lab Summary**
 
 **What You've Accomplished:**
-- ✅ **Mastered state inspection** with terraform state commands
+- ✅ **Practiced state inspection** with terraform state commands
 - ✅ **Practiced state manipulation** safely with backup strategies
 - ✅ **Understood shared environment** state management concepts
 - ✅ **Applied state recovery techniques** with import operations
-- ✅ **Learned production-ready practices** for state security and isolation
+- ✅ **Reviewed practices** for state security and isolation
 
 ### Key Concepts Learned:
 - **State Structure**: Understanding how Terraform tracks infrastructure
@@ -370,13 +370,13 @@ aws s3 ls | grep "${TF_VAR_username}-state-demo"
 - **Shared Environment Practices**: Safe state management in team settings
 - **State Security**: Protecting sensitive information in state files
 
-### Production Skills Gained:
+### Skills Practiced:
 - Infrastructure state management and troubleshooting
 - Team collaboration patterns for Terraform workflows
 - State backup and recovery procedures
 - Resource import and state manipulation techniques
 
 **Next Steps:**
-Lab 7 will explore Terraform Registry modules and how to compose complex infrastructure using proven community modules.
+Lab 7 will explore Terraform Registry modules and how to compose complex infrastructure using community-maintained modules.
 
 ---

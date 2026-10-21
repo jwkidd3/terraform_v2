@@ -146,7 +146,7 @@ resource "aws_instance" "web_server" {
     echo "<h1>Terraform Lab 2 - ${var.username}</h1>" > /var/www/html/index.html
     echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
     echo "<p>Region: ${var.aws_region}</p>" >> /var/www/html/index.html
-    echo "<p>Deployed with Terraform!</p>" >> /var/www/html/index.html
+    echo "<p>Deployed with Terraform.</p>" >> /var/www/html/index.html
   EOF
   )
 

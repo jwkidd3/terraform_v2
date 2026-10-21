@@ -26,7 +26,7 @@ cat <<EOF > /var/www/html/index.html
 </head>
 <body>
     <div class="header">
-        <h1>Welcome to ${app_name}!</h1>
+        <h1>Welcome to ${app_name}</h1>
         <h2>Environment: ${environment}</h2>
     </div>
     <div class="content">

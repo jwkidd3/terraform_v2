@@ -1,4 +1,4 @@
-# main.tf - Your first Infrastructure as Code!
+# main.tf - A Docker image and container managed by Terraform
 
 terraform {
   required_version = ">= 1.9"
@@ -48,7 +48,7 @@ resource "docker_container" "web" {
       <!DOCTYPE html>
       <html>
       <head>
-          <title>My First Terraform Success!</title>
+          <title>Terraform-managed web server</title>
           <style>
               body { font-family: Arial; text-align: center; padding: 50px; background: #f0f8ff; }
               .container { max-width: 600px; margin: 0 auto; }
@@ -59,17 +59,17 @@ resource "docker_container" "web" {
       </head>
       <body>
           <div class="container">
-              <h1 class="success">🎉 Terraform Success!</h1>
+              <h1 class="success">Terraform-managed web server</h1>
               <div class="info">
-                  <h2>Hello from <span class="terraform">Terraform</span>!</h2>
+                  <h2>Deployed with <span class="terraform">Terraform</span></h2>
                   <p><strong>Container Owner:</strong> ${var.username}</p>
                   <p><strong>Created by:</strong> Infrastructure as Code</p>
                   <p><strong>Technology:</strong> Docker + Terraform</p>
-                  <p><strong>Status:</strong> Learning Terraform is awesome!</p>
+                  <p><strong>Image:</strong> nginx:latest</p>
               </div>
-              <h3>🏗️ You just created infrastructure with code!</h3>
+              <h3>How this page was created</h3>
               <p>This web server was created entirely through Terraform configuration.</p>
-              <p>No manual clicking, no GUI - just pure Infrastructure as Code!</p>
+              <p>The container and this page are defined in main.tf; no manual docker commands were run.</p>
           </div>
       </body>
       </html>

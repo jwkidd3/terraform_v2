@@ -12,7 +12,7 @@ By the end of this lab, you will be able to:
 - Combine multiple registry modules to build infrastructure
 - Configure module inputs and consume module outputs
 - Apply module versioning and best practices
-- Build a simple multi-tier application using proven modules
+- Build a simple multi-tier application using community-maintained modules
 
 ---
 

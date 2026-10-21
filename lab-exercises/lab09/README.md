@@ -8,7 +8,7 @@
 
 ## Learning Objectives
 By the end of this lab, you will be able to:
-- Design and implement a production-ready VPC with public and private subnets
+- Design and implement a VPC with public and private subnets
 - Configure advanced routing, a NAT Gateway, and Internet connectivity
 - Deploy a 2-tier application architecture across availability zones
 - Implement proper security group rules for network segmentation
@@ -44,8 +44,8 @@ echo "Username: $TF_VAR_username"
 cd ~/environment/terraform_v2/lab-exercises/lab09
 ```
 
-### Step 2: Review the Production-Ready VPC Infrastructure
-This configuration builds a comprehensive VPC that supports a 2-tier application with public subnets (for the ALB and NAT Gateway) and private subnets (for the web/application servers).
+### Step 2: Review the VPC Infrastructure
+This configuration builds a VPC that supports a 2-tier application with public subnets (for the ALB and NAT Gateway) and private subnets (for the web/application servers).
 
 This lab ships with a complete configuration — every file and block shown below is **already in the lab directory**. Don't add or paste anything; open each file in the Cloud9 editor and read along. (Pasting a block a second time would cause a `Duplicate resource` or `Duplicate variable declaration` error.)
 
@@ -576,26 +576,26 @@ done
 ## Lab Summary
 
 **What You Accomplished:**
-- Designed and implemented a production-ready VPC with a 2-tier architecture
+- Designed and implemented a VPC with a 2-tier architecture
 - Deployed infrastructure across multiple Availability Zones for high availability
 - Configured networking with a single NAT Gateway and proper routing
 - Implemented layered security with ALB and web server security groups
 - Deployed an Application Load Balancer with health checks and target groups
 - Placed web servers in private subnets for enhanced security
 
-**Key Networking Concepts Mastered:**
+**Key Networking Concepts:**
 - **VPC Design**: 2-tier architecture with proper CIDR planning
 - **High Availability**: Multi-AZ deployment patterns
 - **Security**: Network segmentation with security groups
 - **Routing**: Routing with a NAT Gateway and route tables
 - **Load Balancing**: Application Load Balancer configuration and health checks
 
-**Production-Ready Features:**
+**Architecture Features:**
 - Internet Gateway for public subnet connectivity
 - Single NAT Gateway for cost-optimized private subnet internet access
 - Private subnet isolation for web server security
 - Application Load Balancer for high availability and scalability
-- Health checks (`/health.html`) and automatic failover capabilities
+- Health checks (`/health.html`) that stop routing traffic to unhealthy instances
 
 ---
 

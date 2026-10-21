@@ -1,6 +1,6 @@
 # Terraform Infrastructure as Code Mastery
 
-**A comprehensive 3-day enterprise Terraform training course with specialized Terraform Cloud focus**
+**A 3-day Terraform course: core Terraform and AWS on Days 1–2, Terraform Cloud (HCP Terraform) on Day 3**
 
 [![Terraform](https://img.shields.io/badge/Terraform-%3E%3D%201.9-623CE4)](https://terraform.io)
 [![AWS](https://img.shields.io/badge/AWS-Cloud9-FF9900)](https://aws.amazon.com/cloud9/)
@@ -16,7 +16,7 @@
 ## Course Structure
 
 ### **Day 1: Terraform Core Concepts** (5 Labs)
-- **Lab 1**: Introduction to Terraform with Docker (45 min)
+- **Lab 1**: Introduction to Terraform (45 min)
 - **Lab 2**: AWS Infrastructure with Terraform (45 min)
 - **Lab 3**: Advanced Variables and Configuration (45 min)
 - **Lab 4**: Resource Dependencies and Lifecycle Management (45 min)
@@ -39,7 +39,7 @@
 terraform_v2/
 ├── README.md                          # Course introduction
 ├── lab-exercises/                     # 12 hands-on lab exercises
-│   ├── lab01/                         # Lab 1: Introduction to Terraform with Docker
+│   ├── lab01/                         # Lab 1: Introduction to Terraform
 │   ├── lab02/                         # Lab 2: AWS Infrastructure with Terraform
 │   ├── lab03/                         # Lab 3: Advanced Variables and Configuration
 │   ├── lab04/                         # Lab 4: Resource Dependencies and Lifecycle Management
@@ -64,7 +64,7 @@ terraform_v2/
 2. Review labs in [`lab-exercises/`](lab-exercises/)
 
 ### For Students
-1. Begin with [Lab 1 - Introduction to Terraform with Docker](lab-exercises/lab01/README.md)
+1. Begin with [Lab 1 - Introduction to Terraform](lab-exercises/lab01/README.md)
 2. Complete labs 1-12 in order
 3. Prerequisites: AWS Cloud9 environment, Terraform Cloud account (free tier), GitHub account
 
@@ -76,7 +76,7 @@ terraform_v2/
 ## Learning Outcomes
 
 ### Terraform Core Skills
-- Write production-ready HCL configurations
+- Write HCL configurations with variables, validation, data sources, and outputs
 - Manage infrastructure state effectively
 - Create reusable modules
 - Implement dependency management and lifecycle rules
@@ -94,10 +94,10 @@ terraform_v2/
 ## Course Metrics
 
 - **540 minutes** of hands-on Terraform experience (12 labs x 45 min)
-- **12 infrastructure deployments** across Docker, AWS, and Terraform Cloud
+- **12 infrastructure deployments**: a local warm-up in Lab 1, then AWS and Terraform Cloud (HCP Terraform)
 - **Introductory to advanced** progression over 3 days
 - **HashiCorp Terraform Associate** certification alignment
 
 ---
 
-**Start learning**: [Lab 1](lab-exercises/lab01/README.md)
+**Start with**: [Lab 1](lab-exercises/lab01/README.md)

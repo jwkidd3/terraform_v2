@@ -226,7 +226,7 @@ cat <<EOF > /var/www/html/index.html
 </head>
 <body>
     <div class="header">
-        <h1>Welcome to ${app_name}!</h1>
+        <h1>Welcome to ${app_name}</h1>
         <h2>Environment: ${environment}</h2>
     </div>
     <div class="content">
@@ -456,10 +456,10 @@ The error points at the module call in `main.tf` but names the rule in `modules/
 
 **What You've Accomplished:**
 - ✅ Created a reusable Terraform module with EC2, security group, and CloudWatch resources
-- ✅ Implemented variable validation and smart defaults
+- ✅ Implemented variable validation and sensible defaults
 - ✅ Used data sources for dynamic resource selection
 - ✅ Deployed the same module with different configurations
-- ✅ Created outputs for easy access to resource information
+- ✅ Created outputs that expose resource information
 
 **Key Module Design Concepts Learned:**
 - **Input Validation**: Using validation blocks to ensure correct input

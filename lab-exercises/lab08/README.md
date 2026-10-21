@@ -635,10 +635,10 @@ terraform destroy -var-file=environments/dev.tfvars
 ---
 
 ## 🎓 **Next Steps**
-In **Lab 9**, we'll explore **advanced networking with VPC** to build production-ready network architectures.
+In **Lab 9**, we'll explore **advanced networking with VPC** to build a two-tier network architecture.
 
 **Key topics coming up:**
 - Multi-tier VPC design
 - Advanced routing and NAT
 - Network security layers
-- VPC peering and endpoints
+- Application Load Balancer with health checks and target groups

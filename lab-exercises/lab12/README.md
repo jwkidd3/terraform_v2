@@ -13,7 +13,7 @@ By the end of this lab, you will be able to:
 - Observe speculative plans on pull requests
 - Compare CLI-driven and VCS-driven workflows
 
-> **Note on scope:** This lab focuses on the *workflow* — Git push triggering a remote run — not on building production infrastructure. The Terraform code deploys a single EC2 instance so you can spend your time on the VCS integration, not on waiting for an ALB to provision. Lab 9 already covers production-grade architecture.
+> **Note on scope:** This lab focuses on the *workflow* — Git push triggering a remote run — not on building production infrastructure. The Terraform code deploys a single EC2 instance so you can spend your time on the VCS integration, not on waiting for an ALB to provision. Lab 9 already covers a multi-tier VPC architecture.
 
 ---
 
@@ -309,8 +309,8 @@ Opening the pull request is what triggers the speculative plan.
 ### Key Concepts
 - **VCS-driven workflow** — TFC pulls code from GitHub on push; you don't run `terraform` locally
 - **Webhook integration** — GitHub notifies TFC of pushes and pull requests; the workspace acts only on its tracked branch
-- **Speculative plans** — pull requests against the tracked branch get plan-only runs reported back on the PR, perfect for review
-- **GitOps** — Git is the single source of truth for infrastructure state
+- **Speculative plans** — pull requests against the tracked branch get plan-only runs reported back on the PR for review before merge
+- **GitOps** — Git is the single source of truth for infrastructure configuration
 
 ---
 
@@ -330,13 +330,13 @@ cd ~/environment
 rm -rf terraform-vcs-lab12-<your-username>
 ```
 
-Keep the GitHub repository as a portfolio artifact, or delete it from GitHub when you're finished.
+Keep the GitHub repository for reference, or delete it from GitHub when you're finished.
 
 ---
 
 ## 🎓 **Course Conclusion**
-Congratulations — you've completed all 12 labs.
+The 12 labs covered:
 
 - **Terraform Core** (Labs 1–5): HCL, providers, variables, dependencies, modules
 - **Configuration & State** (Labs 6–9): state management, registry modules, multi-environment patterns, VPC networking
-- **Terraform Cloud** (Labs 10–12): CLI-driven workspaces, tag-based multi-workspace setups, and full GitOps via VCS-driven workflows
+- **Terraform Cloud** (Labs 10–12): CLI-driven workspaces, tag-based multi-workspace setups, and GitOps via VCS-driven workflows

@@ -1,4 +1,4 @@
-# outputs.tf - Comprehensive Infrastructure Outputs
+# outputs.tf - Infrastructure outputs
 
 # Infrastructure Information
 output "environment_info" {

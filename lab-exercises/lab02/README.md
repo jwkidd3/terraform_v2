@@ -17,7 +17,7 @@ By the end of this lab, you will be able to:
 ---
 
 ## 📋 **Prerequisites**
-- Completion of Lab 1 (Terraform with Docker)
+- Completion of Lab 1 (Introduction to Terraform)
 - AWS Cloud9 environment with appropriate IAM permissions
 - Terraform installed (from Lab 1)
 
@@ -203,7 +203,7 @@ resource "aws_instance" "web_server" {
     echo "<h1>Terraform Lab 2 - ${var.username}</h1>" > /var/www/html/index.html
     echo "<p>Environment: ${var.environment}</p>" >> /var/www/html/index.html
     echo "<p>Region: ${var.aws_region}</p>" >> /var/www/html/index.html
-    echo "<p>Deployed with Terraform!</p>" >> /var/www/html/index.html
+    echo "<p>Deployed with Terraform.</p>" >> /var/www/html/index.html
   EOF
   )
 
@@ -504,7 +504,7 @@ terraform state show aws_s3_bucket.app_storage
 
 ---
 
-## 🎉 **Lab Summary**
+## 📋 **Lab Summary**
 
 In this lab, you accomplished the following:
 
@@ -545,5 +545,3 @@ In **Lab 3**, you will learn:
 - Sensitive variable handling for secrets
 - Enterprise tagging and cost allocation strategies
 - Dynamic blocks and conditional resource creation
-
-**Congratulations! You've successfully deployed AWS infrastructure with Terraform!**

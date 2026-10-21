@@ -18,7 +18,7 @@
         
         .reveal {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            font-size: 30px;
+            font-size: 32px;
             font-weight: 300;
             color: #2c3e50;
             overflow: hidden;
@@ -83,13 +83,14 @@
             background-color: #272822;
             padding: 0;
             overflow: visible;
+            font-size: 0.5625em; /* 18px code floor (theme default is 0.55em) */
         }
         
         .reveal pre code {
-            padding: 15px;
-            font-size: 0.7em;
+            padding: 12px 15px;
+            font-size: 1em;
             line-height: 1.2;
-            max-height: 400px;
+            max-height: none;
             overflow-y: auto;
             overflow-x: auto;
             word-wrap: normal;
@@ -130,8 +131,8 @@
             padding: 4px 8px;
             margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 0.75em;
+            line-height: 1.25;
         }
         
         .reveal .danger {
@@ -140,8 +141,8 @@
             padding: 4px 8px;
             margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 0.75em;
+            line-height: 1.25;
         }
         
         .reveal .success {
@@ -150,8 +151,8 @@
             padding: 4px 8px;
             margin: 4px 0;
             border-radius: 4px;
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 0.75em;
+            line-height: 1.25;
         }
         
         .reveal .terraform-logo {
@@ -164,13 +165,25 @@
         }
         
         .reveal ul, .reveal ol {
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 0.75em;
+            line-height: 1.25;
             margin: 0.2em 0 0.2em 0.5em;
         }
         
         .reveal li {
             margin-bottom: 2px;
+        }
+
+        /* Lists nested in lists or callout boxes keep the 24px body size (no compounding) */
+        .reveal li ul, .reveal li ol,
+        .reveal .highlight ul, .reveal .highlight ol,
+        .reveal .danger ul, .reveal .danger ol,
+        .reveal .success ul, .reveal .success ol {
+            font-size: 1em;
+        }
+
+        .reveal .highlight p, .reveal .danger p, .reveal .success p {
+            margin: 0.2em 0;
         }
         
         .reveal .fragment {
@@ -194,7 +207,7 @@
             padding: 12px 16px;
             margin: 10px 0;
             font-family: 'Courier New', monospace;
-            font-size: 0.6em;
+            font-size: 0.625em;
             line-height: 1.3;
             white-space: pre-wrap;
             overflow-x: auto;
@@ -206,7 +219,7 @@
             padding: 12px 16px;
             border-radius: 8px;
             font-family: 'Courier New', monospace;
-            font-size: 0.6em;
+            font-size: 0.625em;
             line-height: 1.3;
             margin: 10px 0;
             white-space: pre-wrap;
@@ -226,26 +239,6 @@
         }
 
         /* Enhanced Responsive Design for Better Screen Fit */
-        @media screen and (min-width: 1600px) {
-            .reveal {
-                font-size: 32px;
-            }
-        }
-
-        @media screen and (max-width: 1400px) {
-            .reveal {
-                font-size: 28px;
-            }
-            
-            .reveal table {
-                font-size: 0.6em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.7em;
-            }
-        }
-
         @media screen and (max-width: 1024px) {
             .reveal {
                 font-size: 24px;
@@ -257,22 +250,10 @@
                 gap: 15px;
             }
             
-            .reveal pre code {
-                font-size: 0.6em;
-                max-height: 350px;
-            }
-            
             .reveal .slides section {
                 padding: 8px;
             }
             
-            .reveal table {
-                font-size: 0.55em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.65em;
-            }
         }
 
         @media screen and (max-width: 768px) {
@@ -292,28 +273,10 @@
                 font-size: 1.1em;
             }
             
-            .reveal pre code {
-                font-size: 0.55em;
-                max-height: 300px;
-                padding: 10px;
-            }
-            
             .reveal .slides section {
                 padding: 6px;
             }
             
-            .reveal table {
-                font-size: 0.5em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.6em;
-            }
-            
-            .reveal .highlight, .reveal .danger, .reveal .success {
-                padding: 4px 8px;
-                font-size: 0.7em;
-            }
         }
 
         /* Content overflow prevention */
@@ -328,7 +291,7 @@
         }
         
         .reveal table {
-            font-size: 0.65em;
+            font-size: 0.75em;
             overflow-x: auto;
             display: block;
             white-space: nowrap;
@@ -443,7 +406,7 @@
             }
             
             .reveal .lab-callout ul {
-                font-size: 0.65em;
+                font-size: 0.7em;
             }
         }
     </style>
@@ -456,16 +419,16 @@
             <section class="title-slide">
                 <h1><span class="emoji">🏗️</span> Module 1: Terraform Core Concepts</h1>
                 <div class="terraform-logo">Infrastructure as Code Mastery</div>
-                <p class="subtitle">Day 1 Theory Session • Comprehensive Overview</p>
-                <p><strong>Learning Path:</strong> From Zero to Infrastructure Automation Expert</p>
+                <p class="subtitle">Day 1 Theory Session</p>
+                <p><strong>Scope:</strong> Terraform fundamentals, from the core workflow to reusable modules</p>
                 <div class="highlight">
                     <p><strong>📚 What We'll Cover:</strong> Infrastructure as Code concepts, Terraform architecture, HCL syntax essentials, the core workflow, providers and data sources, variables and locals, dependencies and lifecycle, and modules</p>
                 </div>
             </section>
 
-            <!-- Comprehensive Course Overview and Agenda -->
+            <!-- Course Overview and Agenda -->
             <section>
-                <h2><span class="emoji">📋</span> Day 1 Complete Learning Agenda</h2>
+                <h2><span class="emoji">📋</span> Day 1 Agenda (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3><span class="emoji">🎯</span> Theory Sessions (~30% · ~90 min)</h3>
@@ -492,12 +455,18 @@
                             <p><strong>📊 Day 1 Focus:</strong> 70% hands-on learning + 30% theory, with each concept taught directly before the lab that uses it.</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">📋</span> Day 1 Agenda (2/2)</h2>
+                <h3><span class="emoji">⚡</span> Hands-On Labs (~70% · 5 × 45 min)</h3>
+                <div class="two-column">
                     <div class="column">
-                        <h3><span class="emoji">⚡</span> Hands-On Labs (~70% · 5 × 45 min)</h3>
                         <ul>
-                            <li><strong>Lab 1: Introduction to Terraform with Docker</strong>
+                            <li><strong>Lab 1: Introduction to Terraform</strong>
                                 <ul><li>Create your Cloud9 environment (SSH) and run <code>setup.sh</code></li>
-                                <li>Run an nginx container with the Docker provider</li>
+                                <li>Learn init, plan, apply and destroy in a safe local sandbox</li>
                                 <li>Practice init, plan, apply, destroy and inspect state</li></ul>
                             </li>
                             <li><strong>Lab 2: AWS Infrastructure with Terraform</strong>
@@ -510,6 +479,10 @@
                                 <li>Advanced validation, locals, and enterprise tagging</li>
                                 <li>Dynamic blocks and conditionals on an EC2 instance + security group</li></ul>
                             </li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <ul>
                             <li><strong>Lab 4: Resource Dependencies and Lifecycle Management</strong>
                                 <ul><li>Implicit and explicit (<code>depends_on</code>) dependencies</li>
                                 <li><code>count</code> and <code>for_each</code> with S3 objects</li>
@@ -527,10 +500,10 @@
 
             <!-- Learning Objectives -->
             <section>
-                <h2><span class="emoji">🎯</span> Comprehensive Learning Objectives</h2>
+                <h2><span class="emoji">🎯</span> Learning Objectives</h2>
                 <div class="two-column">
                     <div class="column">
-                        <h3>Core Concepts Mastery</h3>
+                        <h3>Core Concepts</h3>
                         <ul>
                             <li class="fragment"><strong>Infrastructure as Code (IaC)</strong> - Philosophy, benefits, and enterprise adoption patterns</li>
                             <li class="fragment"><strong>Terraform Architecture</strong> - Core components, providers, state management</li>
@@ -541,12 +514,12 @@
                         <h3>Practical Skills Development</h3>
                         <ul>
                             <li class="fragment"><strong>HCL Syntax Fluency</strong> - Blocks, arguments, expressions, functions</li>
-                            <li class="fragment"><strong>Workflow Mastery</strong> - init, plan, apply, destroy cycle</li>
+                            <li class="fragment"><strong>Core Workflow</strong> - init, plan, apply, destroy cycle</li>
                             <li class="fragment"><strong>State Understanding</strong> - Local vs remote, locking, backup strategies</li>
                         </ul>
                     </div>
                     <div class="column">
-                        <h3>Enterprise Readiness</h3>
+                        <h3>Team and Operational Practices</h3>
                         <ul>
                             <li class="fragment"><strong>Best Practices</strong> - Naming conventions, organization patterns</li>
                             <li class="fragment"><strong>Security Foundations</strong> - Credential management, least privilege</li>
@@ -555,46 +528,53 @@
                         </ul>
 
                         <div class="success">
-                            <p><strong>🎓 Outcome Expectation:</strong> By the end of Day 1, you'll confidently deploy infrastructure using Terraform, understand core concepts deeply, and be ready for advanced patterns in Days 2-3.</p>
+                            <p><strong>🎓 Outcome Expectation:</strong> By the end of Day 1, you'll be able to deploy infrastructure with Terraform, explain its core concepts, and build on them in Days 2-3.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Infrastructure as Code Revolution -->
+            <!-- Why Infrastructure as Code -->
             <section>
-                <h2><span class="emoji">🔥</span> The Infrastructure Revolution: Why Traditional Approaches Are Failing</h2>
+                <h2><span class="emoji">🔥</span> Why Infrastructure as Code (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
-                        <h3><span class="emoji">💥</span> Traditional Infrastructure Crisis</h3>
+                        <h3><span class="emoji">💥</span> Problems with Manual Infrastructure</h3>
                         <div class="danger">
-                            <p><strong>❌ The Manual Configuration Disaster:</strong></p>
-                            <ul style="font-size: 0.85em;">
+                            <p><strong>❌ Common Problems with Manual Configuration:</strong></p>
+                            <ul>
                                 <li><strong>Configuration Drift:</strong> Systems diverge over time, creating unpredictable behavior</li>
                                 <li><strong>Snowflake Servers:</strong> Each server becomes unique and unreproducible</li>
-                                <li><strong>Human Error Multiplication:</strong> Manual processes compound mistakes</li>
+                                <li><strong>Human Error:</strong> Manual processes compound mistakes</li>
                                 <li><strong>Documentation Decay:</strong> Changes rarely get documented properly</li>
-                                <li><strong>Scaling Impossibility:</strong> Can't replicate environments reliably</li>
-                                <li><strong>Audit Nightmares:</strong> No reliable change tracking or compliance proof</li>
+                                <li><strong>Hard to Scale:</strong> Can't replicate environments reliably</li>
+                                <li><strong>Weak Audit Trail:</strong> No reliable change tracking or compliance proof</li>
                                 <li><strong>Knowledge Silos:</strong> Critical knowledge trapped in individual minds</li>
-                                <li><strong>Deployment Anxiety:</strong> Every change carries high risk</li>
+                                <li><strong>Deployment Risk:</strong> Every change carries high risk</li>
                             </ul>
                         </div>
-
-                        <h3><span class="emoji">💸</span> Real Business Impact</h3>
-                        <ul style="font-size: 0.85em;">
+                    </div>
+                    <div class="column">
+                        <h3><span class="emoji">💸</span> Business Impact</h3>
+                        <ul>
                             <li><strong>Downtime Costs:</strong> Unplanned outages are expensive — automation reduces recovery time</li>
                             <li><strong>Labor Inefficiency:</strong> Significant ops time spent on repetitive manual tasks</li>
                             <li><strong>Security Vulnerabilities:</strong> Manual processes miss security updates</li>
                             <li><strong>Compliance Failures:</strong> Can't prove configuration compliance</li>
-                            <li><strong>Innovation Paralysis:</strong> Fear of change slows business growth</li>
+                            <li><strong>Slower Change:</strong> Risky changes get delayed or avoided</li>
                         </ul>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🔥</span> Why Infrastructure as Code (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3><span class="emoji">🚀</span> What IaC Brings</h3>
                         <div class="success">
                             <p><strong>✅ Infrastructure as Code Benefits:</strong></p>
-                            <ul style="font-size: 0.85em;">
+                            <ul>
                                 <li><strong>Version Control Everything:</strong> Git workflow for infrastructure changes</li>
                                 <li><strong>Reproducibility:</strong> The same code produces consistent environments</li>
                                 <li><strong>Self-Documenting:</strong> Code becomes living documentation</li>
@@ -606,9 +586,10 @@
                                 <li><strong>Multi-Environment Consistency:</strong> Dev/staging/prod built from the same code</li>
                             </ul>
                         </div>
-
-                        <h3><span class="emoji">📊</span> Process Transformation</h3>
-                        <table style="width: 100%; font-size: 0.7em; border-collapse: collapse;">
+                    </div>
+                    <div class="column">
+                        <h3><span class="emoji">📊</span> Process Comparison</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
                             <tr style="background-color: #ffebee;">
                                 <td style="padding: 5px; border: 1px solid #ccc;"><strong>Traditional:</strong></td>
                                 <td style="padding: 5px; border: 1px solid #ccc;">Plan → Manual → Hope → Document Later</td>
@@ -624,11 +605,11 @@
 
             <!-- Enterprise IaC Adoption Analysis -->
             <section>
-                <h2><span class="emoji">📈</span> Enterprise Infrastructure as Code: Market Reality & Success Stories</h2>
+                <h2><span class="emoji">📈</span> Infrastructure as Code: Adoption Drivers & Use Cases</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3><span class="emoji">📊</span> Why Organizations Adopt IaC</h3>
-                        <ul style="font-size: 0.8em;">
+                        <ul>
                             <li><strong>Consistency:</strong> Eliminate configuration drift across environments</li>
                             <li><strong>Speed:</strong> Provision infrastructure in minutes instead of days</li>
                             <li><strong>Reliability:</strong> Repeatable deployments reduce human error</li>
@@ -638,7 +619,7 @@
                         </ul>
                         
                         <h3><span class="emoji">🎯</span> Implementation Strategy</h3>
-                        <div style="font-size: 0.7em; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <div style="font-size: 0.75em; background: #f8f9fa; padding: 10px; border-radius: 5px;">
                             <strong>Phase 1:</strong> Proof of Concept (2-4 weeks)<br/>
                             <strong>Phase 2:</strong> Dev Environment Migration (4-8 weeks)<br/>
                             <strong>Phase 3:</strong> Staging Environment (8-12 weeks)<br/>
@@ -646,10 +627,10 @@
                         </div>
                     </div>
                     <div class="column">
-                        <h3><span class="emoji">🌍</span> Real-World Enterprise Use Cases</h3>
+                        <h3><span class="emoji">🌍</span> Example Use Cases by Industry</h3>
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🏦</span> Financial Services</h4>
-                            <ul style="font-size: 0.7em;">
+                            <ul>
                                 <li><strong>Common use cases:</strong> SOC compliance automation, disaster recovery</li>
                                 <li><strong>Benefits:</strong> Auditable infrastructure, consistent environments, cost optimization</li>
                             </ul>
@@ -657,18 +638,16 @@
                         
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🛒</span> E-Commerce & Retail</h4>
-                            <ul style="font-size: 0.7em;">
-                                <li><strong>Amazon:</strong> Millions of resources managed via IaC</li>
-                                <li><strong>Target:</strong> Black Friday scaling automation</li>
+                            <ul>
+                                <li><strong>Common use cases:</strong> Seasonal peak scaling, multi-region storefronts</li>
                                 <li><strong>Benefits:</strong> Auto-scaling, peak load handling, cost efficiency</li>
                             </ul>
                         </div>
                         
                         <div class="highlight" style="margin-bottom: 15px;">
                             <h4><span class="emoji">🎬</span> Media & Entertainment</h4>
-                            <ul style="font-size: 0.7em;">
-                                <li><strong>Netflix:</strong> Global content delivery at scale</li>
-                                <li><strong>Disney+:</strong> Launch day infrastructure management</li>
+                            <ul>
+                                <li><strong>Common use cases:</strong> Content delivery, launch-day capacity</li>
                                 <li><strong>Benefits:</strong> Global distribution, elastic scaling, cost control</li>
                             </ul>
                         </div>
@@ -678,10 +657,10 @@
             </section>
 
             <section>
-                <h2><span class="emoji">📊</span> Infrastructure as Code: Enterprise Impact</h2>
+                <h2><span class="emoji">📊</span> Infrastructure as Code: Organizational Impact</h2>
                 <div class="two-column">
                     <div class="column">
-                        <h3>Enterprise Adoption Statistics</h3>
+                        <h3>Commonly Reported Benefits</h3>
                         <div class="highlight">
                             <ul>
                                 <li><strong>Growing adoption</strong> of IaC across enterprises of all sizes</li>
@@ -714,7 +693,7 @@
                             </ul>
                         </div>
                         
-                        <h3>Industry Leaders Using IaC</h3>
+                        <h3>Example Organizations Using IaC</h3>
                         <ul>
                             <li><strong>Netflix:</strong> Cloud-native infrastructure</li>
                             <li><strong>Airbnb:</strong> Kubernetes + Terraform</li>
@@ -729,7 +708,7 @@
 
             <!-- Terraform Architecture Deep Dive -->
             <section>
-                <h2><span class="emoji">⚙️</span> Terraform Architecture: Under the Hood</h2>
+                <h2><span class="emoji">⚙️</span> Terraform Architecture: Under the Hood (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>Core Components Explained</h3>
@@ -742,48 +721,36 @@
                             <li class="fragment"><strong>Resources:</strong> Individual infrastructure components</li>
                             <li class="fragment"><strong>Data Sources:</strong> Read-only information from existing infrastructure</li>
                         </ul>
-                        
+                    </div>
+                    <div class="column">
                         <h3>Terraform Execution Flow</h3>
-                        <div class="command-demo">1. Configuration Parsing
-2. Provider Initialization
-3. Resource Graph Creation
-4. State Comparison
-5. Plan Generation
-6. Resource Provisioning
-7. State Update</div>
+                        <div class="command-demo">1. Configuration Parsing    5. Plan Generation
+2. Provider Initialization  6. Resource Provisioning
+3. Resource Graph Creation  7. State Update
+4. State Comparison</div>
                         
                         <div class="highlight">
                             <p><strong>💡 Key Insight:</strong> Terraform doesn't just create resources - it manages their entire lifecycle and maintains a detailed understanding of dependencies.</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">⚙️</span> Terraform Architecture: Under the Hood (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>Provider Ecosystem</h3>
                         <div class="success">
                             <p><strong>3000+ Providers Available</strong></p>
                             <ul>
-                                <li><strong>Major Cloud Providers:</strong>
-                                    <ul>
-                                        <li>AWS (1,500+ resource types) — used in this course</li>
-                                        <li>Azure, Google Cloud, and many others</li>
-                                    </ul>
-                                </li>
-                                <li><strong>Infrastructure Providers:</strong>
-                                    <ul>
-                                        <li>VMware vSphere</li>
-                                        <li>Docker</li>
-                                        <li>Kubernetes</li>
-                                    </ul>
-                                </li>
-                                <li><strong>SaaS Providers:</strong>
-                                    <ul>
-                                        <li>GitHub, GitLab</li>
-                                        <li>Datadog, New Relic</li>
-                                        <li>PagerDuty, Slack</li>
-                                    </ul>
-                                </li>
+                                <li><strong>Major Cloud Providers:</strong> AWS (1,500+ resource types) — used in this course; Azure, Google Cloud, and many others</li>
+                                <li><strong>Infrastructure Providers:</strong> VMware vSphere, Docker, Kubernetes</li>
+                                <li><strong>SaaS Providers:</strong> GitHub, GitLab, Datadog, New Relic, PagerDuty, Slack</li>
                             </ul>
                         </div>
-                        
+                    </div>
+                    <div class="column">
                         <h3>State Management Deep Dive</h3>
                         <div class="architecture-diagram">Configuration → Plan → Apply → State
      ↓           ↓       ↓       ↓
@@ -802,7 +769,7 @@
                 </div>
             </section>
 
-            <!-- HCL Syntax Mastery -->
+            <!-- HCL Syntax -->
             <section>
                 <h2><span class="emoji">📝</span> HCL Syntax: Basic Structures</h2>
                 <div class="two-column">
@@ -859,7 +826,7 @@ variable "availability_zones" {
             </section>
 
 
-            <!-- Workflow Mastery (1/2) -->
+            <!-- Core Workflow (1/2) -->
             <section>
                 <h2><span class="emoji">🔄</span> Terraform Workflow: Initialize &amp; Plan</h2>
                 <div class="two-column">
@@ -879,10 +846,8 @@ variable "availability_zones" {
                         <h3>Advanced Init Options</h3>
                         <div class="command-demo"># Upgrade providers
 $ terraform init -upgrade
-
 # Copy from another environment
 $ terraform init -from-module=../prod
-
 # Backend configuration
 $ terraform init -backend-config="bucket=my-state-bucket"</div>
 
@@ -907,13 +872,10 @@ $ terraform init -backend-config="bucket=my-state-bucket"</div>
                         <h3>Plan Variations</h3>
                         <div class="command-demo"># Save plan for later
 $ terraform plan -out=tfplan
-
 # Target specific resources
 $ terraform plan -target=aws_instance.web
-
 # Destroy plan
 $ terraform plan -destroy
-
 # Variable specification
 $ terraform plan -var="instance_count=3"</div>
 
@@ -924,7 +886,7 @@ $ terraform plan -var="instance_count=3"</div>
                 </div>
             </section>
 
-            <!-- Workflow Mastery (2/2) -->
+            <!-- Core Workflow (2/2) -->
             <section>
                 <h2><span class="emoji">🔄</span> Terraform Workflow: Apply, Destroy &amp; State</h2>
                 <div class="two-column">
@@ -978,7 +940,7 @@ $ terraform state mv aws_instance.web aws_instance.web_server</div>
 
             <!-- Preparation for Labs -->
             <section>
-                <h2><span class="emoji">🎯</span> Preparation for Hands-On Labs</h2>
+                <h2><span class="emoji">🎯</span> Preparation for Hands-On Labs (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>Our Lab Environment</h3>
@@ -994,6 +956,8 @@ $ terraform state mv aws_instance.web aws_instance.web_server</div>
                         <div class="highlight">
                             <p><strong>🌎 Regions:</strong> Cloud9 runs in <strong>us-east-1</strong>; Terraform labs deploy to <strong>us-east-2</strong> (the default for <code>var.aws_region</code>).</p>
                         </div>
+                    </div>
+                    <div class="column">
 
                         <div class="danger">
                             <p><strong>⚠️ Shared Account Rules:</strong></p>
@@ -1010,7 +974,21 @@ $ terraform state mv aws_instance.web aws_instance.web_server</div>
                             <li>Text editor comfort (Cloud9 editor, vim, etc.)</li>
                             <li>Git basics understanding</li>
                         </ul>
+
+                        <h3>Key Skills You'll Develop Today</h3>
+                        <ul>
+                            <li><strong>Configuration Writing:</strong> Fluent HCL syntax</li>
+                            <li><strong>Core Workflow:</strong> init → plan → apply → destroy</li>
+                            <li><strong>State Understanding:</strong> How Terraform tracks resources</li>
+                            <li><strong>Variables, Dependencies &amp; Modules:</strong> Dynamic, reusable configurations</li>
+                        </ul>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🎯</span> Preparation for Hands-On Labs (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>🎯 Lab 1 Preparation</h3>
                         <ol>
@@ -1022,21 +1000,14 @@ $ terraform state mv aws_instance.web aws_instance.web_server</div>
                         <div class="command-demo">$ cd ~/environment/terraform_v2
 $ bash lab-exercises/lab01/setup.sh user1
 $ source ~/.bashrc</div>
-                        <p style="font-size: 0.75em;"><code>setup.sh</code> grows the disk to 100 GB (no reboot), installs Terraform 1.9.8, unzip, jq and git, starts Docker, and saves <code>TF_VAR_username</code> to <code>~/.bashrc</code>.</p>
+                    </div>
+                    <div class="column">
+                        <p style="font-size: 0.75em;"><code>setup.sh</code> grows the disk to 100 GB (no reboot), installs Terraform 1.9.8, unzip, jq and git, and saves <code>TF_VAR_username</code> to <code>~/.bashrc</code>.</p>
                         <ol start="5">
                             <li>Quick checks:</li>
                         </ol>
                         <div class="command-demo">$ df -h /              # Size ~100G
-$ terraform version    # v1.9.8
-$ docker ps</div>
-
-                        <h3>Key Skills You'll Develop Today</h3>
-                        <ul>
-                            <li><strong>Configuration Writing:</strong> Fluent HCL syntax</li>
-                            <li><strong>Workflow Mastery:</strong> init → plan → apply → destroy</li>
-                            <li><strong>State Understanding:</strong> How Terraform tracks resources</li>
-                            <li><strong>Variables, Dependencies &amp; Modules:</strong> Dynamic, reusable configurations</li>
-                        </ul>
+$ terraform version    # v1.9.8</div>
                     </div>
                 </div>
             </section>
@@ -1044,21 +1015,20 @@ $ docker ps</div>
             <!-- Lab 1 Callout -->
             <section class="lab-callout" data-background-color="#623ce4">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔬</span> Time for Hands-On Practice!</h1>
-                    <h2><span class="emoji">🐳</span> Lab 1: Introduction to Terraform with Docker</h2>
+                    <h1><span class="emoji">🔬</span> Hands-On: The Terraform Workflow</h1>
+                    <h2><span class="emoji">🚀</span> Lab 1: Introduction to Terraform</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Build:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Create your AWS Cloud9 environment (us-east-1, SSH connection)</li>
-                            <li>✅ Run setup.sh (100 GB disk, Terraform 1.9.8, Docker, username)</li>
-                            <li>✅ Run an nginx web server container with the Docker provider</li>
+                            <li>✅ Run setup.sh (100 GB disk, Terraform 1.9.8, username)</li>
+                            <li>✅ Deploy your first resource: a local web server container (Lab 1 only)</li>
                             <li>✅ Practice the terraform init, plan, apply, destroy workflow and inspect state</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Learn Terraform with local Docker infrastructure!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Learn the Terraform workflow in a safe local sandbox.</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🚀 Let's Build Something Amazing!</h2>
                 </div>
             </section>
 
@@ -1166,9 +1136,9 @@ data "aws_subnets" "default" {
 
             <!-- Resources -->
             <section>
-                <h2><span class="emoji">🧱</span> Resources: Creating AWS Infrastructure</h2>
-                <div class="two-column">
-                    <div class="column">
+                <h2><span class="emoji">🧱</span> Resources: Creating AWS Infrastructure (1/2)</h2>
+                <div>
+                    <div>
                         <h3>S3 Bucket with a Unique Name</h3>
                         <pre><code class="language-hcl">resource "random_id" "bucket_suffix" {
   byte_length = 4
@@ -1191,6 +1161,12 @@ resource "aws_s3_bucket" "app_storage" {
   }
 }</code></pre>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🧱</span> Resources: Creating AWS Infrastructure (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>Security Group</h3>
                         <pre><code class="language-hcl">resource "aws_security_group" "web_sg" {
@@ -1212,7 +1188,8 @@ resource "aws_s3_bucket" "app_storage" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }</code></pre>
-
+                    </div>
+                    <div class="column">
                         <h3>Resource Addressing</h3>
                         <div class="highlight">
                             <p><strong>Resource Address Format:</strong> <code>resource_type.resource_name[index]</code></p>
@@ -1228,9 +1205,9 @@ resource "aws_s3_bucket" "app_storage" {
 
             <!-- Variables and Outputs -->
             <section>
-                <h2><span class="emoji">📥</span> Input Variables &amp; Outputs</h2>
-                <div class="two-column">
-                    <div class="column">
+                <h2><span class="emoji">📥</span> Input Variables &amp; Outputs (1/2)</h2>
+                <div>
+                    <div>
                         <h3>Variables with Validation</h3>
                         <pre><code class="language-hcl">variable "username" {
   description = "Your unique username (shared account)"
@@ -1256,7 +1233,13 @@ variable "environment" {
                             <p><strong>💡 Setting Values:</strong> <code>export TF_VAR_username="user1"</code> sets <code>var.username</code>; you can also use <code>terraform.tfvars</code> or <code>-var</code>.</p>
                         </div>
                     </div>
-                    <div class="column">
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">📥</span> Input Variables &amp; Outputs (2/2)</h2>
+                <div>
+                    <div>
                         <h3>Outputs</h3>
                         <pre><code class="language-hcl">output "account_info" {
   description = "AWS account information"
@@ -1344,10 +1327,10 @@ terraform fmt -recursive</div>
             <!-- Lab 2 Callout -->
             <section class="lab-callout" data-background-color="#28a745">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">☁️</span> Next Challenge: AWS Cloud Infrastructure!</h1>
+                    <h1><span class="emoji">☁️</span> Hands-On: AWS Cloud Infrastructure</h1>
                     <h2><span class="emoji">⚙️</span> Lab 2: AWS Infrastructure with Terraform</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
+                        <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Configure the AWS provider with version constraints</li>
                             <li>✅ Deploy AWS infrastructure with S3, EC2, and security groups</li>
@@ -1356,15 +1339,14 @@ terraform fmt -recursive</div>
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Transition from local containers to cloud infrastructure!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Moves from a local container to resources in AWS.</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">☁️ Deploy to the Cloud!</h2>
                 </div>
             </section>
 
             <!-- HCL Advanced (1/2) -->
             <section>
-                <h2><span class="emoji">⚡</span> HCL Syntax: Conditionals &amp; Functions</h2>
+                <h2><span class="emoji">⚡</span> HCL Syntax: Conditionals &amp; Functions (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>Conditional Expressions</h3>
@@ -1380,15 +1362,23 @@ terraform fmt -recursive</div>
     Name = "web-${count.index + 1}"
   }
 }</code></pre>
+                    </div>
+                    <div class="column">
                         <div class="highlight">
                             <p><strong>💡 Syntax Tip:</strong> <code>condition ? true_value : false_value</code>. To split a long conditional across lines, wrap it in parentheses.</p>
                         </div>
-
-                        <h3>Optional Arguments with null</h3>
-                        <pre><code class="language-hcl"># null means "argument not set"
-key_name = var.key_pair_name != "" ? var.key_pair_name : null</code></pre>
                     </div>
-                    <div class="column">
+                </div>
+
+                <h3>Optional Arguments with null</h3>
+                <pre><code class="language-hcl"># null means "argument not set"
+key_name = var.key_pair_name != "" ? var.key_pair_name : null</code></pre>
+            </section>
+
+            <section>
+                <h2><span class="emoji">⚡</span> HCL Syntax: Conditionals &amp; Functions (2/2)</h2>
+                <div>
+                    <div>
                         <h3>Functions</h3>
                         <pre><code class="language-hcl">locals {
   # String manipulation
@@ -1414,7 +1404,7 @@ $ terraform console
 
             <!-- HCL Advanced (2/2) -->
             <section>
-                <h2><span class="emoji">⚡</span> HCL Syntax: Validation &amp; Dynamic Blocks</h2>
+                <h2><span class="emoji">⚡</span> HCL Syntax: Validation &amp; Dynamic Blocks (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>Variable Validation</h3>
@@ -1437,7 +1427,8 @@ variable "availability_zones" {
     error_message = "Need 2+ AZs for HA."
   }
 }</code></pre>
-
+                    </div>
+                    <div class="column">
                         <h3>Complex Types: Objects</h3>
                         <pre><code class="language-hcl">variable "application_config" {
   type = object({
@@ -1447,6 +1438,12 @@ variable "availability_zones" {
   })
 }</code></pre>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">⚡</span> HCL Syntax: Validation &amp; Dynamic Blocks (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>Dynamic Blocks</h3>
                         <pre><code class="language-hcl">resource "aws_security_group" "web" {
@@ -1463,6 +1460,8 @@ variable "availability_zones" {
     }
   }
 }</code></pre>
+                    </div>
+                    <div class="column">
                         <div class="success">
                             <p><strong>Why Dynamic Blocks?</strong></p>
                             <ul>
@@ -1477,9 +1476,9 @@ variable "availability_zones" {
 
             <!-- Locals -->
             <section>
-                <h2><span class="emoji">🧮</span> Locals: Computed Values &amp; Tagging Strategy</h2>
-                <div class="two-column">
-                    <div class="column">
+                <h2><span class="emoji">🧮</span> Locals: Computed Values &amp; Tagging Strategy (1/2)</h2>
+                <div>
+                    <div>
                         <h3>Local Values</h3>
                         <pre><code class="language-hcl"># locals.tf
 locals {
@@ -1502,7 +1501,13 @@ locals {
   instance_type = local.config[var.environment].instance_type
 }</code></pre>
                     </div>
-                    <div class="column">
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🧮</span> Locals: Computed Values &amp; Tagging Strategy (2/2)</h2>
+                <div>
+                    <div>
                         <h3>Validating Numbers</h3>
                         <pre><code class="language-hcl">variable "instance_count" {
   description = "Number of instances"
@@ -1514,7 +1519,10 @@ locals {
     error_message = "Instance count must be between 1 and 10."
   }
 }</code></pre>
-
+                    </div>
+                </div>
+                <div class="two-column">
+                    <div class="column">
                         <h3>Using Locals</h3>
                         <pre><code class="language-hcl">resource "aws_instance" "app" {
   ami           = data.aws_ami.amazon_linux.id
@@ -1524,6 +1532,8 @@ locals {
     Name = "${local.name_prefix}-app"
   })
 }</code></pre>
+                    </div>
+                    <div class="column">
                         <div class="highlight">
                             <p><strong>💡 Variables vs Locals:</strong> variables are <em>inputs</em> set by the caller; locals are <em>computed</em> inside the configuration and cannot be overridden.</p>
                         </div>
@@ -1534,10 +1544,10 @@ locals {
             <!-- Lab 3 Callout -->
             <section class="lab-callout" data-background-color="#fd7e14">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">📊</span> Next Challenge: Dynamic Configuration!</h1>
+                    <h1><span class="emoji">📊</span> Hands-On: Dynamic Configuration</h1>
                     <h2><span class="emoji">⚙️</span> Lab 3: Advanced Variables and Configuration</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
+                        <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Complex variable types: objects, maps, and validation rules</li>
                             <li>✅ Locals for naming, computed values, and enterprise tagging</li>
@@ -1546,9 +1556,8 @@ locals {
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Make your infrastructure configurations reusable and dynamic!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">The whole configuration is driven by variables, locals, and expressions.</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🔧 Build Flexible Infrastructure!</h2>
                 </div>
             </section>
 
@@ -1608,9 +1617,9 @@ resource "aws_s3_bucket_versioning" "app_data" {
 
             <!-- Real-World Example: dependency chain -->
             <section>
-                <h2><span class="emoji">🌟</span> Real-World Example: A Network Dependency Chain</h2>
-                <div class="two-column">
-                    <div class="column">
+                <h2><span class="emoji">🌟</span> Real-World Example: A Network Dependency Chain (1/2)</h2>
+                <div>
+                    <div>
                         <h3>VPC and Subnets</h3>
                         <pre><code class="language-hcl"># VPC is created first...
 resource "aws_vpc" "main" {
@@ -1637,6 +1646,12 @@ resource "aws_subnet" "public" {
   }
 }</code></pre>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🌟</span> Real-World Example: A Network Dependency Chain (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>Security Group in the VPC</h3>
                         <pre><code class="language-hcl">resource "aws_security_group" "web" {
@@ -1658,7 +1673,8 @@ resource "aws_subnet" "public" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }</code></pre>
-
+                    </div>
+                    <div class="column">
                         <h3>Outputs with Splat Expressions</h3>
                         <pre><code class="language-hcl">output "vpc_id" {
   value = aws_vpc.main.id
@@ -1676,7 +1692,7 @@ output "public_subnet_ids" {
 
             <!-- count and for_each -->
             <section>
-                <h2><span class="emoji">🔢</span> Multiple Resources: count and for_each</h2>
+                <h2><span class="emoji">🔢</span> Multiple Resources: count and for_each (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>count: Numbered Copies</h3>
@@ -1688,7 +1704,8 @@ output "public_subnet_ids" {
   content = "Data file ${count.index + 1}"
 }
 # Addresses: aws_s3_object.data_files[0], [1]</code></pre>
-
+                    </div>
+                    <div class="column">
                         <h3>Conditional Resource Creation</h3>
                         <pre><code class="language-hcl"># Create resource only in prod
 resource "aws_cloudtrail" "audit" {
@@ -1697,7 +1714,14 @@ resource "aws_cloudtrail" "audit" {
   name           = "${var.project_name}-audit-trail"
   s3_bucket_name = aws_s3_bucket.audit[0].bucket
 }</code></pre>
+                    </div>
+                </div>
+            </section>
 
+            <section>
+                <h2><span class="emoji">🔢</span> Multiple Resources: count and for_each (2/2)</h2>
+                <div class="two-column">
+                    <div class="column">
                         <h3>for_each over a Set</h3>
                         <pre><code class="language-hcl">resource "aws_instance" "web" {
   for_each = toset(var.availability_zones)
@@ -1706,6 +1730,14 @@ resource "aws_cloudtrail" "audit" {
   instance_type     = "t3.micro"
   availability_zone = each.value
 }</code></pre>
+                        <div class="success">
+                            <p><strong>count vs for_each:</strong></p>
+                            <ul>
+                                <li><strong>count</strong> → list, addressed by index <code>[0]</code></li>
+                                <li><strong>for_each</strong> → map, addressed by key <code>["alice"]</code></li>
+                                <li>Removing a middle item from <code>count</code> shifts indexes and can force replacements; <code>for_each</code> keys stay stable</li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="column">
                         <h3>for_each: Keyed Instances</h3>
@@ -1731,14 +1763,6 @@ resource "aws_iam_user" "users" {
     Team = each.value.team
   }
 }</code></pre>
-                        <div class="success">
-                            <p><strong>count vs for_each:</strong></p>
-                            <ul>
-                                <li><strong>count</strong> → list, addressed by index <code>[0]</code></li>
-                                <li><strong>for_each</strong> → map, addressed by key <code>["alice"]</code></li>
-                                <li>Removing a middle item from <code>count</code> shifts indexes and can force replacements; <code>for_each</code> keys stay stable</li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1793,10 +1817,10 @@ resource "aws_iam_user" "users" {
             <!-- Lab 4 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> Advanced Challenge: Dependencies and Lifecycle!</h1>
+                    <h1><span class="emoji">🔗</span> Hands-On: Dependencies and Lifecycle</h1>
                     <h2><span class="emoji">⚙️</span> Lab 4: Resource Dependencies and Lifecycle Management</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
+                        <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Understand how Terraform manages resource dependencies</li>
                             <li>✅ Use <code>count</code> to create multiple similar resources</li>
@@ -1805,15 +1829,14 @@ resource "aws_iam_user" "users" {
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build an organized S3 bucket structure from dependent resources!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build an organized S3 bucket structure from dependent resources.</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🏗️ Master Advanced Patterns!</h2>
                 </div>
             </section>
 
             <!-- Module Theory Section -->
             <section>
-                <h2><span class="emoji">📦</span> Introduction to Terraform Modules</h2>
+                <h2><span class="emoji">📦</span> Introduction to Terraform Modules (1/2)</h2>
                 <div class="two-column">
                     <div class="column">
                         <h3>What are Modules?</h3>
@@ -1831,17 +1854,6 @@ resource "aws_iam_user" "users" {
 ├── outputs.tf   # Returns
 └── user_data.sh # Template file</div>
 
-                        <h3>Rendering a Template</h3>
-                        <pre><code class="language-hcl"># modules/web-application/main.tf
-resource "aws_instance" "web" {
-  # ...
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    app_name    = var.app_name
-    environment = var.environment
-    username    = var.username
-  }))
-}</code></pre>
-                        <p style="font-size: 0.75em;"><code>templatefile()</code> fills <code>${app_name}</code>-style placeholders in the file; <code>path.module</code> is the module's own directory.</p>
                     </div>
 
                     <div class="column">
@@ -1871,11 +1883,29 @@ resource "aws_instance" "web" {
                 </div>
             </section>
 
+            <section>
+                <h2><span class="emoji">📦</span> Introduction to Terraform Modules (2/2)</h2>
+                <div>
+                    <div>                        <h3>Rendering a Template</h3>
+                        <pre><code class="language-hcl"># modules/web-application/main.tf
+resource "aws_instance" "web" {
+  # ...
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    app_name    = var.app_name
+    environment = var.environment
+    username    = var.username
+  }))
+}</code></pre>
+                        <p style="font-size: 0.75em;"><code>templatefile()</code> fills <code>${app_name}</code>-style placeholders in the file; <code>path.module</code> is the module's own directory.</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Module Inputs, Outputs, Reuse -->
             <section>
-                <h2><span class="emoji">🧩</span> Module Inputs, Outputs &amp; Reuse</h2>
-                <div class="two-column">
-                    <div class="column">
+                <h2><span class="emoji">🧩</span> Module Inputs, Outputs &amp; Reuse (1/2)</h2>
+                <div>
+                    <div>
                         <h3>Inside the Module</h3>
                         <pre><code class="language-hcl"># modules/web-application/variables.tf
 variable "environment" {
@@ -1903,6 +1933,12 @@ output "website_url" {
   value = "http://${aws_instance.web.public_ip}"
 }</code></pre>
                     </div>
+                </div>
+            </section>
+
+            <section>
+                <h2><span class="emoji">🧩</span> Module Inputs, Outputs &amp; Reuse (2/2)</h2>
+                <div class="two-column">
                     <div class="column">
                         <h3>Calling It Twice</h3>
                         <pre><code class="language-hcl">module "dev_blog" {
@@ -1931,6 +1967,8 @@ output "all_websites" {
     portfolio = module.staging_portfolio.website_url
   }
 }</code></pre>
+                    </div>
+                    <div class="column">
                         <div class="highlight">
                             <p><strong>💡 Module outputs</strong> are the only values callers can read: <code>module.NAME.OUTPUT</code>.</p>
                         </div>
@@ -1941,10 +1979,10 @@ output "all_websites" {
             <!-- Lab 5 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🏗️</span> Final Challenge: Modular Architecture!</h1>
+                    <h1><span class="emoji">🏗️</span> Hands-On: Modular Architecture</h1>
                     <h2><span class="emoji">📦</span> Lab 5: Creating and Using Terraform Modules</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
-                        <h3>🎯 What You'll Master:</h3>
+                        <h3>🎯 What You'll Do:</h3>
                         <ul style="font-size: 1.1em; line-height: 1.6;">
                             <li>✅ Build a reusable web application module with EC2, security group, and CloudWatch</li>
                             <li>✅ Implement variable validation and conditional resource creation</li>
@@ -1953,9 +1991,8 @@ output "all_websites" {
                         </ul>
                     </div>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
-                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build reusable infrastructure components!</p>
+                        <p style="font-size: 1.1em; margin: 10px 0 0 0;">Build one module and call it with different settings.</p>
                     </div>
-                    <h2 style="margin-top: 30px; font-size: 2em;">🚀 Complete Day 1 Mastery!</h2>
                 </div>
             </section>
 
@@ -1966,7 +2003,7 @@ output "all_websites" {
                     <div class="column">
                         <h3>Enterprise Patterns</h3>
                         <div class="highlight">
-                            <p><strong>🏢 Enterprise Success Patterns:</strong></p>
+                            <p><strong>🏢 Recommended Patterns:</strong></p>
                             <ul>
                                 <li><strong>Module Strategy:</strong> Reusable, tested, versioned modules</li>
                                 <li><strong>Environment Separation:</strong> Isolated state and configurations</li>
@@ -1995,7 +2032,7 @@ output "all_websites" {
 
             <!-- Summary and Next Steps -->
             <section class="title-slide">
-                <h2><span class="emoji">🚀</span> Ready to Continue Your Terraform Journey!</h2>
+                <h2><span class="emoji">🚀</span> Day 1 Summary and Next Steps</h2>
                 <div class="terraform-logo">Day 1 Foundation Complete</div>
 
                 <div class="two-column">
@@ -2012,13 +2049,13 @@ output "all_websites" {
                             </ul>
                         </div>
 
-                        <h3>Your Learning Path</h3>
+                        <h3>Course Outline</h3>
                         <div class="architecture-diagram">Day 1: Core Concepts ← You Are Here
-Day 2: Configuration Mastery
+Day 2: Terraform Configuration
 Day 3: Terraform Cloud Enterprise</div>
                     </div>
                     <div class="column">
-                        <h3>Success Metrics</h3>
+                        <h3>Day 1 Outcomes</h3>
                         <div class="highlight">
                             <p><strong>🎯 By End of Day 1 You Can:</strong></p>
                             <ul>
@@ -2026,17 +2063,13 @@ Day 3: Terraform Cloud Enterprise</div>
                                 <li>Explain how Terraform uses state and the dependency graph</li>
                                 <li>Write validated, well-structured configurations</li>
                                 <li>Create and use custom modules</li>
-                                <li>Troubleshoot common issues confidently</li>
+                                <li>Troubleshoot common errors</li>
                             </ul>
-                        </div>
-
-                        <div class="terraform-logo">
-                            <strong>🏗️ Let's Build Infrastructure!</strong>
                         </div>
 
                         <p><strong>Course Structure:</strong> Day 1 of 3</p>
                         <p><strong>Up Next — Day 2:</strong></p>
-                        <ul style="font-size: 0.8em;">
+                        <ul>
                             <li>Lab 6: Local State Management and Best Practices</li>
                             <li>Lab 7: Working with Terraform Registry Modules</li>
                             <li>Lab 8: Multi-Environment Deployment Patterns</li>
@@ -2056,8 +2089,8 @@ Day 3: Terraform Cloud Enterprise</div>
     <script>
         Reveal.initialize({
             // Display configuration optimized for all screen sizes
-            width: 1920,
-            height: 1080,
+            width: 1440,
+            height: 810,
             margin: 0.03,
 
             // Scaling — minScale lowered so dense slides fit on smaller projectors
@@ -2068,7 +2101,7 @@ Day 3: Terraform Cloud Enterprise</div>
             hash: true,
             controls: true,
             progress: true,
-            center: false,
+            center: true,
             touch: true,
             keyboard: true,
             overview: true,

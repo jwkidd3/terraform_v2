@@ -20,7 +20,7 @@ output "web_url" {
   value       = "http://localhost:${docker_container.web.ports[0].external}"
 }
 
-output "success_message" {
-  description = "Congratulations message"
-  value       = "🎉 Congratulations ${var.username}! You've successfully created infrastructure with Terraform!"
+output "summary" {
+  description = "One-line summary of the deployed container"
+  value       = "Container ${docker_container.web.name} (owner: ${var.username}) is serving nginx on port ${docker_container.web.ports[0].external}"
 }

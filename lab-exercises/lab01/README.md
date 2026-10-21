@@ -1,4 +1,4 @@
-# Lab 1: Introduction to Terraform with Docker
+# Lab 1: Introduction to Terraform
 **Duration:** 45 minutes  
 **Difficulty:** Introductory
 **Day:** 1  
@@ -9,8 +9,8 @@
 ## 🎯 **Learning Objectives**
 By the end of this lab, you will be able to:
 - Set up an AWS Cloud9 development environment
-- Prepare Cloud9 with a setup script (100 GB disk, Terraform, Docker)
-- Create a Terraform configuration using the Docker provider
+- Prepare Cloud9 with a setup script (100 GB disk, Terraform, username)
+- Write your first Terraform configuration, using a local container as a safe sandbox
 - Execute the complete Terraform workflow: init, plan, apply, destroy
 - Interpret Terraform plan output and state files
 
@@ -100,7 +100,7 @@ A fresh Cloud9 environment has a small 10 GB disk and no Terraform. The course r
 |------|----------------------|
 | 1 | Grows the Cloud9 disk (EBS root volume) to **100 GB** and extends the filesystem |
 | 2 | Installs **Terraform 1.9.8** (checksum-verified), plus `unzip`, `jq`, and `git` |
-| 3 | Starts **Docker** and makes sure your user can run it |
+| 3 | Starts Docker, which this lab uses as a local sandbox (no later lab needs it) |
 | 4 | Saves your username to `~/.bashrc` as `TF_VAR_username` |
 
 The script is safe to re-run: steps that are already done are skipped.
@@ -167,7 +167,7 @@ ls
 
 You should see `main.tf`, `outputs.tf`, `setup.sh` (which you ran in Exercise 1.2), `terraform.tfvars`, and this `README.md`.
 
-### Step 2: Review main.tf - Your First Infrastructure!
+### Step 2: Review main.tf
 Open `main.tf`. This is your first Terraform file — it manages a Docker image and a container:
 
 ```bash
@@ -175,7 +175,7 @@ cat main.tf
 ```
 
 ```hcl
-# main.tf - Your first Infrastructure as Code!
+# main.tf - A Docker image and container managed by Terraform
 
 terraform {
   required_version = ">= 1.9"
@@ -225,7 +225,7 @@ resource "docker_container" "web" {
       <!DOCTYPE html>
       <html>
       <head>
-          <title>My First Terraform Success!</title>
+          <title>Terraform-managed web server</title>
           <style>
               body { font-family: Arial; text-align: center; padding: 50px; background: #f0f8ff; }
               .container { max-width: 600px; margin: 0 auto; }
@@ -236,17 +236,17 @@ resource "docker_container" "web" {
       </head>
       <body>
           <div class="container">
-              <h1 class="success">🎉 Terraform Success!</h1>
+              <h1 class="success">Terraform-managed web server</h1>
               <div class="info">
-                  <h2>Hello from <span class="terraform">Terraform</span>!</h2>
+                  <h2>Deployed with <span class="terraform">Terraform</span></h2>
                   <p><strong>Container Owner:</strong> ${var.username}</p>
                   <p><strong>Created by:</strong> Infrastructure as Code</p>
                   <p><strong>Technology:</strong> Docker + Terraform</p>
-                  <p><strong>Status:</strong> Learning Terraform is awesome!</p>
+                  <p><strong>Image:</strong> nginx:latest</p>
               </div>
-              <h3>🏗️ You just created infrastructure with code!</h3>
+              <h3>How this page was created</h3>
               <p>This web server was created entirely through Terraform configuration.</p>
-              <p>No manual clicking, no GUI - just pure Infrastructure as Code!</p>
+              <p>The container and this page are defined in main.tf; no manual docker commands were run.</p>
           </div>
       </body>
       </html>
@@ -291,9 +291,9 @@ output "web_url" {
   value       = "http://localhost:${docker_container.web.ports[0].external}"
 }
 
-output "success_message" {
-  description = "Congratulations message"
-  value       = "🎉 Congratulations ${var.username}! You've successfully created infrastructure with Terraform!"
+output "summary" {
+  description = "One-line summary of the deployed container"
+  value       = "Container ${docker_container.web.name} (owner: ${var.username}) is serving nginx on port ${docker_container.web.ports[0].external}"
 }
 ```
 
@@ -364,7 +364,7 @@ terraform output container_name
 terraform output -raw web_url
 ```
 
-### Step 5: View Your Success!
+### Step 5: Inspect the Container
 ```bash
 # Check your container is running
 docker ps
@@ -380,7 +380,7 @@ Since we're in Cloud9, we can't directly browse to localhost:8080, but we can te
 # Test your web server using the web_url output
 curl $(terraform output -raw web_url)
 
-# You should see your custom HTML page!
+# The response is the HTML page defined in main.tf
 ```
 
 ### Step 7: View Terraform State
@@ -394,16 +394,16 @@ terraform state list
 
 ---
 
-## 🎉 **Understanding What Just Happened**
+## 📋 **Understanding What Just Happened**
 
-### The Magic of Infrastructure as Code:
+### How Infrastructure as Code Worked Here:
 1. **You wrote code** (main.tf) that described your desired infrastructure
 2. **Terraform planned** exactly what it would create
 3. **Terraform created** real infrastructure (Docker containers) from your code
 4. **Terraform tracks** the state of your infrastructure
 
 ### Key Files:
-- `main.tf` - Your infrastructure definition (this IS your documentation!)
+- `main.tf` - Your infrastructure definition (it also documents what exists)
 - `outputs.tf` - Values Terraform reports back after each apply
 - `terraform.tfvars` - Variable values (your `username` comes from `TF_VAR_username` instead)
 - `terraform.tfstate` - Terraform's knowledge of your infrastructure (created by `apply`)
@@ -455,7 +455,7 @@ terraform destroy
 # Verify container is gone
 docker ps | grep $TF_VAR_username
 
-# Should return nothing - container was removed!
+# Should return nothing - the container was removed
 ```
 
 ---
@@ -469,7 +469,7 @@ docker ps | grep $TF_VAR_username
 ✅ **Managed real infrastructure** (web server container) through code  
 ✅ **Understood state management** - how Terraform tracks your infrastructure  
 ✅ **Made infrastructure changes** by editing code  
-✅ **Successfully cleaned up** all resources  
+✅ **Cleaned up** all resources  
 
 ### Core Concepts Learned:
 - **Infrastructure as Code**: Infrastructure defined in version-controlled files
@@ -481,9 +481,11 @@ docker ps | grep $TF_VAR_username
 
 ---
 
-## 🔍 **Why We Started with Docker**
+## 🔍 **Why Lab 1 Uses a Local Container**
 
-### Perfect Learning Environment:
+This is the only lab that uses Docker. It lets you learn the Terraform workflow before touching the cloud; from Lab 2 onward everything runs on AWS and HCP Terraform.
+
+### Why a Container Works Well for Lab 1:
 - **Fast**: Containers start in seconds, not minutes
 - **Safe**: No cloud costs or complex permissions
 - **Visual**: You can see your web server immediately
@@ -493,7 +495,7 @@ docker ps | grep $TF_VAR_username
 ### Real Infrastructure Skills:
 - The **same Terraform concepts** apply to AWS, Azure, GCP
 - The **same workflow** works for any infrastructure
-- The **same state management** principles scale to enterprise
+- The **same state management** principles apply at any scale
 - The **same best practices** apply everywhere
 
 ---
@@ -536,14 +538,10 @@ In Lab 2, you'll learn:
 - How to deploy infrastructure to AWS cloud
 - Working with AWS credentials and regions
 - Creating cloud resources like S3 buckets and EC2 instances
-- The power of cloud-scale Infrastructure as Code
 
-### Why This Foundation Matters:
-- **Same concepts, bigger scale**: What you learned applies to entire data centers
-- **Enterprise ready**: The workflow scales from containers to cloud empires
-- **Career valuable**: These skills are in high demand everywhere
-
-**Congratulations! You've taken your first step into Infrastructure as Code! 🚀**
+### How This Lab Carries Forward:
+- The init → plan → apply → destroy workflow is the same for AWS resources
+- Providers, resources, variables, outputs, and state work the same way regardless of the target platform
 
 ---
 
@@ -552,5 +550,3 @@ In Lab 2, you'll learn:
 2. What advantages does code-based infrastructure provide?
 3. How would you share this infrastructure setup with a teammate?
 4. What would happen if you ran `terraform apply` twice in a row?
-
-**You're now ready to scale up to cloud infrastructure in Lab 2!**

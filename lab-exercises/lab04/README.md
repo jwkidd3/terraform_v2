@@ -122,7 +122,7 @@ resource "aws_s3_bucket" "app_data" {
 
 # Step 2: Create bucket versioning (depends on bucket)
 resource "aws_s3_bucket_versioning" "app_data" {
-  bucket = aws_s3_bucket.app_data.id # This creates a dependency!
+  bucket = aws_s3_bucket.app_data.id # This reference creates the dependency
 
   versioning_configuration {
     status = "Disabled"
@@ -383,7 +383,7 @@ terraform output
 
 ---
 
-## 🎉 **Lab Summary**
+## 📋 **Lab Summary**
 
 ### What You Accomplished:
 ✅ **Learned implicit dependencies**: S3 bucket → versioning → file upload

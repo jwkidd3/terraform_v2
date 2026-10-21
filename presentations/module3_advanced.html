@@ -24,7 +24,7 @@
         /* Global Reveal.js Overrides */
         .reveal {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            font-size: 34px;
+            font-size: 32px;
             font-weight: 300;
             color: #2c3e50;
         }
@@ -58,6 +58,11 @@
             margin-bottom: 0.1em;
         }
 
+        .reveal h5 {
+            font-size: 1em;
+            margin-bottom: 0.1em;
+        }
+
         /* Slide Layout - Fixed for content overflow */
         .reveal .slides section {
             text-align: left;
@@ -81,14 +86,18 @@
         /* Typography - Optimized for dense content */
         .reveal p {
             margin: 0.3em 0;
-            line-height: 1.2;
-            font-size: 0.85em;
+            line-height: 1.25;
+            font-size: 26px;
         }
 
         .reveal ul, .reveal ol {
             margin: 0.2em 0 0.2em 0.5em;
             line-height: 1.3;
-            font-size: 0.9em;
+            font-size: 26px;
+        }
+
+        .reveal li ul, .reveal li ol {
+            font-size: inherit;
         }
 
         .reveal li {
@@ -103,7 +112,7 @@
             padding: 4px 8px;
             color: var(--terraform-dark);
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 1.0em;
+            font-size: max(24px, 0.9em);
         }
 
         .reveal pre {
@@ -119,8 +128,8 @@
             background-color: transparent;
             border: none;
             padding: 8px;
-            font-size: 0.9em;
-            line-height: 1.3;
+            font-size: 20px;
+            line-height: 1.2;
             color: #f8f8f2;
             max-height: 780px;
             overflow-y: auto;
@@ -165,8 +174,8 @@
             padding: 6px 8px;
             margin: 4px 0;
             box-shadow: 0 1px 3px rgba(255, 152, 0, 0.2);
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         .reveal .danger {
@@ -176,8 +185,8 @@
             padding: 6px 8px;
             margin: 4px 0;
             box-shadow: 0 1px 3px rgba(244, 67, 54, 0.2);
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         .reveal .success {
@@ -187,8 +196,8 @@
             padding: 6px 8px;
             margin: 4px 0;
             box-shadow: 0 1px 3px rgba(30, 136, 229, 0.2);
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         .reveal .info {
@@ -198,8 +207,8 @@
             padding: 6px 8px;
             margin: 4px 0;
             box-shadow: 0 1px 3px rgba(76, 175, 80, 0.2);
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         .reveal .enterprise {
@@ -210,8 +219,8 @@
             margin: 4px 0;
             box-shadow: 0 1px 3px rgba(98, 60, 228, 0.3);
             position: relative;
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         .reveal .enterprise::before {
@@ -228,8 +237,8 @@
             padding: 8px 10px;
             margin: 4px 0;
             color: white;
-            font-size: 0.7em;
-            line-height: 1.2;
+            font-size: 26px;
+            line-height: 1.25;
         }
 
         /* Section Dividers */
@@ -269,7 +278,7 @@
             border-collapse: collapse;
             width: 100%;
             margin: 20px 0;
-            font-size: 0.85em;
+            font-size: 24px;
         }
 
         .reveal table th,
@@ -385,29 +394,6 @@
         }
 
         /* Enhanced Responsive Design for Better Screen Fit */
-        @media screen and (min-width: 1600px) {
-            .reveal {
-                font-size: 32px;
-            }
-        }
-
-        @media screen and (max-width: 1400px) {
-            .reveal {
-                font-size: 28px;
-            }
-            .reveal h1 { font-size: 1.5em; }
-            .reveal h2 { font-size: 1.25em; }
-            .reveal h3 { font-size: 0.95em; }
-            
-            .reveal table {
-                font-size: 0.65em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.7em;
-            }
-        }
-
         @media screen and (max-width: 1024px) {
             .reveal {
                 font-size: 24px;
@@ -424,22 +410,13 @@
                 gap: 10px;
             }
             
-            .reveal pre code {
-                font-size: 0.45em;
-                max-height: 280px;
-            }
+
             
             .reveal .slides section {
                 padding: 8px;
             }
             
-            .reveal table {
-                font-size: 0.6em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.65em;
-            }
+
         }
 
         @media screen and (max-width: 768px) {
@@ -467,27 +444,16 @@
                 font-size: 0.85em;
             }
             
-            .reveal pre code {
-                font-size: 0.4em;
-                max-height: 250px;
-                padding: 6px;
-            }
+
             
             .reveal .slides section {
                 padding: 6px;
             }
             
-            .reveal table {
-                font-size: 0.55em;
-            }
-            
-            .reveal ul, .reveal ol {
-                font-size: 0.6em;
-            }
+
             
             .reveal .highlight, .reveal .danger, .reveal .success, .reveal .info, .reveal .enterprise {
                 padding: 4px 6px;
-                font-size: 0.65em;
             }
         }
 
@@ -503,16 +469,16 @@
         }
         
         .reveal table {
-            font-size: 0.65em;
+            font-size: 24px;
             overflow-x: auto;
             display: block;
-            white-space: nowrap;
+            white-space: normal;
             width: 100%;
             border-collapse: collapse;
         }
         
         .reveal table th, .reveal table td {
-            padding: 3px 5px;
+            padding: 4px 10px;
             border: 1px solid #ddd;
             font-size: inherit;
         }
@@ -559,7 +525,7 @@
         }
         
         .reveal .dense-content ul, .reveal .dense-content ol {
-            font-size: 0.8em;
+            font-size: 26px;
             line-height: 1.1;
             margin: 0.1em 0 0.1em 0.3em;
         }
@@ -580,11 +546,11 @@
         .reveal .dense-content .enterprise {
             padding: 4px 6px;
             margin: 4px 0;
-            font-size: 0.7em;
+            font-size: 26px;
         }
         
         .reveal .dense-content pre code {
-            font-size: 0.5em;
+            font-size: 20px;
             max-height: 300px;
             padding: 6px;
             line-height: 1.1;
@@ -678,7 +644,7 @@
         }
 
         .reveal .lab-callout ul {
-            font-size: 0.7em;
+            font-size: 1.0em;
             line-height: 1.2;
             margin: 0.2em 0;
         }
@@ -726,7 +692,7 @@
                 <p><strong>Course Structure:</strong> Day 3 of 3 - Terraform Cloud Focus</p>
                 <p><strong>Labs:</strong> 10, 11, 12 &mdash; 3 hands-on labs, 45 minutes each</p>
                 <div class="terraform-brand" style="margin: 20px auto; max-width: 900px;">
-                    <p>🏆 <strong>Learning Journey:</strong> Remote Execution → Multiple Workspaces → VCS-Driven Workflows → Governance</p>
+                    <p>🏆 <strong>Day 3 Outline:</strong> Remote Execution → Multiple Workspaces → VCS-Driven Workflows → Governance</p>
                 </div>
                 <div class="highlight" style="margin: 10px auto; max-width: 900px; text-align: left;">
                     <p>📛 <strong>Name change:</strong> Terraform Cloud has been renamed <strong>HCP Terraform</strong>. The web UI and current docs say &ldquo;HCP Terraform&rdquo; &mdash; same product, same URL (<code>app.terraform.io</code>). Lab titles keep the original &ldquo;Terraform Cloud&rdquo; name.</p>
@@ -781,10 +747,10 @@
                 </div>
             </section>
 
-            <!-- Comprehensive Learning Objectives -->
+            <!-- Learning Objectives -->
             <section class="dense-content">
                 <div class="section-divider">
-                    <h2>🎯 Terraform Cloud - Day 3 Learning Path</h2>
+                    <h2>🎯 Terraform Cloud - Day 3 Learning Path (1/2)</h2>
                 </div>
                 <div class="terraform-brand">
                     <h3>🚀 From Local Runs to Team Workflows</h3>
@@ -795,7 +761,7 @@
                 <div class="two-column">
                     <div class="column">
                         <h4>☁️ Hands-On in the Labs</h4>
-                        <ul style="font-size: 0.8em; line-height: 1.2;">
+                        <ul style="line-height: 1.2;">
                             <li><strong>Organizations &amp; Workspaces:</strong> CLI-driven and VCS-driven workspaces</li>
                             <li><strong>The <code>cloud {}</code> Block:</strong> <code>name</code> vs <code>tags</code> workspace selection</li>
                             <li><strong>Remote Execution:</strong> Plans and applies on Terraform Cloud runners</li>
@@ -807,7 +773,7 @@
                     </div>
                     <div class="column">
                         <h4>🔒 Survey Topics (after the labs)</h4>
-                        <ul style="font-size: 0.8em; line-height: 1.2;">
+                        <ul style="line-height: 1.2;">
                             <li><strong>CI/CD Alternatives:</strong> GitHub Actions, <code>terraform test</code>, Trivy, conftest</li>
                             <li><strong>Policy as Code:</strong> Sentinel and OPA policy sets</li>
                             <li><strong>Registry:</strong> Public and private module registries</li>
@@ -816,14 +782,20 @@
                         </ul>
                     </div>
                 </div>
+            </section>
 
-                <!-- Career Impact -->
+            <section class="dense-content">
+                <div class="section-divider">
+                    <h2>🎯 Terraform Cloud - Day 3 Learning Path (2/2)</h2>
+                </div>
+
+                <!-- Skills and Next Steps -->
                 <div class="enterprise" style="margin: 15px 0;">
-                    <h4>📈 Career Impact</h4>
+                    <h4>📈 Skills and Next Steps</h4>
                     <div class="three-column">
                         <div class="column">
                             <h5>🎯 Skills You'll Gain</h5>
-                            <ul style="font-size: 0.7em;">
+                            <ul>
                                 <li>Terraform Cloud administration</li>
                                 <li>Remote state and workspace management</li>
                                 <li>VCS-driven deployment workflows</li>
@@ -831,15 +803,15 @@
                         </div>
                         <div class="column">
                             <h5>🏢 Enterprise Relevance</h5>
-                            <ul style="font-size: 0.7em;">
-                                <li>Widely adopted in enterprise</li>
-                                <li>Key skill for DevOps and Cloud roles</li>
+                            <ul>
+                                <li>Common in team and enterprise settings</li>
+                                <li>Used in DevOps and cloud roles</li>
                                 <li>Foundation for HashiCorp certification</li>
                             </ul>
                         </div>
                         <div class="column">
                             <h5>🚀 Next Steps</h5>
-                            <ul style="font-size: 0.7em;">
+                            <ul>
                                 <li>Explore Sentinel policy as code</li>
                                 <li>Set up a private module registry</li>
                                 <li>Pursue Terraform Associate certification</li>
@@ -852,19 +824,17 @@
             <!-- Detailed Lab Matrix -->
             <section class="dense-content">
                 <div class="section-divider">
-                    <h2>🧪 Day 3 Laboratory Exercises - 3 Labs</h2>
+                    <h2>🧪 Day 3 Laboratory Exercises - 3 Labs (1/3)</h2>
                 </div>
                 <div class="terraform-brand">
                     <h3>📊 3 Labs × 45 Minutes = 2 h 15 min Hands-On</h3>
                     <p>Each lab builds on the previous one: CLI-driven → multiple workspaces → VCS-driven</p>
                 </div>
 
-                <!-- Labs 10-11 Detailed Breakdown -->
-                <div class="two-column">
-                    <div class="column">
+                <!-- Lab 10 Detailed Breakdown -->
                         <div class="info" style="padding: 15px;">
                             <h4>☁️ Lab 10: Terraform Cloud Integration and Remote Execution</h4>
-                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
+                            <ul style="line-height: 1.4; margin: 10px 0;">
                                 <li><strong>Organization:</strong> Create <code>&lt;username&gt;-terraform-training</code> (names are globally unique &mdash; if taken, add a short suffix)</li>
                                 <li><strong>CLI-Driven Workspace:</strong> One workspace for this configuration</li>
                                 <li><strong>Connect:</strong> <code>cloud {}</code> block + <code>terraform login</code> from Cloud9</li>
@@ -873,14 +843,20 @@
                                 <li><strong>Infrastructure:</strong> One EC2 instance + security group; inspect Runs, States, Outputs; destroy</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Move a local configuration to remote state and remote execution</p>
+                                <p style="margin: 0;"><strong>Outcomes:</strong> Move a local configuration to remote state and remote execution</p>
                             </div>
                         </div>
-                    </div>
-                    <div class="column">
+            </section>
+
+            <section class="dense-content">
+                <div class="section-divider">
+                    <h2>🧪 Day 3 Laboratory Exercises - 3 Labs (2/3)</h2>
+                </div>
+
+                <!-- Lab 11 Detailed Breakdown -->
                         <div class="success" style="padding: 15px;">
                             <h4>👥 Lab 11: Terraform Cloud Workspaces</h4>
-                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 10px 0;">
+                            <ul style="line-height: 1.4; margin: 10px 0;">
                                 <li><strong>Tag-Based Selection:</strong> <code>cloud { workspaces { tags = ["lab11"] } }</code></li>
                                 <li><strong>Multiple Workspaces:</strong> <code>terraform workspace new</code> creates <code>lab11-development</code> and <code>lab11-staging</code>, tagged <code>lab11</code></li>
                                 <li><strong>Workspace Variables:</strong> Different <code>environment</code> / <code>instance_count</code> per workspace</li>
@@ -889,10 +865,14 @@
                                 <li><strong>Settings:</strong> Manual apply method</li>
                             </ul>
                             <div style="background: rgba(30, 136, 229, 0.1); padding: 8px; border-radius: 4px; margin-top: 10px;">
-                                <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Deploy 1 instance to development and 2 to staging from identical HCL</p>
+                                <p style="margin: 0;"><strong>Outcomes:</strong> Deploy 1 instance to development and 2 to staging from identical HCL</p>
                             </div>
                         </div>
-                    </div>
+            </section>
+
+            <section class="dense-content">
+                <div class="section-divider">
+                    <h2>🧪 Day 3 Laboratory Exercises - 3 Labs (3/3)</h2>
                 </div>
 
                 <!-- Lab 12 Detailed Breakdown -->
@@ -900,7 +880,7 @@
                     <h4>🔗 Lab 12: VCS-Driven Terraform Cloud with GitHub Integration</h4>
                     <div class="two-column" style="margin: 5px 0;">
                         <div class="column">
-                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
+                            <ul style="line-height: 1.4; margin: 5px 0;">
                                 <li><strong>VCS Provider:</strong> GitHub App, or OAuth &ldquo;GitHub.com (Custom)&rdquo;</li>
                                 <li><strong>VCS-Driven Workspace:</strong> Connected to your GitHub repo</li>
                                 <li><strong>First Run:</strong> Start it manually (New run → Plan and apply)</li>
@@ -908,7 +888,7 @@
                             </ul>
                         </div>
                         <div class="column">
-                            <ul style="font-size: 0.85em; line-height: 1.6; margin: 5px 0;">
+                            <ul style="line-height: 1.4; margin: 5px 0;">
                                 <li><strong>Update via Git:</strong> Bump <code>app_version</code> and push again</li>
                                 <li><strong>Speculative Plans:</strong> Plan-only runs for pull requests against <code>main</code></li>
                                 <li><strong>Cleanup:</strong> &ldquo;Allow destroy plans&rdquo; enabled + queue destroy plan</li>
@@ -916,7 +896,7 @@
                         </div>
                     </div>
                     <div style="background: rgba(255, 152, 0, 0.1); padding: 8px; border-radius: 4px; margin-top: 5px;">
-                        <p style="font-size: 0.85em; margin: 0;"><strong>Outcomes:</strong> Drive infrastructure changes entirely through Git and compare CLI-driven with VCS-driven workflows</p>
+                        <p style="margin: 0;"><strong>Outcomes:</strong> Drive infrastructure changes entirely through Git and compare CLI-driven with VCS-driven workflows</p>
                     </div>
                 </div>
             </section>
@@ -941,18 +921,18 @@
                             </ul>
                         </div>
                         <div class="column">
-                            <h4>📈 Adoption</h4>
+                            <h4>🤝 Collaboration</h4>
                             <ul>
-                                <li>Widely adopted across Fortune 500</li>
-                                <li>Thousands of organizations globally</li>
-                                <li>Millions of resources managed</li>
-                                <li>Strong ecosystem and community</li>
+                                <li>Shared remote state per workspace</li>
+                                <li>Run history visible to the team</li>
+                                <li>VCS integration (GitHub, GitLab, Bitbucket)</li>
+                                <li>Private module registry</li>
                             </ul>
                         </div>
                         <div class="column">
                             <h4>🔒 Governance</h4>
                             <ul>
-                                <li>Complete audit trail</li>
+                                <li>Audit trail of runs</li>
                                 <li>Encrypted state storage</li>
                                 <li>Role-based access control</li>
                                 <li>Policy enforcement capabilities</li>
@@ -962,12 +942,12 @@
                 </section>
 
                 <section>
-                    <h3>🏠 Local Terraform — Enterprise Challenges</h3>
+                    <h3>🏠 Local Terraform — Team Challenges</h3>
                     <div class="danger" style="padding: 15px;">
-                        <h4>⚠️ Critical Business Risks</h4>
+                        <h4>⚠️ Business Risks</h4>
                         <ul>
                             <li><strong>State File Loss:</strong> Lost or corrupted state means Terraform no longer knows what it manages</li>
-                            <li><strong>Security Breaches:</strong> Credentials in local files</li>
+                            <li><strong>Credential Exposure:</strong> Credentials in local files</li>
                             <li><strong>Compliance Failures:</strong> No audit trails or governance</li>
                             <li><strong>Team Bottlenecks:</strong> Single points of failure</li>
                         </ul>
@@ -985,9 +965,9 @@
                 </section>
 
                 <section>
-                    <h3>☁️ Terraform Cloud — Enterprise Advantages</h3>
+                    <h3>☁️ Terraform Cloud — What It Adds</h3>
                     <div class="success" style="padding: 15px;">
-                        <h4>🏆 Business Value Drivers</h4>
+                        <h4>🏆 Business Benefits</h4>
                         <ul>
                             <li><strong>Productivity:</strong> Shared runners, no local setup to keep in sync</li>
                             <li><strong>Risk Reduction:</strong> Locked, versioned state and reviewed plans</li>
@@ -1001,7 +981,7 @@
                             <li><strong>Remote State:</strong> Automatic locking, versioning, encryption at rest</li>
                             <li><strong>Secure Variables:</strong> Sensitive, write-only workspace variables and variable sets</li>
                             <li><strong>Team Workflows:</strong> RBAC, approval processes</li>
-                            <li><strong>Complete Audit:</strong> Full run history</li>
+                            <li><strong>Audit:</strong> Full run history</li>
                             <li><strong>Policy Enforcement:</strong> Sentinel and OPA policy sets</li>
                         </ul>
                     </div>
@@ -1169,7 +1149,7 @@ terraform destroy   # clean up at the end of the lab</code></pre>
             <!-- Lab 10 Callout -->
             <section class="lab-callout" data-background-color="#623ce4">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">☁️</span> Time for Remote Execution!</h1>
+                    <h1><span class="emoji">☁️</span> Hands-On: Remote Execution</h1>
                     <h2><span class="emoji">🗂️</span> Lab 10: Terraform Cloud Integration and Remote Execution</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Do:</h3>
@@ -1183,7 +1163,6 @@ terraform destroy   # clean up at the end of the lab</code></pre>
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; Cloud9 (us-east-1) deploys to us-east-2 &middot; the UI says &ldquo;HCP Terraform&rdquo;</p>
                     </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🚀 Run It Remotely!</h2>
                 </div>
             </section>
 
@@ -1336,7 +1315,7 @@ resource "aws_instance" "app" {
             <!-- Lab 11 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🏢</span> Next Challenge: One Configuration, Many Workspaces!</h1>
+                    <h1><span class="emoji">🏢</span> Hands-On: One Configuration, Many Workspaces</h1>
                     <h2><span class="emoji">☁️</span> Lab 11: Terraform Cloud Workspaces</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Do:</h3>
@@ -1350,7 +1329,6 @@ resource "aws_instance" "app" {
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; Same HCL, different variables per workspace</p>
                     </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🏢 Master Workspaces!</h2>
                 </div>
             </section>
 
@@ -1474,7 +1452,7 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
             <!-- Lab 12 Callout -->
             <section class="lab-callout" data-background-color="#dc3545">
                 <div style="text-align: center; color: white;">
-                    <h1><span class="emoji">🔗</span> Final Challenge: Git Push Becomes the Trigger!</h1>
+                    <h1><span class="emoji">🔗</span> Hands-On: Git Push as the Run Trigger</h1>
                     <h2><span class="emoji">📋</span> Lab 12: VCS-Driven Terraform Cloud with GitHub Integration</h2>
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; margin: 20px 0;">
                         <h3>🎯 What You'll Do:</h3>
@@ -1488,7 +1466,6 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
                     <div style="background: rgba(255,193,7,0.2); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #ffc107;">
                         <p style="font-size: 1.0em; margin: 8px 0 0 0;">45 minutes &middot; GitHub + Terraform Cloud + AWS (us-east-2)</p>
                     </div>
-                    <h2 style="margin-top: 20px; font-size: 1.8em;">🚀 Automate Deployments!</h2>
                 </div>
             </section>
 
@@ -1503,11 +1480,11 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
                     <h3>🔄 GitOps Workflow with Terraform</h3>
                     <div style="text-align: center;">
                         <div style="display: inline-block; padding: 10px 20px; background: #623ce4; color: white; border-radius: 5px; margin: 5px;">Code Push</div>
-                        <span style="font-size: 16px;">→</span>
+                        <span style="font-size: 26px;">→</span>
                         <div style="display: inline-block; padding: 10px 20px; background: #ff9900; color: white; border-radius: 5px; margin: 5px;">CI Pipeline</div>
-                        <span style="font-size: 16px;">→</span>
+                        <span style="font-size: 26px;">→</span>
                         <div style="display: inline-block; padding: 10px 20px; background: #17a2b8; color: white; border-radius: 5px; margin: 5px;">Plan Review</div>
-                        <span style="font-size: 16px;">→</span>
+                        <span style="font-size: 26px;">→</span>
                         <div style="display: inline-block; padding: 10px 20px; background: #28a745; color: white; border-radius: 5px; margin: 5px;">Auto Deploy</div>
                     </div>
                     <div class="info">
@@ -1658,17 +1635,17 @@ module "green_environment" {
                         <h4>🏢 Public &amp; Private Module Registries</h4>
                         <div class="three-column">
                             <div class="column">
-                                <p style="font-size: 0.9em; margin: 0;"><strong>Public Registry:</strong></p>
-                                <ul style="font-size: 0.85em; margin: 5px 0;">
+                                <p style="margin: 0;"><strong>Public Registry:</strong></p>
+                                <ul style="margin: 5px 0;">
                                     <li><strong>AWS Provider:</strong> 1,500+ resource types</li>
-                                    <li><strong>VPC Module:</strong> Most popular AWS module</li>
+                                    <li><strong>VPC Module:</strong> <code>terraform-aws-modules/vpc/aws</code></li>
                                     <li><strong>Security Groups:</strong> Common patterns</li>
                                     <li><strong>EKS / RDS Modules:</strong> Kubernetes and databases</li>
                                 </ul>
                             </div>
                             <div class="column">
-                                <p style="font-size: 0.9em; margin: 0;"><strong>Private Registry:</strong></p>
-                                <ul style="font-size: 0.85em; margin: 5px 0;">
+                                <p style="margin: 0;"><strong>Private Registry:</strong></p>
+                                <ul style="margin: 5px 0;">
                                     <li>Built into every Terraform Cloud organization</li>
                                     <li>Publish modules from a VCS repo by Git tag</li>
                                     <li>Source: <code>app.terraform.io/&lt;org&gt;/&lt;name&gt;/aws</code></li>
@@ -1676,8 +1653,8 @@ module "green_environment" {
                                 </ul>
                             </div>
                             <div class="column">
-                                <p style="font-size: 0.9em; margin: 0;"><strong>Module Benefits:</strong></p>
-                                <ul style="font-size: 0.85em; margin: 5px 0;">
+                                <p style="margin: 0;"><strong>Module Benefits:</strong></p>
+                                <ul style="margin: 5px 0;">
                                     <li><strong>Consistency:</strong> Standardized infrastructure</li>
                                     <li><strong>Reusability:</strong> Write once, use everywhere</li>
                                     <li><strong>Best Practices:</strong> Tested patterns</li>
@@ -1723,7 +1700,7 @@ main = rule { mandatory_tags and approved_instance_types and databases_encrypted
                 </section>
 
                 <section>
-                    <h3>⚡ Open Policy Agent (OPA) / Rego</h3>
+                    <h3>⚡ Open Policy Agent (OPA) / Rego (1/2)</h3>
                     <div class="code-block-title">policies/security.rego &mdash; OPA 1.0 syntax</div>
                     <pre><code class="language-rego">package terraform.security
 
@@ -1736,9 +1713,13 @@ managed contains rc if {
 	rc.mode == "managed"
 	some action in rc.change.actions
 	action in {"create", "update"}
-}
+}</code></pre>
+                </section>
 
-deny contains msg if {
+                <section>
+                    <h3>⚡ Open Policy Agent (OPA) / Rego (2/2)</h3>
+                    <div class="code-block-title">policies/security.rego (continued) &mdash; deny rules</div>
+                    <pre><code class="language-rego">deny contains msg if {
 	some rc in managed
 	rc.type == "aws_security_group"
 	some ingress in rc.change.after.ingress
@@ -2120,14 +2101,13 @@ module "dr_region" {
                 </section>
 
                 <section>
-                    <h2>🎉 Course Completion</h2>
+                    <h2>🏁 Course Completion</h2>
                     <div class="success">
-                        <h3>🎉 Congratulations!</h3>
-                        <p>You've completed all 12 labs of the Terraform training course and are now equipped with:</p>
+                        <p>Across the 12 labs of this course you worked with:</p>
                         <ul>
-                            <li>Deep understanding of Infrastructure as Code principles</li>
-                            <li>Hands-on experience with Terraform core concepts and advanced features</li>
-                            <li>Real-world skills for team Terraform workflows in Terraform Cloud</li>
+                            <li>Infrastructure as Code principles</li>
+                            <li>Terraform core concepts and advanced features, hands-on</li>
+                            <li>Team Terraform workflows in Terraform Cloud</li>
                             <li>Best practices for security, performance, and governance</li>
                         </ul>
                     </div>
@@ -2150,8 +2130,7 @@ module "dr_region" {
                 <section>
                     <h2>❓ Questions &amp; Discussion</h2>
                     <div style="text-align: center; margin-top: 50px;">
-                        <h3>Thank you for participating!</h3>
-                        <p>Ready to transform your infrastructure management?</p>
+                        <h3>Thank you for participating.</h3>
                         <br>
                         <h4>Reminder: destroy any remaining Lab 10&ndash;12 resources before you leave</h4>
                     </div>
@@ -2166,8 +2145,8 @@ module "dr_region" {
     <script>
         Reveal.initialize({
             // Display configuration optimized for dense content
-            width: 1920,
-            height: 1080,
+            width: 1440,
+            height: 810,
             margin: 0.03,
 
             // Scaling — minScale lowered so dense slides fit on smaller projectors
@@ -2178,7 +2157,7 @@ module "dr_region" {
             hash: true,
             controls: true,
             progress: true,
-            center: false,
+            center: true,
             touch: true,
             overview: true,
             

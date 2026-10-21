@@ -8,8 +8,8 @@
 # What it does (safe to re-run):
 #   1. Grows the Cloud9 root EBS volume to 100 GB and extends the filesystem.
 #      The resize happens online while Cloud9 keeps running: no reboot needed.
-#   2. Installs Terraform (pinned), unzip, jq, git, and Docker
-#   3. Starts Docker and grants the current user access to it
+#   2. Installs Terraform (pinned), unzip, jq, and git
+#   3. Starts Docker for Lab 1's local warm-up (no later lab uses it)
 #   4. Saves TF_VAR_username to ~/.bashrc
 #
 # Instructor notes:
@@ -168,7 +168,7 @@ fi
 # ---------------------------------------------------------------------------
 # 2. Install tools
 # ---------------------------------------------------------------------------
-info "Installing packages (unzip, jq, git, docker)"
+info "Installing packages (unzip, jq, git)"
 sudo "$PKG" install -y -q unzip jq git >/dev/null
 # Cloud9 images ship with Docker; install it only if it's missing
 command -v docker >/dev/null 2>&1 || sudo "$PKG" install -y -q docker >/dev/null \
@@ -198,7 +198,7 @@ fi
 # ---------------------------------------------------------------------------
 # 3. Docker
 # ---------------------------------------------------------------------------
-info "Configuring Docker"
+info "Starting Docker (used in Lab 1 only)"
 if ! sudo systemctl enable --now docker >/dev/null 2>&1; then
   # Fallback for images without systemd as PID 1
   if command -v service >/dev/null 2>&1; then
