@@ -721,7 +721,7 @@
             </section>
 
             <!-- Section 1: Data Sources & State Management -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>📊 Section 1: Data Sources & State Management</h2>
                     <p>Integrate existing infrastructure and discover resources dynamically</p>
@@ -889,7 +889,7 @@ import {
                         <p><strong>💡 Note:</strong> S3 native locking is GA in Terraform 1.11, which also deprecates DynamoDB-based locking (<code>dynamodb_table</code>). It is not available on the class's Terraform 1.9.8 - the labs use local state. A stuck lock can be cleared with <code>terraform force-unlock LOCK_ID</code> - only when you are sure no run is active.</p>
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Lab 6 Callout -->
             <section class="lab-callout" data-background-color="#17a2b8">
@@ -913,7 +913,7 @@ import {
             </section>
 
             <!-- Section 2: Modules Revisited - Composition & the Registry -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>📦 Section 2: Modules Revisited - Composition & the Registry</h2>
                     <p>Build on Lab 5: from your own modules to proven community modules</p>
@@ -1151,7 +1151,7 @@ module "s3_logs" {
                         </div>
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Lab 7 Callout -->
             <section class="lab-callout" data-background-color="#6610f2">
@@ -1175,7 +1175,7 @@ module "s3_logs" {
             </section>
 
             <!-- Section 3: Advanced Variables & Outputs -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🔧 Section 3: Advanced Variables, Outputs & Dynamic Configuration</h2>
                     <p>Complex data structures, validation, precedence, and conditional configuration</p>
@@ -1759,7 +1759,7 @@ output "application_endpoint" {
                         </div>
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Lab 8 Callout -->
             <section class="lab-callout" data-background-color="#e83e8c">
@@ -1783,7 +1783,7 @@ output "application_endpoint" {
             </section>
 
             <!-- Section 4: Resource Dependencies, Lifecycle & VPC Networking -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🔗 Section 4: Dependencies, Lifecycle & VPC Networking</h2>
                     <p>Resource orchestration, lifecycle management, and 2-tier network design</p>
@@ -2301,7 +2301,7 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }</code></pre>
                 </section>
-            </section>
+            
 
             <!-- Lab 9 Callout -->
             <section class="lab-callout" data-background-color="#20c997">
@@ -2325,7 +2325,7 @@ resource "aws_route_table_association" "private" {
             </section>
 
             <!-- Section 5: Error Handling and Debugging -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🐞 Section 5: Error Handling and Debugging</h2>
                     <p>Diagnose failures quickly and prevent common mistakes</p>
@@ -2414,11 +2414,11 @@ data "aws_vpc" "existing" {
   }
 }</code></pre>
                 </section>
-            </section>
+            
 
 
             <!-- Best Practices -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🏆 Terraform Best Practices</h2>
                     <p>Organization, versioning, and security habits for every project</p>
@@ -2513,10 +2513,10 @@ variable "api_key" {
   sensitive   = true
 }</code></pre>
                 </section>
-            </section>
+            
 
             <!-- Summary -->
-            <section>
+            
                 <section>
                     <h2>📝 Module 2 Summary</h2>
                     <h3>🔑 Key Takeaways</h3>
@@ -2547,7 +2547,7 @@ variable "api_key" {
                         <p>Before you leave: confirm <code>terraform destroy</code> has removed your Lab 6–9 resources from the shared AWS account.</p>
                     </div>
                 </section>
-            </section>
+            
         </div>
     </div>
 

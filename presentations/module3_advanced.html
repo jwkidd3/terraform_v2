@@ -902,7 +902,7 @@
             </section>
 
             <!-- Section 1: Introduction to Terraform Cloud -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>☁️ Section 1: Terraform Cloud and Remote Execution</h2>
                     <p>Why remote state and remote runs, and how to connect a configuration</p>
@@ -1144,7 +1144,7 @@ terraform destroy   # clean up at the end of the lab</code></pre>
                         <li>State locking is automatic &mdash; no S3 bucket or DynamoDB table to manage</li>
                     </ul>
                 </section>
-            </section>
+            
 
             <!-- Lab 10 Callout -->
             <section class="lab-callout" data-background-color="#623ce4">
@@ -1167,7 +1167,7 @@ terraform destroy   # clean up at the end of the lab</code></pre>
             </section>
 
             <!-- Section 2: Multiple Workspaces -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>👥 Section 2: Multiple Workspaces and Environments</h2>
                     <p>One configuration, many workspaces &mdash; each with its own state and variables</p>
@@ -1310,7 +1310,7 @@ resource "aws_instance" "app" {
                         <strong>State isolation:</strong> each workspace has its own state file and run history &mdash; an apply in <code>lab11-staging</code> cannot touch <code>lab11-development</code>.
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Lab 11 Callout -->
             <section class="lab-callout" data-background-color="#6f42c1">
@@ -1333,7 +1333,7 @@ resource "aws_instance" "app" {
             </section>
 
             <!-- Section 3: VCS-Driven Workflows -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🔗 Section 3: VCS-Driven Workflows</h2>
                     <p>Make <code>git push</code> the trigger for Terraform Cloud runs</p>
@@ -1447,7 +1447,7 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
                         <li>Deleting a workspace does <strong>not</strong> destroy its resources &mdash; destroy first</li>
                     </ul>
                 </section>
-            </section>
+            
 
             <!-- Lab 12 Callout -->
             <section class="lab-callout" data-background-color="#dc3545">
@@ -1470,7 +1470,7 @@ git push origin feature/add-tags     # push to a non-tracked branch: no run
             </section>
 
             <!-- Section 4: CI/CD Alternatives -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🤖 Section 4: Beyond the Labs &mdash; CI/CD Pipelines</h2>
                     <p>An alternative to VCS-driven workspaces: run Terraform from your own CI system</p>
@@ -1620,10 +1620,10 @@ module "green_environment" {
   instance_count   = var.deployment_color == "green" ? var.instance_count : 0
 }</code></pre>
                 </section>
-            </section>
+            
 
             <!-- Section 5: Policy as Code and Governance -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🛡️ Section 5: Policy, Governance, and the Registry</h2>
                     <p>Survey of enterprise features &mdash; not part of the lab exercises</p>
@@ -1859,10 +1859,10 @@ provider "aws" {
                         <strong>Avoid <code>timestamp()</code> in tags:</strong> it returns a new value on every run, so every plan shows changes. Use static values (or a CI-supplied variable) instead.
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Section 6: Performance and Scaling -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>⚡ Section 6: Performance Optimization and Scaling</h2>
                     <p>Keeping large configurations fast and maintainable</p>
@@ -1946,10 +1946,10 @@ module "applications" {
                         <strong>Terraform Enterprise</strong> is the self-hosted distribution of the same product; configurations use the same <code>cloud {}</code> block with an added <code>hostname</code>.
                     </div>
                 </section>
-            </section>
+            
 
             <!-- Hands-on Activities -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🛠️ Hands-on Activities Recap</h2>
                 </section>
@@ -1998,10 +1998,10 @@ module "applications" {
                         <li>Speculative plans on pull requests</li>
                     </ul>
                 </section>
-            </section>
+            
 
             <!-- Enterprise Best Practices -->
-            <section>
+            
                 <section class="section-divider">
                     <h2>🏆 Enterprise Best Practices</h2>
                 </section>
@@ -2083,10 +2083,10 @@ module "dr_region" {
   replica_source = module.primary_region.backup_config
 }</code></pre>
                 </section>
-            </section>
+            
 
             <!-- Summary and Wrap-up -->
-            <section>
+            
                 <section>
                     <h2>🎓 Module 3 Summary</h2>
                     <h3>What You Learned Today</h3>
@@ -2135,7 +2135,7 @@ module "dr_region" {
                         <h4>Reminder: destroy any remaining Lab 10&ndash;12 resources before you leave</h4>
                     </div>
                 </section>
-            </section>
+            
         </div>
     </div>
 
